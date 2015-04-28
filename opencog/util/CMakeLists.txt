@@ -77,6 +77,7 @@ INSTALL(FILES
 	backtrace-symbols.h
 	based_variant.h
 	cluster.h
+	cogutil.h
 	comprehension.h
 	Config.h
 	Counter.h
