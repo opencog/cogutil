@@ -3,7 +3,7 @@ find_library( IBERTY_LIBRARY	NAMES iberty	PATH /usr/lib /usr/lib64 )
 INCLUDE (CheckIncludeFiles)
 
 # The location of iberty.h varies according to the distro.
-# Fine the right location.
+# Find the right location.
 find_path(
     IBERTY_INCLUDE_DIR libiberty.h
     PATHS
