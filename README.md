@@ -28,6 +28,23 @@ container in which OpenCog will be built and run.
 > Currently, opencog requires cxxtest version 3, and is not compatible
   with version 4.
 
+Optional Prerequisites
+----------------------
+The following are optional, but are strongly recommended, as they result
+in "pretty" stack traces, which result in far more useful and readable
+stack traces.  These are requires, and not really optional, if you are
+a regular OpenCog developer.
+
+###### binutils BFD library
+> The GNU binutils linker-loader, ahem, cough, "Binary File Description".
+> http://gnu.org/binutils | binutils-dev
+> The linker-loader understands calling conventions.
+
+###### iberty
+> The GNU GCC compiler tools libiberty component.
+> http://gcc.gnu.org | libiberty-dev
+> The GCC compiler, and iberty in particular, know stack traces.
+
 Building CogUtils
 -----------------
 Peform the following steps at the shell prompt:
