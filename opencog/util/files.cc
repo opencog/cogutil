@@ -54,12 +54,31 @@
  */
 static const std::vector<std::string> paths =
 {
+#ifndef WIN32
+    // XXX FIXME Searching the current path is a security breach just
+    // waiting to happen, but the current OpenCog cogserver and Config
+    // and unit-test-case design more or less demands this. The unit
+    // tests and/or the config infrastructure would need to be overhauled.
+    //
+    "./",
+    "./opencog/",
+    "../",
+    "../opencog/",
+    "../../",
+    "../../opencog/",
+    "../../../",
+    "../../../opencog/",
+    "../../../../",
+    "../../../../opencog/",
+#endif // !WIN32
     CMAKE_INSTALL_PREFIX,
+    CMAKE_INSTALL_PREFIX "/opencog",
     DATADIR,         // this too is an install dir
     DATADIR "/opencog",
 #ifndef WIN32
     "/usr/local/share/opencog",  // search local first, then system.
     "/usr/share/opencog",
+    "/opt/opencog",
     "/",
 #endif // !WIN32
 };
