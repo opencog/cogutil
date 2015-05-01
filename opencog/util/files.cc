@@ -76,9 +76,12 @@ static const std::vector<std::string> paths =
     DATADIR,         // this too is an install dir
     DATADIR "/opencog",
 #ifndef WIN32
-    "/usr/local/share/opencog",  // search local first, then system.
-    "/usr/share/opencog",
-    "/opt/opencog",
+    "/usr/local/share/",  // search local first, then system.
+    "/usr/local/share/opencog/",
+    "/usr/share/",
+    "/usr/share/opencog/",
+    "/opt/",
+    "/opt/opencog/",
     "/",
 #endif // !WIN32
 };
