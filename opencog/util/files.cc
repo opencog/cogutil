@@ -61,27 +61,17 @@ static const std::vector<std::string> paths =
     // tests and/or the config infrastructure would need to be overhauled.
     //
     "./",
-    "./opencog/",
     "../",
-    "../opencog/",
     "../../",
-    "../../opencog/",
     "../../../",
-    "../../../opencog/",
     "../../../../",
-    "../../../../opencog/",
 #endif // !WIN32
     CMAKE_INSTALL_PREFIX,
-    CMAKE_INSTALL_PREFIX "/opencog",
     DATADIR,         // this too is an install dir
-    DATADIR "/opencog",
 #ifndef WIN32
     "/usr/local/share/",  // search local first, then system.
-    "/usr/local/share/opencog/",
     "/usr/share/",
-    "/usr/share/opencog/",
     "/opt/",
-    "/opt/opencog/",
     "/",
 #endif // !WIN32
 };
