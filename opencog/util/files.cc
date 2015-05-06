@@ -64,12 +64,14 @@ static const std::vector<std::string> paths =
     "../",
     "../../",
     "../../../",
-    "../../../../",
 #endif // !WIN32
-    CMAKE_INSTALL_PREFIX,
+    CMAKE_INSTALL_PREFIX "/lib",
+    CMAKE_INSTALL_PREFIX "/share",
     DATADIR,         // this too is an install dir
 #ifndef WIN32
+    "/usr/local/lib/",    // search local first, then system.
     "/usr/local/share/",  // search local first, then system.
+    "/usr/lib/",
     "/usr/share/",
     "/opt/",
     "/",
