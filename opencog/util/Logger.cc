@@ -418,9 +418,12 @@ void Logger::log(Logger::Level level, const std::string &txt)
     // If the queue gets too full, block until it's flushed to file or
     // stdout. This can sometimes happen, if some component is spewing
     // lots of debugging messages in a tight loop.
-    if (msg_queue.size() > max_queue_size_allowed) {
-        flush();
-    }
+    if (msg_queue.size() > max_queue_size_allowed) flush();
+
+    // Errors are associated with immenent crashes. Make sure that the
+    // stack trace is written to disk *before* the crash happens! Yes,
+    // this introduces latency and lag. Tough. Don't generate errors.
+    if (level <= backTraceLevel) flush();
 }
 
 void Logger::backtrace()
