@@ -33,6 +33,11 @@
 #include <string.h>
 #include <opencog/util/macros.h>
 
+// For non-gnu systems...
+#ifndef _GLIBCXX_USE_NOEXCEPT
+#define _GLIBCXX_USE_NOEXCEPT
+#endif
+
 namespace opencog
 {
 /** \addtogroup grp_cogutil
@@ -68,7 +73,7 @@ public:
     StandardException();
     StandardException(const StandardException&);
     StandardException& operator=(const StandardException&);
-    virtual ~StandardException() noexcept(true);
+    virtual ~StandardException() _GLIBCXX_USE_NOEXCEPT;
     virtual const char* what() const _GLIBCXX_USE_NOEXCEPT {
         return getMessage();
     }
