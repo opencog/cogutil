@@ -68,7 +68,7 @@ public:
     StandardException();
     StandardException(const StandardException&);
     StandardException& operator=(const StandardException&);
-    virtual ~StandardException();
+    virtual ~StandardException() noexcept(true);
     virtual const char* what() const _GLIBCXX_USE_NOEXCEPT {
         return getMessage();
     }
