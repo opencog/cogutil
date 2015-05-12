@@ -96,7 +96,7 @@ StandardException& StandardException::operator=(const StandardException& ex)
     return *this;
 }
 
-StandardException::~StandardException()
+StandardException::~StandardException() _GLIBCXX_USE_NOEXCEPT
 {
     // clear memory
     if (message != NULL) {
