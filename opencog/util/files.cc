@@ -64,6 +64,7 @@ static const std::vector<std::string> paths =
     "../",
     "../../",
     "../../../",
+    "../../../../",   // some unit tests need this
 #endif // !WIN32
     CMAKE_INSTALL_PREFIX "/lib",
     CMAKE_INSTALL_PREFIX "/share",
