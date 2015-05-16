@@ -143,7 +143,8 @@ static const char* DEFAULT_CONFIG_PATHS[] =
 // constructor
 void Config::load(const char* filename, bool resetFirst)
 {
-    if (filename == NULL) filename = DEFAULT_CONFIG_FILENAME;
+    if (NULL == filename or 0 == filename[0])
+        filename = DEFAULT_CONFIG_FILENAME;
 
     if (resetFirst) {
         // Reset to default values
