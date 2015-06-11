@@ -25,8 +25,6 @@ container in which OpenCog will be built and run.
 ###### cxxtest
 > Test framework
 > http://cxxtest.sourceforge.net/ | https://launchpad.net/~opencog-dev/+archive/ppa
-> Currently, opencog requires cxxtest version 3, and is not compatible
-  with version 4.
 
 Optional Prerequisites
 ----------------------
