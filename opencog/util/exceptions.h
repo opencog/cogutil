@@ -33,11 +33,6 @@
 #include <string.h>
 #include <opencog/util/macros.h>
 
-// For non-gnu systems...
-#ifndef _GLIBCXX_USE_NOEXCEPT
-#define _GLIBCXX_USE_NOEXCEPT
-#endif
-
 namespace opencog
 {
 /** \addtogroup grp_cogutil
