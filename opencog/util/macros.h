@@ -51,4 +51,15 @@
 
 
 /** @}*/
+
+/// macro available from gcc 4.7
+#ifndef _GLIBCXX_USE_NOEXCEPT
+# if __GNUC__ >= 4
+#  define _GLIBCXX_USE_NOEXCEPT throw()
+/// For non-gnu systems...
+# else
+#  define _GLIBCXX_USE_NOEXCEPT
+# endif
+#endif
+
 #endif // _OPENCOG_MACROS_H
