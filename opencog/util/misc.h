@@ -31,6 +31,10 @@
 #include <iterator>
 #include <functional>
 
+#ifdef __APPLE__
+#include <string>
+#endif
+
 #ifndef WIN32
 #include <cxxabi.h>
 #endif
