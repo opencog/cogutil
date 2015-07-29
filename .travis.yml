@@ -1,0 +1,26 @@
+os:
+  - linux
+
+# TODO: one day when container infrastructure works better change to
+# sudo: false
+sudo: required
+
+cache: apt
+
+before_install:
+    - sudo apt-add-repository -y ppa:opencog-dev/ppa
+    - sudo apt-add-repository -y ppa:boost-latest/ppa
+    - sudo apt-get update
+
+install:
+    - sudo apt-get install -y boost1.54 cxxtest cmake build-essential
+
+before_script:
+    - mkdir build
+    - cd build
+    - cmake ..
+
+script:
+    - make -j$(nproc)
+    - make tests
+    - make test
