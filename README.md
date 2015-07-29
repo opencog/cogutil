@@ -1,5 +1,6 @@
 OpenCog Utilities
 =================
+[![Build Status](https://travis-ci.org/opencog/cogutils.svg)](https://travis-ci.org/opencog/cogutils)
 
 The OpenCog utilities is a miscellaneous collection of C++ utilities
 use for typical programming tasks in multiple OpenCog projects.
@@ -11,7 +12,7 @@ Prerequisites
 To build the OpenCog utilities, the packages listed below are required. With a
 few exceptions, most Linux distributions will provide these packages. Users of
 Ubuntu 14.04 "Trusty Tahr" may use the dependency installer at scripts/octool.
-Users of any version of Linux may use the Dockerfile to quickly build a 
+Users of any version of Linux may use the Dockerfile to quickly build a
 container in which OpenCog will be built and run.
 
 ###### boost
