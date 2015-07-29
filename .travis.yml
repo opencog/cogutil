@@ -9,6 +9,7 @@ cache: apt
 
 before_install:
     - sudo apt-add-repository -y ppa:opencog-dev/ppa
+    - sudo apt-add-repository -y ppa:boost-latest/ppa
     - sudo apt-get update
 
 install:
