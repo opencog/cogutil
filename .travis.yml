@@ -6,9 +6,6 @@ os:
 sudo: required
 
 cache: apt
-env:
-    - CXX=g++-4.9
-    - CC="gcc-4.9
 
 before_install:
     - sudo apt-add-repository -y ppa:opencog-dev/ppa
