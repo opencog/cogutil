@@ -68,7 +68,7 @@ public:
     bool randbool();
 
 	//! random discrete distribution according to some weights
-	int randDiscrete(const std::vector<double>&);
+    int randDiscrete(const std::vector<double>&);
 };
 
 //! singleton instance (following Meyer's design pattern)
