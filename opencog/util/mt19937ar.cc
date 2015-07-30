@@ -78,7 +78,14 @@ int MT19937RandGen::randPositiveNegative(){
 
 //random boolean
 bool MT19937RandGen::randbool() {
-    return randint() % 2 == 0;
+	return randint() % 2 == 0;
+}
+
+// random integer values according to a discrete distribution
+int MT19937RandGen::randDiscrete(const std::vector<double>& weights)
+{
+	std::discrete_distribution<int> distribution(weights.begin(), weights.end());
+	return distribution(randomGen);
 }
 
 

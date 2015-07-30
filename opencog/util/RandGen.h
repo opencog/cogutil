@@ -26,6 +26,7 @@
 #define _OPENCOG_RAND_GEN_H
 
 #include <set>
+#include <vector>
 #include <opencog/util/exceptions.h>
 
 namespace opencog
@@ -65,6 +66,9 @@ public:
 
     //! random boolean
     virtual bool randbool() = 0;
+
+    //! random discrete base on weights
+    virtual int randDiscrete(const std::vector<double>&) = 0;
 };
 
 /** @}*/
