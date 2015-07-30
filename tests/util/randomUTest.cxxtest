@@ -56,4 +56,18 @@ public:
         // check standard deviation
         TS_ASSERT_DELTA(sqrt(moment<2>(acc)), s, delta);        
     }
+
+    void test_discrete() {
+        std::vector<double> weights = { 1, 3, 4, 2 };
+        size_t size = 10000000;
+        int p[4];
+
+        MT19937RandGen rng(1);
+        for (size_t i = 0; i < size; ++i)
+            ++p[rng.randDiscrete(weights)];
+
+        TS_ASSERT(p[2] > p[1]);
+        TS_ASSERT(p[1] > p[3]);
+        TS_ASSERT(p[3] > p[0]);
+    }
 };
