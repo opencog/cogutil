@@ -28,6 +28,7 @@
 #include <set>
 #include <vector>
 #include <opencog/util/exceptions.h>
+#include <random>
 
 namespace opencog
 {
@@ -36,16 +37,22 @@ namespace opencog
  */
 
 //! interface for random generators
-class RandGen
+    
+// RandGen inherits std::mt19937. This may seem like a hack because
+// there is no point having that abstract class inherit a concrete
+// random generator. But it's clear we don't need that home made
+// random generator structure anymore so it's a step toward getting
+// rid of it.
+//
+// The advantage is that the random generator returned by the
+// singleton randGen() can be now used in the STL distributions.
+class RandGen : public std::mt19937
 {
 
 public:
 
     virtual ~RandGen() {}
 
-    //! reset the random seed
-    virtual void seed(unsigned long) = 0;
-    
     //! random int between 0 and max rand number.
     virtual int randint() = 0;
 
