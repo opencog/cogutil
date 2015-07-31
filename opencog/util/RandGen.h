@@ -37,6 +37,15 @@ namespace opencog
  */
 
 //! interface for random generators
+    
+// RandGen inherits std::mt19937. This may seem like a hack because
+// there is no point having that abstract class inherit a concrete
+// random generator. But it's clear we don't need that home made
+// random generator structure anymore so it's a step toward getting
+// rid of it.
+//
+// The advantage is that the random generator returned by the
+// singleton randGen() can be now used in the STL distributions.
 class RandGen : public std::mt19937
 {
 
