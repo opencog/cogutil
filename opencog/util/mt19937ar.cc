@@ -40,10 +40,6 @@ MT19937RandGen::MT19937RandGen(unsigned long s) {
 }
 
 
-void MT19937RandGen::seed(unsigned long s) {
-    std::mt19937::seed(s);
-}
-
 // random int between 0 and max rand number.
 int MT19937RandGen::randint() {
     std::uniform_int_distribution<int> dis;

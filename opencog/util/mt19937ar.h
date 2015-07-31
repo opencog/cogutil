@@ -38,9 +38,6 @@ public:
 
     MT19937RandGen(unsigned long s);
 
-    //! reset the random seed
-    void seed(unsigned long); 
-    
     //! random int between 0 and max rand number.
     int randint();
 
