@@ -66,8 +66,8 @@ public:
         for (size_t i = 0; i < size; ++i)
             ++p[rng.randDiscrete(weights)];
 
-        TS_ASSERT(p[2] > p[1]);
-        TS_ASSERT(p[1] > p[3]);
-        TS_ASSERT(p[3] > p[0]);
+        TS_ASSERT_LESS_THAN(p[1], p[2]);
+        TS_ASSERT_LESS_THAN(p[3], p[1]);
+        TS_ASSERT_LESS_THAN(p[0], p[3]);
     }
 };
