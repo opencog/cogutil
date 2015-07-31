@@ -36,34 +36,34 @@ using namespace opencog;
 // PUBLIC METHODS: 
 
 MT19937RandGen::MT19937RandGen(unsigned long s) {
-    randomGen.seed(s);
+    seed(s);
 }
 
 
 void MT19937RandGen::seed(unsigned long s) {
-    randomGen.seed(s);
+    std::mt19937::seed(s);
 }
 
 // random int between 0 and max rand number.
 int MT19937RandGen::randint() {
     std::uniform_int_distribution<int> dis;
-    return dis(randomGen);
+    return dis(*this);
 }
 
 // random float in [0,1]
 float MT19937RandGen::randfloat() {
-    return randomGen() / (float)randomGen.max();
+    return operator()() / (float)max();
 }
 
 // random double in [0,1]
 double MT19937RandGen::randdouble() {
-    return randomGen() / (double)randomGen.max();
+	return operator()() / (double)max();
 }
   
 //random double in [0,1)
 double MT19937RandGen::randDoubleOneExcluded() {
     std::uniform_real_distribution<double> dis;
-    return dis(randomGen);
+    return dis(*this);
 }
 
 //random int in [0,n)
@@ -73,7 +73,7 @@ int MT19937RandGen::randint(int n) {
 
 // return -1 or 1 randonly
 int MT19937RandGen::randPositiveNegative(){
-    return (this->randint(2) == 0) ? 1 : -1;
+    return (randint(2) == 0) ? 1 : -1;
 }
 
 //random boolean
@@ -85,7 +85,7 @@ bool MT19937RandGen::randbool() {
 int MT19937RandGen::randDiscrete(const std::vector<double>& weights)
 {
     std::discrete_distribution<int> distribution(weights.begin(), weights.end());
-    return distribution(randomGen);
+    return distribution(*this);
 }
 
 

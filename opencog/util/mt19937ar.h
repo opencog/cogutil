@@ -34,11 +34,6 @@ namespace opencog
 
 class MT19937RandGen : public RandGen
 {
-
-private: 
-
-    std::mt19937 randomGen;
-
 public: 
 
     MT19937RandGen(unsigned long s);

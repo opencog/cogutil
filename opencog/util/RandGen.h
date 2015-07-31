@@ -28,6 +28,7 @@
 #include <set>
 #include <vector>
 #include <opencog/util/exceptions.h>
+#include <random>
 
 namespace opencog
 {
@@ -36,7 +37,7 @@ namespace opencog
  */
 
 //! interface for random generators
-class RandGen
+class RandGen : public std::mt19937
 {
 
 public:
