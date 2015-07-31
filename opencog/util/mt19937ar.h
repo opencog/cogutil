@@ -67,7 +67,7 @@ public:
     //! random boolean
     bool randbool();
 
-	//! random discrete distribution according to some weights
+    //! random discrete distribution according to some weights
     int randDiscrete(const std::vector<double>&);
 };
 
