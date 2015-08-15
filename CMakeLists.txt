@@ -17,7 +17,7 @@ IF (COMMAND CMAKE_POLICY)
 	CMAKE_POLICY(SET CMP0005 OLD)
 ENDIF (COMMAND CMAKE_POLICY)
 
-PROJECT(opencog)
+PROJECT(cogutils)
 
 # To supress Cygwin warning "CMake no longer defines WIN32 on Cygwin!"
 # Remove when CMake >= 2.8.4 is required to build the project
