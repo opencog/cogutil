@@ -118,7 +118,7 @@ INSTALL(FILES
 	StringTokenizer.h
 	tbb.h
 	tree.h
-	DESTINATION "include/${PROJECT_NAME}/util"
+	DESTINATION "include/opencog/util"
 )
 
 IF (WIN32)
