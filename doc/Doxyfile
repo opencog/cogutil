@@ -38,7 +38,7 @@ PROJECT_NAME           = "OpenCog Utilities"
 # could be handy for archiving the generated documentation or if some version
 # control system is used.
 
-PROJECT_NUMBER         = "Branch: @BZR_NICK@, revision @BZR_REVNO@"
+PROJECT_NUMBER         = "Branch: @GIT_BRANCH@, Commit Hash: @GIT_COMMIT@"
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description
 # for a project that appears at the top of each page and should give viewer a
