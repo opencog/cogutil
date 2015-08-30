@@ -48,7 +48,10 @@ void StandardException::parseErrorMessage(const char* fmt, va_list ap, bool logE
     char buf[MAX_MSG_LENGTH];
 
     vsnprintf(buf, sizeof(buf), fmt, ap);
-    if (logError) opencog::logger().error(buf);
+
+    // If buf contains %s %x %d %u etc. because one of the ap's did,
+    // then it becomes a horrid strange crash. So be careful, use %s.
+    if (logError) opencog::logger().error("%s", buf);
     setMessage(buf);
 }
 
@@ -57,11 +60,21 @@ void StandardException::parseErrorMessage(const char *trace, const char * msg, v
     size_t tlen = 0;
     if (trace) tlen = strlen(trace);
 
-    char * concatMsg = new char[tlen + strlen(msg) + 1];
-    *concatMsg = '\0'; // empty c-string
+    size_t mlen = strlen(msg);
+    char * concatMsg = new char[tlen + mlen + 1];
 
-    strcat(concatMsg, msg);
-    if (trace) strcat(concatMsg, trace);
+    strcpy(concatMsg, msg);
+    if (trace) {
+        // If "trace" is a string that contains %d %s %x %u or any
+        // format string, there will be confusing horrors!  Thus,
+        // blank out any %'s in "trace".
+        char * pcnt = concatMsg + mlen;
+        strcpy(pcnt, trace);
+        do {
+            pcnt = strchr(pcnt, '%');
+            if (pcnt) *pcnt = ' ';
+        } while (pcnt);
+    }
 
     parseErrorMessage(concatMsg, ap, logError);
 
@@ -292,7 +305,7 @@ AssertionException::AssertionException(const char* fmt, ...)
     va_end(ap);
 
     setMessage(buf);
-    opencog::logger().error(buf);
+    opencog::logger().error("%s", buf);
 }
 
 AssertionException::AssertionException(const char* fmt, va_list ap)
@@ -301,6 +314,6 @@ AssertionException::AssertionException(const char* fmt, va_list ap)
 
     vsnprintf(buf, sizeof(buf), fmt, ap);
     setMessage(buf);
-    opencog::logger().error(buf);
+    opencog::logger().error("%s", buf);
 }
 
