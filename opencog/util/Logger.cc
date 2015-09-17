@@ -234,12 +234,23 @@ void Logger::writeMsg(std::string &msg)
         // specifies the log location.
         if (INFO <= currentLevel)
         {
-            fprintf(f, "[INFO] Using config file found at: %s\n",
-                   config().path_where_found().c_str());
+            const char * cpath = config().path_where_found().c_str();
+            if (strcmp("", cpath))
+            {
+                fprintf(f, "[INFO] Using config file found at: %s\n",
+                   cpath);
 
-            if (printToStdout)
-                printf("[INFO] Using config file found at: %s\n",
-                       config().path_where_found().c_str());
+                if (printToStdout)
+                    printf("[INFO] Using config file found at: %s\n",
+                           cpath);
+            }
+            else
+            {
+                fprintf(f, "[INFO] No config file found\n");
+
+                if (printToStdout)
+                    printf("[INFO] No config file found\n");
+            }
         }
     }
 
