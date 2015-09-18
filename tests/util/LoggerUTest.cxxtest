@@ -137,4 +137,17 @@ public:
         logAllLevels("LoggerUTest.fine.log",  Logger::FINE,  5);
     }
 
+    void testLazyLogger()
+    {
+        logger().setLevel(Logger::DEBUG);
+
+        int i = 0;
+
+        LAZY_LOGGER_FINE << "i = " << ++i;
+        LAZY_LOGGER_DEBUG << "i = " << ++i;
+        LAZY_LOGGER_INFO << "i = " << ++i;
+
+        TS_ASSERT_EQUALS(i, 2);
+    }
+
 }; // class
