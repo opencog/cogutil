@@ -300,6 +300,13 @@ private:
 // singleton instance (following Meyer's design pattern)
 Logger& logger();
 
+// Macro to not evaluate the stream if log level is disabled
+#define LAZY_LOG_ERROR if(logger().isErrorEnabled()) logger().error()
+#define LAZY_LOG_WARN if(logger().isWarnEnabled()) logger().warn()
+#define LAZY_LOG_INFO if(logger().isInfoEnabled()) logger().info()
+#define LAZY_LOG_DEBUG if(logger().isDebugEnabled()) logger().debug()
+#define LAZY_LOG_FINE if(logger().isFineEnabled()) logger().fine()
+
 /** @}*/
 }  // namespace opencog
 
