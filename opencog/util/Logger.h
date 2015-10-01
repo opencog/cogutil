@@ -121,6 +121,12 @@ public:
     void setPrintToStdoutFlag(bool);
 
     /**
+     * If set, the logging level is preinted as a part
+     * of the message,
+     */
+    void setPrintLevelFlag(bool);
+
+    /**
      * If set, log messages are printed immediately.
      * (Normally, they are buffered in a different thread, and
      * only get printed when that thread runs. Async logging
@@ -277,6 +283,7 @@ private:
     bool timestampEnabled;
     bool logEnabled;
     bool printToStdout;
+    bool printLevel;
     bool syncEnabled;
     FILE *f;
 
