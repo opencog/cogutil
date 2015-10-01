@@ -111,16 +111,23 @@ public:
     const std::string& getFilename();
 
     /**
-     * Reset the flag that indicates whether a timestamp is to be prefixed
-     * in every message or not.
+     * If set, log messages are prefixed with a timestamp.
      */
-    void setTimestampFlag(bool flag);
+    void setTimestampFlag(bool);
 
     /**
-     * Reset the flag that indicates whether the log messages should be
-     * printed to the stdout or not.
+     * If set, log messages are printed to the stdout.
      */
-    void setPrintToStdoutFlag(bool flag);
+    void setPrintToStdoutFlag(bool);
+
+    /**
+     * If set, log messages are printed immediately.
+     * (Normally, they are buffered in a different thread, and
+     * only get printed when that thread runs. Async logging
+     * minimizes the interference to your runing program;
+     * synchronous logging might slow down your program).
+     */
+    void setSyncFlag(bool);
 
     /**
      * Set the main logger to print only
@@ -134,7 +141,7 @@ public:
      * if passed level is lower than or equal to the current log level
      * of this Logger instance.
      */
-    void log  (Level level, const std::string &txt);
+    void log (Level level, const std::string &txt);
     // void error(const std::string &txt);
     // void warn (const std::string &txt);
     // void info (const std::string &txt);
@@ -265,11 +272,12 @@ public:
 private:
 
     std::string fileName;
-    bool timestampEnabled;
     Level currentLevel;
     Level backTraceLevel;
+    bool timestampEnabled;
     bool logEnabled;
     bool printToStdout;
+    bool syncEnabled;
     FILE *f;
 
     /** One single thread does all writing of log messages */

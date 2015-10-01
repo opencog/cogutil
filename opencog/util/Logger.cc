@@ -374,6 +374,11 @@ void Logger::setPrintToStdoutFlag(bool flag)
     printToStdout = flag;
 }
 
+void Logger::setSyncFlag(bool flag)
+{
+    syncEnabled = flag;
+}
+
 void Logger::setPrintErrorLevelStdout()
 {
     setPrintToStdoutFlag(true);
@@ -435,6 +440,8 @@ void Logger::log(Logger::Level level, const std::string &txt)
     // stack trace is written to disk *before* the crash happens! Yes,
     // this introduces latency and lag. Tough. Don't generate errors.
     if (level <= backTraceLevel) flush();
+
+    if (syncEnabled) flush();
 }
 
 void Logger::backtrace()
