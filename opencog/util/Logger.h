@@ -53,8 +53,10 @@ public:
     // levelStrings[] in Logger.cc
     enum Level { NONE, ERROR, WARN, INFO, DEBUG, FINE, BAD_LEVEL=255 };
 
-    /** Convert from 'enum' (int) to 'string' and vice-versa */
-    static const Level getLevelFromString(const std::string&);
+    /**
+     * Convert from string to enum (ignoring case), and vice-versa.
+     */
+    static const Level getLevelFromString(const std::string&); // Ignoring case
     static const char* getLevelString(const Level);
 
     // ***********************************************/
