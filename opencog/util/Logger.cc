@@ -281,6 +281,8 @@ Logger::Logger(const std::string &fname, Logger::Level level, bool tsEnabled)
 
     this->timestampEnabled = tsEnabled;
     this->printToStdout = false;
+    this->printLevel = true;
+    this->syncEnabled = false;
 
     this->logEnabled = true;
 #ifdef HAVE_VALGRIND
@@ -374,6 +376,16 @@ void Logger::setPrintToStdoutFlag(bool flag)
     printToStdout = flag;
 }
 
+void Logger::setPrintLevelFlag(bool flag)
+{
+    printLevel = flag;
+}
+
+void Logger::setSyncFlag(bool flag)
+{
+    syncEnabled = flag;
+}
+
 void Logger::setPrintErrorLevelStdout()
 {
     setPrintToStdoutFlag(true);
@@ -415,7 +427,10 @@ void Logger::log(Logger::Level level, const std::string &txt)
         oss << timestampStr;
     }
 
-    oss << "[" << getLevelString(level) << "] " << txt << std::endl;
+    if (printLevel)
+        oss << "[" << getLevelString(level) << "] ";
+
+    oss << txt << std::endl;
 
     if (level <= backTraceLevel)
     {
@@ -435,6 +450,8 @@ void Logger::log(Logger::Level level, const std::string &txt)
     // stack trace is written to disk *before* the crash happens! Yes,
     // this introduces latency and lag. Tough. Don't generate errors.
     if (level <= backTraceLevel) flush();
+
+    if (syncEnabled) flush();
 }
 
 void Logger::backtrace()

@@ -17,7 +17,7 @@ container in which OpenCog will be built and run.
 
 ###### boost
 > C++ utilities package
-> http://www.boost.org/ | libboost-dev
+> http://www.boost.org/ | libboost-dev, libboost-date-time-dev, libboost-filesystem-dev, libboost-program-options-dev, libboost-regex-dev, libboost-serialization-dev, libboost-system-dev, libboost-thread-dev
 
 ###### cmake
 > Build management tool; v2.8 or higher recommended.
@@ -43,6 +43,11 @@ a regular OpenCog developer.
 > The GNU GCC compiler tools libiberty component.
 > http://gcc.gnu.org | libiberty-dev
 > The GCC compiler, and iberty in particular, know stack traces.
+
+###### doxygen
+> Documentation generator under GNU General Public License
+> http://www.stack.nl/~dimitri/doxygen/ | doxygen
+> Generates code documentation
 
 Building CogUtils
 -----------------
