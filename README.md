@@ -1,6 +1,6 @@
 OpenCog Utilities
 =================
-[![Build Status](https://travis-ci.org/opencog/cogutils.svg?branch=master)](https://travis-ci.org/opencog/cogutils)
+[![Build Status](https://circleci.com/gh/opencog/cogutils.svg?style=svg)](https://circleci.com/gh/opencog/cogutils)
 
 The OpenCog utilities is a miscellaneous collection of C++ utilities
 use for typical programming tasks in multiple OpenCog projects.
