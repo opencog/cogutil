@@ -1,0 +1,18 @@
+machine:
+    services:
+        - docker
+
+dependencies:
+    override:
+        - docker info
+        - docker pull opencog/opencog-deps
+        - docker images opencog/opencog-deps
+
+test:
+    override:
+        - docker run -v $PWD:/cogutils -it opencog/opencog-deps /bin/sh -c "cd /cogutils && /tmp/octool -bt":
+            parallel: true
+
+general:
+  artifacts:
+    - "~/cogutils/build/tests/Testing/Temporary" # Test logs
