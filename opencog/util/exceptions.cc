@@ -155,10 +155,10 @@ RuntimeException::RuntimeException()
 
 /*
  * ----------------------------------------------------------------------
- * XMLException class
+ * SyntaxException class
  * ----------------------------------------------------------------------
  */
-XMLException::XMLException(const char * trace, const char * fmt, ...)
+SyntaxException::SyntaxException(const char * trace, const char * fmt, ...)
 {
     va_list  ap;
     va_start(ap, fmt);
@@ -284,14 +284,6 @@ NotFoundException::NotFoundException(const char * trace, const char * fmt, ...)
 
 /*
  * ----------------------------------------------------------------------
- * DeleteException class
- * ----------------------------------------------------------------------
- */
-DeleteException::DeleteException(void)
-{}
-
-/*
- * ----------------------------------------------------------------------
  * AssertionException class
  * ----------------------------------------------------------------------
  */
@@ -317,3 +309,18 @@ AssertionException::AssertionException(const char* fmt, va_list ap)
     opencog::logger().error("%s", buf);
 }
 
+/*
+ * ----------------------------------------------------------------------
+ * DeleteException class
+ * ----------------------------------------------------------------------
+ */
+DeleteException::DeleteException(void)
+{}
+
+/*
+ * ----------------------------------------------------------------------
+ * NotEvaluatableException class
+ * ----------------------------------------------------------------------
+ */
+NotEvaluatableException::NotEvaluatableException(void)
+{}
