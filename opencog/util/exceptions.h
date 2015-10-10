@@ -44,7 +44,6 @@ namespace opencog
  */
 class StandardException : public std::exception
 {
-
 private:
     /**
      * c-string error message
@@ -52,16 +51,16 @@ private:
     char * message;
 
 protected:
-
     /**
-     * Parse error message substituting scape characters like (%s, %d, etc)
-     * with their corresponding values.
+     * Parse error message, substituting formatting characters (such
+     * as %s, %d, etc) with their corresponding values.
      */
-    void parseErrorMessage(const char* fmt, va_list ap, bool logError=true);
-    void parseErrorMessage(const char * trace, const char* fmt, va_list ap, bool logError=true);
+    void parseErrorMessage(const char* fmt, va_list ap,
+                          bool logError=true);
+    void parseErrorMessage(const char * trace, const char* fmt,
+                           va_list ap, bool logError=true);
 
 public:
-
     /**
      * Construtor and destructor.
      */
@@ -75,32 +74,31 @@ public:
 
     /**
      * Get error message.
-     * @return A c-string representing the error message. If no message have
-     * been created just return an empty string.
+     * @return A c-string representing the error message. If no message
+     *     have been created just return an empty string.
      */
     const char* getMessage() const;
 
     /**
      * Set the error message.
      * @param A c-string representing the error message. The caller is
-     * responsable to free the memory allocated in the c-string parameter.
+     *    responsable to free the memory allocated in the c-string
+     *    parameter.
      */
     void setMessage(const char *);
 
 }; // StandardException
 
 /**
- * Generic exception to be called in runtime, whenever an unexpected condition
- * is detected.
+ * Generic exception to be called in runtime, whenever an unexpected
+ * condition is detected.
  */
 class RuntimeException : public StandardException
 {
-
 public:
-
     /**
-     * Generic exception to be called in runtime, whenever an unexpected
-     * condition is detected.
+     * Generic exception to be called in runtime, whenever an
+     * unexpected condition is detected.
      *
      * @param Exception message in printf standard format.
      */
@@ -114,32 +112,29 @@ public:
 }; // RuntimeException
 
 /**
- * Exception to be thrown when a XML operation (processing, creation) fails.
+ * Exception to be thrown when a syntax error is detected.
  */
-class XMLException : public RuntimeException
+class SyntaxException : public RuntimeException
 {
-
 public:
-
     /**
      * Constructor
      *
      * @param Trace information (filename:line-number). Use TRACE_INFO
-     * macro.
+     *        macro.
      * @param Exception message in printf standard format.
      */
-    XMLException(const char*, const char*, ...);
+    SyntaxException(const char*, const char*, ...);
 
-}; // XMLException
+}; // SyntaxException
 
 /**
- * Exception to be thrown when an I/O operation (reading, writing, open) fails.
+ * Exception to be thrown when an I/O operation (reading, writing,
+ * open) fails.
  */
 class IOException : public RuntimeException
 {
-
 public:
-
     /**
      * Constructor
      *
@@ -152,13 +147,12 @@ public:
 }; // IOException
 
 /**
- * Exception to be thrown when a Combo operation (parsing, executing) fails.
+ * Exception to be thrown when a Combo operation (parsing, executing)
+ * fails.
  */
 class ComboException : public RuntimeException
 {
-
 public:
-
     /**
      * Constructor
      *
@@ -175,14 +169,13 @@ public:
  */
 class IndexErrorException : public RuntimeException
 {
-
 public:
 
     /**
      * Constructor
      *
      * @param Trace information (filename:line-number). Use TRACE_INFO
-     * macro.
+     *        macro.
      * @param Exception message in printf standard format.
      */
     IndexErrorException(const char*, const char*, ...);
@@ -190,17 +183,15 @@ public:
 }; // IndexErrorException
 
 /**
- * Exception to be thrown when an invalid parameter is used within a function or
- * an object initalization.
+ * Exception to be thrown when an invalid parameter is used within a
+ * function or an object initalization.
  *
- * This exception will not log an error when throwed, because the error must be
- * handled inside the code
+ * This exception will not log an error when throwed, because the error
+ * must be handled inside the code.
  */
 class InvalidParamException : public RuntimeException
 {
-
 public:
-
     /**
      * Constructor
      *
@@ -218,9 +209,7 @@ public:
  */
 class InconsistenceException : public RuntimeException
 {
-
 public:
-
     /**
      * Constructor
      *
@@ -233,14 +222,13 @@ public:
 }; // InconsistenceException
 
 /**
- * Exception to be called when an unrecoverable error has occured. When catching
- * such exception all state savings should be done.
+ * Exception to be called when an unrecoverable error has occured.
+ * When this exception is caught, a stack trace must be generated
+ * and provided to the user (e.g. saved to a log file).
  */
 class FatalErrorException : public StandardException
 {
-
 public:
-
     /**
      * Constructor
      *
@@ -253,51 +241,13 @@ public:
 }; // FatalErrorException
 
 /**
- * Exception to be called when the searched item was not found
- *
- * This exception will not log an error when thrown, because the
- * error must be handled inside the code
- */
-class NotFoundException : public StandardException {
-public:
-
-    /**
-     * Constructor
-     *
-     * @param Trace information (filename:line-number). Use TRACE_INFO
-     * macro.
-     * @param Exception message in printf standard format.
-     */
-    NotFoundException(const char*, const char*, ...);
-
-}; // NotFoundException
-
-/**
- * Exception thrown when the DeleteLink executes.
- *
- * This exception will not log an error when thrown, because the
- * error must be handled inside the code
- */
-class DeleteException : public StandardException {
-public:
-
-    /**
-     * Constructor
-     * Nothing to be logged; tis simply breaks us out of inner loops.
-     */
-    DeleteException(void);
-
-}; // DeleteException
-
-/**
- * Exception to be called when a network error  has occured. When catching
- * such exception all state savings should be done.
+ * Exception to be called when a network error  has occured.
+ * When this exception is caught, a stack trace must be generated
+ * and provided to the user (e.g. saved to a log file).
  */
 class NetworkException : public StandardException
 {
-
 public:
-
     /**
      * Constructor
      *
@@ -311,18 +261,73 @@ public:
 
 
 /**
- * Exception to be called when an assertion fails to pass a cassert function.
+ * Exception to be called when an assertion fails.
+ * When this exception is caught, a stack trace must be generated
+ * and provided to the user (e.g. saved to a log file).
  */
 class AssertionException : public StandardException
 {
-
 public:
-
     AssertionException(const char*, ...);
     AssertionException(const char* fmt, va_list ap);
 };
 
-inline std::ostream& operator<<(std::ostream& out, const StandardException& ex)
+/**
+ * Exception to be called when the searched item was not found
+ *
+ * This exception will not log an error when thrown, because the
+ * error must be handled inside the code.
+ */
+class NotFoundException : public StandardException
+{
+public:
+    /**
+     * Constructor
+     *
+     * @param Trace information (filename:line-number). Use TRACE_INFO
+     * macro.
+     * @param Exception message in printf standard format.
+     */
+    NotFoundException(const char*, const char*, ...);
+
+}; // NotFoundException
+
+/**
+ * Exception thrown when an expression is not evaluatable.
+ *
+ * This exception will not log an error when thrown, because the
+ * exception is thrown during normal processing, and is not an error.
+ */
+class NotEvaluatableException : public RuntimeException
+{
+public:
+    /**
+     * Constructor
+     * Nothing to be logged; tis simply breaks us out of inner loops.
+     */
+    NotEvaluatableException(void);
+
+}; // NotEvaluatableException
+
+/**
+ * Exception thrown when the DeleteLink executes.
+ *
+ * This exception will not log an error when thrown, because the
+ * exception is thrown during normal processing, and is not an error.
+ */
+class DeleteException : public RuntimeException
+{
+public:
+    /**
+     * Constructor
+     * Nothing to be logged; tis simply breaks us out of inner loops.
+     */
+    DeleteException(void);
+
+}; // DeleteException
+
+inline std::ostream& operator<<(std::ostream& out,
+                                const StandardException& ex)
 {
     out << ex.what();
     return out;
