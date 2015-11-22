@@ -79,7 +79,7 @@ static void prt_backtrace(std::ostringstream& oss)
 	int stack_depth = backtrace(bt_buf, BT_BUFSZ);
 	char **syms = oc_backtrace_symbols(bt_buf, stack_depth);
 
-    // Depending on how the dependencies are met, syms could be NULL 
+    // Depending on how the dependencies are met, syms could be NULL
     if (syms == NULL) return;
 
 	// Start printing at a bit into the stack, so as to avoid recording
@@ -210,7 +210,7 @@ void Logger::flush()
     if (f) fdatasync(fileno(f));
 }
 
-void Logger::writeMsg(std::string &msg)
+void Logger::writeMsg(const std::string &msg)
 {
     std::unique_lock<std::mutex> lock(the_mutex);
     // Delay opening the file until the first logging statement is issued;
