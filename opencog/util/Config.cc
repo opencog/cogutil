@@ -85,8 +85,8 @@ static char const* blank_chars = " \t\f\v\n\r";
 static string strip(string const& str, char const *strip_chars = blank_chars)
 {
     string::size_type const first = str.find_first_not_of(strip_chars);
-    return (first == string::npos) ? 
-        string() : 
+    return (first == string::npos) ?
+        string() :
         str.substr(first, str.find_last_not_of(strip_chars) - first + 1);
 }
 
@@ -161,7 +161,7 @@ void Config::load(const char* filename, bool resetFirst)
         {
             // Read and process the config file
             fin.open(configPath.string().c_str());
-            if (fin && fin.good() && fin.is_open()) 
+            if (fin and fin.good() and fin.is_open())
             {
                 if ('/' != configPath.string()[0])
                 {
@@ -179,7 +179,7 @@ void Config::load(const char* filename, bool resetFirst)
     }
 
     // Whoops, failed.
-    if (!fin || !fin.good() || !fin.is_open())
+    if (!fin or !fin.good() or !fin.is_open())
         throw IOException(TRACE_INFO,
              "unable to open file \"%s\"", filename);
 
@@ -190,7 +190,7 @@ void Config::load(const char* filename, bool resetFirst)
     bool have_name = false;
     bool have_value = false;
 
-    while (++line_number, fin.good() && getline(fin, line))
+    while (++line_number, fin.good() and getline(fin, line))
     {
         string::size_type idx;
 
@@ -206,7 +206,7 @@ void Config::load(const char* filename, bool resetFirst)
             name  = line.substr(0, idx);
             value = line.substr(idx + 1);
 
-            // Strip out whitespace, etc. 
+            // Strip out whitespace, etc.
             name  = strip(name);
             value = strip(value);
             value = strip(value, "\"");
@@ -229,7 +229,7 @@ void Config::load(const char* filename, bool resetFirst)
             if (',' != value[value.size()-1])
                 have_value = true;
         }
-        
+
         else if (line.find_first_not_of(blank_chars) != string::npos)
         {
             throw InvalidParamException(TRACE_INFO,

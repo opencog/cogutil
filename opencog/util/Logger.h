@@ -270,7 +270,7 @@ public:
     bool isWarnEnabled() const { return WARN <= currentLevel; }
     bool isInfoEnabled() const { return INFO <= currentLevel; }
     bool isDebugEnabled() const { return DEBUG <= currentLevel; }
-    bool isFineEnabled() const { return FINE <= currentLevel; } 
+    bool isFineEnabled() const { return FINE <= currentLevel; }
 
     /**
      * Block until all messages have been written out.
@@ -300,7 +300,7 @@ private:
     void startWriteLoop();
     void stopWriteLoop();
     void writingLoop();
-    void writeMsg(std::string &msg);
+    void writeMsg(const std::string &msg);
 
     /**
      * Enable logging messages.
