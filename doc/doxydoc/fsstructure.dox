@@ -36,7 +36,7 @@ package in directories and files.
 <DD>A high level overview of the project, various information</DD>
 
 <DT>Vagrantfile</DT>
-<DD>Control file for 
+<DD>Control file for
 <a href="http://wiki.opencog.org/w/Setup_OpenCog_development_environment_VM_using_Vagrant">Vagrant</a>.
 This is virtualization thechnology that runs on top of existing programs,
 allowing an easy set-up of the development environment.
@@ -74,7 +74,7 @@ Support scripts for various tasks.
 Source code for tests.
 
 \section sect_vagrant_configs vagrant-configs directory
-Contains a single file: vagrant-vm-setup.sh. It is run inside 
+Contains a single file: vagrant-vm-setup.sh. It is run inside
 <a href="http://wiki.opencog.org/w/Setup_OpenCog_development_environment_VM_using_Vagrant">Vagrant</a>
 virtual machine on the first run to install prerequisites and build
 the package.
