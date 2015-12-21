@@ -41,17 +41,6 @@ ignored by doxygen; used as markers for update-links.py;
 \endif
 - \subpage libraries
 	- \ref libcogutil
-	- \ref libatomspace
-	- \ref libserver
-	- \ref libspatial
-	- \ref libspacetime
-	- \ref libattention
-	- \ref libsmob
-	- \ref libpersist
-	- \ref libcomboreduct
-- \subpage programs
-	- \ref progcogserver
-	- \ref progMapTools
 - \subpage fsstructure
 - \subpage bldtargets
 - \subpage otherwikis
