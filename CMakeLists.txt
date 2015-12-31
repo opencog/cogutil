@@ -8,6 +8,11 @@
 # -- configure various config files.
 # -- print pretty summary
 #
+# To specify which compiler to use, the environment variables CC and CXX 
+# can override the path to the C and CPP compilers, respectively.
+# CMake will not update these settings internally until both the ./CMakeFiles
+# folder and ./CMakeCache.txt are deleted.
+
 include(lib/Summary.cmake)
 
 # To supress Cygwin warning "CMake no longer defines WIN32 on Cygwin!"
@@ -68,7 +73,7 @@ SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/lib/")
 # ===============================================================
 # Detect different compilers and OS'es, tweak flags as necessary.
 
-IF (CMAKE_COMPILER_IS_GNUCXX)
+IF (CMAKE_COMPILER_IS_GNUCXX)  # Compiler is GCC
 	# aiiee cmake version 2.8.8 or newer is needed for below to
 	# work...
 	# IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.6.4)
@@ -98,7 +103,7 @@ IF (CMAKE_COMPILER_IS_GNUCXX)
 	# 2) -fopenmp for multithreading support
 	#
 	# 3) -std=gnu++0x for C++0x and GNU extensions support
-	SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wno-variadic-macros -fopenmp -std=gnu++0x")
+	SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wno-variadic-macros -fopenmp -std=gnu++11")
 
 	SET(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
 	SET(CMAKE_CXX_FLAGS_PROFILE ${CMAKE_C_FLAGS_PROFILE})
@@ -111,7 +116,10 @@ IF (CMAKE_COMPILER_IS_GNUCXX)
 	IF (CMAKE_BUILD_TYPE STREQUAL "Coverage")
 		LINK_LIBRARIES(gcov)
 	ENDIF (CMAKE_BUILD_TYPE STREQUAL "Coverage")
-ENDIF (CMAKE_COMPILER_IS_GNUCXX)
+ELSEIF (CMAKE_CXX_COMPILER_ID STREQUAL "Clang") # Compiler is Clang
+    SET(CMAKE_CXX_FLAGS "-std=gnu++11")
+ENDIF ()
+
 
 # Do the cygwin build
 IF (CYGWIN)
