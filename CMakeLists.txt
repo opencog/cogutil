@@ -10,6 +10,10 @@
 #
 include(lib/Summary.cmake)
 
+# To supress Cygwin warning "CMake no longer defines WIN32 on Cygwin!"
+# Remove when CMake >= 2.8.4 is required to build the project
+set(CMAKE_LEGACY_CYGWIN_WIN32 0)
+
 # Seems to work fine with cmake-2.6
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 IF (COMMAND CMAKE_POLICY)
@@ -19,9 +23,19 @@ ENDIF (COMMAND CMAKE_POLICY)
 
 PROJECT(cogutils)
 
-# To supress Cygwin warning "CMake no longer defines WIN32 on Cygwin!"
-# Remove when CMake >= 2.8.4 is required to build the project
-set(CMAKE_LEGACY_CYGWIN_WIN32 0)
+if(WIN32) # Windows host but not cygwin
+    message(FATAL_ERROR "You must use Cygwin if compiling under Windows.")
+    
+    # Previous definitions used for win32 (non cygwin) compilation.
+    # For reference only 
+    
+    # ADD_DEFINITIONS(-DWIN32_NOT_UNIX)
+    # FIND_PACKAGE(PThreads REQUIRED)
+    # FIND_PACKAGE(STLPort REQUIRED)
+    # INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include/win32" ${PTHREADS_INCLUDE_DIR} ${STLPORT_INCLUDE_DIR})
+    # LINK_LIBRARIES(${PTHREADS_LIBRARY} ${STLPORT_LIBRARIES})
+    # ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE)
+endif(WIN32)
 
 # uncomment to be in Release mode [default]
 # SET(CMAKE_BUILD_TYPE Release)
@@ -99,32 +113,12 @@ IF (CMAKE_COMPILER_IS_GNUCXX)
 	ENDIF (CMAKE_BUILD_TYPE STREQUAL "Coverage")
 ENDIF (CMAKE_COMPILER_IS_GNUCXX)
 
-# Do the windows build
-IF (WIN32)
-	ADD_DEFINITIONS(-DWIN32)
-	IF (CYGWIN)
-		ADD_DEFINITIONS(-DCYGWIN)
-	#   SET(WIN32 1)
-	ENDIF (CYGWIN)
-
-	# It is "not unix" when the code is compiled under windows but not
-	# under cygwin
-	IF (NOT UNIX)
-		ADD_DEFINITIONS(-DWIN32_NOT_UNIX)
-		FIND_PACKAGE(PThreads REQUIRED)
-		FIND_PACKAGE(STLPort REQUIRED)
-		INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include/win32" ${PTHREADS_INCLUDE_DIR} ${STLPORT_INCLUDE_DIR})
-		LINK_LIBRARIES(${PTHREADS_LIBRARY} ${STLPORT_LIBRARIES})
-		ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE)
-	ELSE (NOT UNIX)
-		LINK_LIBRARIES(pthread)
-		IF (CYGWIN)
-			SET(CMAKE_SHARED_LINKER_FLAGS "-Wl")
-		ELSE (CYGWIN)
-			SET(CMAKE_SHARED_LINKER_FLAGS "-Wl,--enable-new-dtags")
-		ENDIF (CYGWIN)
-	ENDIF (NOT UNIX)
-ENDIF (WIN32)
+# Do the cygwin build
+IF (CYGWIN)
+    ADD_DEFINITIONS(-DCYGWIN)
+    LINK_LIBRARIES(pthread)
+    SET(CMAKE_SHARED_LINKER_FLAGS "-Wl")
+ENDIF (CYGWIN)
 
 # ===================================================================
 # Check for existance of various required, optional packages.
