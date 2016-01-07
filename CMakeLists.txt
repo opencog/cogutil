@@ -158,7 +158,7 @@ IF(Boost_FOUND)
 	SET(BOOST_PARAMETER_MAX_ARITY 7)
 	ADD_DEFINITIONS(-DBOOST_PARAMETER_MAX_ARITY=${BOOST_PARAMETER_MAX_ARITY})
 ELSE(Boost_FOUND)
-	MESSAGE(FATAL_ERROR "Boost 1.46 or newer (package libboost-all-dev) is needed to build OpenCog!")
+	MESSAGE(FATAL_ERROR "Boost 1.46 or newer (package libboost-all-dev if using Ubuntu) is needed to build OpenCog!")
 ENDIF(Boost_FOUND)
 
 # Opencog won't compile with Boost 1.51, some kind of conflict with
