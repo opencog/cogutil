@@ -31,28 +31,28 @@ using std::string;
 class printContainerUTest : public CxxTest::TestSuite
 {
 
-    std::vector<int> _N;
+    std::vector<int> _NN;
     
 public:
     printContainerUTest() {
-        _N = {1, 2, 3, 4};
+        _NN = {1, 2, 3, 4};
     }
 
     void test_ostreamContainer() {
         stringstream ss;
-        ostreamContainer(ss, _N, ";", "{", "}");
+        ostreamContainer(ss, _NN, ";", "{", "}");
         TS_ASSERT_EQUALS(string("{1;2;3;4}"), ss.str());
     }
     void test_istreamContainer1() {
-        std::vector<int> N;
+        std::vector<int> NN;
         stringstream ss("[1 2 3 4] 5");
-        istreamContainer(ss, std::back_inserter(N), "[", "]");
-        TS_ASSERT_EQUALS(_N, N);
+        istreamContainer(ss, std::back_inserter(NN), "[", "]");
+        TS_ASSERT_EQUALS(_NN, NN);
     }
     void test_istreamContainer2() {
-        std::vector<int> N;
+        std::vector<int> NN;
         stringstream ss("1 2 3 4");
-        istreamContainer(ss, std::back_inserter(N));
-        TS_ASSERT_EQUALS(_N, N);
+        istreamContainer(ss, std::back_inserter(NN));
+        TS_ASSERT_EQUALS(_NN, NN);
     }
 };

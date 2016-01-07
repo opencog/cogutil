@@ -44,13 +44,16 @@
 ///@{
 
 //! compile with multithread support (!)
+#ifndef CYGWIN
 #define OC_OMP
+#endif
 
 #ifdef OC_OMP
 #include <omp.h>
 #include <parallel/algorithm>
 #define OMP_ALGO __gnu_parallel
 #else
+#include <algorithm>
 #define OMP_ALGO std
 #endif
 

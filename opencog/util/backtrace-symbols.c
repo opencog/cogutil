@@ -60,7 +60,9 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifndef CYGWIN
 #include <execinfo.h>
+#endif
 #include <libiberty.h> // must appear before bfd.h !! see bug #696
 //  https://github.com/opencog/opencog/issues/696
 #include <bfd.h>

@@ -15,21 +15,19 @@
 
 include(lib/Summary.cmake)
 
-# To supress Cygwin warning "CMake no longer defines WIN32 on Cygwin!"
-# Remove when CMake >= 2.8.4 is required to build the project
-set(CMAKE_LEGACY_CYGWIN_WIN32 0)
-
-# Seems to work fine with cmake-2.6
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12.2)
 IF (COMMAND CMAKE_POLICY)
 	CMAKE_POLICY(SET CMP0003 NEW)
 	CMAKE_POLICY(SET CMP0005 OLD)
 ENDIF (COMMAND CMAKE_POLICY)
 
+# Only list install files that have actually changed
+set( CMAKE_INSTALL_MESSAGE "LAZY" )
+
 PROJECT(cogutils)
 
 if(WIN32) # Windows host but not cygwin
-    message(FATAL_ERROR "You must use Cygwin if compiling under Windows.")
+    MESSAGE(FATAL_ERROR "You must use Cygwin if compiling under Windows.")
     
     # Previous definitions used for win32 (non cygwin) compilation.
     # For reference only 
@@ -40,7 +38,11 @@ if(WIN32) # Windows host but not cygwin
     # INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include/win32" ${PTHREADS_INCLUDE_DIR} ${STLPORT_INCLUDE_DIR})
     # LINK_LIBRARIES(${PTHREADS_LIBRARY} ${STLPORT_LIBRARIES})
     # ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE)
-endif(WIN32)
+ENDIF(WIN32)
+
+IF (NOT CMAKE_COMPILER_IS_GNUCXX) # Compiler is not gcc
+    MESSAGE(FATAL_ERROR "Only the gcc compiler is supported at this time") 
+ENDIF (NOT CMAKE_COMPILER_IS_GNUCXX)
 
 # uncomment to be in Release mode [default]
 # SET(CMAKE_BUILD_TYPE Release)
@@ -116,16 +118,13 @@ IF (CMAKE_COMPILER_IS_GNUCXX)  # Compiler is GCC
 	IF (CMAKE_BUILD_TYPE STREQUAL "Coverage")
 		LINK_LIBRARIES(gcov)
 	ENDIF (CMAKE_BUILD_TYPE STREQUAL "Coverage")
-ELSEIF (CMAKE_CXX_COMPILER_ID STREQUAL "Clang") # Compiler is Clang
-    SET(CMAKE_CXX_FLAGS "-std=gnu++11")
-ENDIF ()
+ENDIF (CMAKE_COMPILER_IS_GNUCXX)
 
 
 # Do the cygwin build
 IF (CYGWIN)
     ADD_DEFINITIONS(-DCYGWIN)
     LINK_LIBRARIES(pthread)
-    SET(CMAKE_SHARED_LINKER_FLAGS "-Wl")
 ENDIF (CYGWIN)
 
 # ===================================================================
@@ -159,7 +158,7 @@ IF(Boost_FOUND)
 	SET(BOOST_PARAMETER_MAX_ARITY 7)
 	ADD_DEFINITIONS(-DBOOST_PARAMETER_MAX_ARITY=${BOOST_PARAMETER_MAX_ARITY})
 ELSE(Boost_FOUND)
-	MESSAGE(FATAL_ERROR "Boost 1.46 or newer is needed to build OpenCog!")
+	MESSAGE(FATAL_ERROR "Boost 1.46 or newer (package libboost-all-dev) is needed to build OpenCog!")
 ENDIF(Boost_FOUND)
 
 # Opencog won't compile with Boost 1.51, some kind of conflict with
@@ -237,7 +236,8 @@ ENDIF (NOT DEFINED LIB_DIR_SUFFIX)
 # set default include paths
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR} ${Boost_INCLUDE_DIRS})
 
-# rpath handling
+# RPATH handling (see https://cmake.org/Wiki/CMake_RPATH_handling)
+# Note: RPATH only supported under Linux!
 SET(CMAKE_SKIP_BUILD_RPATH	FALSE)
 SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib/opencog")
