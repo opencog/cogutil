@@ -8,20 +8,41 @@
 # -- configure various config files.
 # -- print pretty summary
 #
+# To specify which compiler to use, the environment variables CC and CXX 
+# can override the path to the C and CPP compilers, respectively.
+# CMake will not update these settings internally until both the ./CMakeFiles
+# folder and ./CMakeCache.txt are deleted.
+
 include(lib/Summary.cmake)
 
-# Seems to work fine with cmake-2.6
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12.2)
 IF (COMMAND CMAKE_POLICY)
 	CMAKE_POLICY(SET CMP0003 NEW)
 	CMAKE_POLICY(SET CMP0005 OLD)
 ENDIF (COMMAND CMAKE_POLICY)
 
+# Only list install files that have actually changed
+set( CMAKE_INSTALL_MESSAGE "LAZY" )
+
 PROJECT(cogutils)
 
-# To supress Cygwin warning "CMake no longer defines WIN32 on Cygwin!"
-# Remove when CMake >= 2.8.4 is required to build the project
-set(CMAKE_LEGACY_CYGWIN_WIN32 0)
+if(WIN32) # Windows host but not cygwin
+    MESSAGE(FATAL_ERROR "You must use Cygwin if compiling under Windows.")
+    
+    # Previous definitions used for win32 (non cygwin) compilation.
+    # For reference only 
+    
+    # ADD_DEFINITIONS(-DWIN32_NOT_UNIX)
+    # FIND_PACKAGE(PThreads REQUIRED)
+    # FIND_PACKAGE(STLPort REQUIRED)
+    # INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include/win32" ${PTHREADS_INCLUDE_DIR} ${STLPORT_INCLUDE_DIR})
+    # LINK_LIBRARIES(${PTHREADS_LIBRARY} ${STLPORT_LIBRARIES})
+    # ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE)
+ENDIF(WIN32)
+
+IF (NOT CMAKE_COMPILER_IS_GNUCXX) # Compiler is not gcc
+    MESSAGE(FATAL_ERROR "Only the gcc compiler is supported at this time") 
+ENDIF (NOT CMAKE_COMPILER_IS_GNUCXX)
 
 # uncomment to be in Release mode [default]
 # SET(CMAKE_BUILD_TYPE Release)
@@ -54,7 +75,7 @@ SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/lib/")
 # ===============================================================
 # Detect different compilers and OS'es, tweak flags as necessary.
 
-IF (CMAKE_COMPILER_IS_GNUCXX)
+IF (CMAKE_COMPILER_IS_GNUCXX)  # Compiler is GCC
 	# aiiee cmake version 2.8.8 or newer is needed for below to
 	# work...
 	# IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.6.4)
@@ -84,7 +105,7 @@ IF (CMAKE_COMPILER_IS_GNUCXX)
 	# 2) -fopenmp for multithreading support
 	#
 	# 3) -std=gnu++0x for C++0x and GNU extensions support
-	SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wno-variadic-macros -fopenmp -std=gnu++0x")
+	SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wno-variadic-macros -fopenmp -std=gnu++11")
 
 	SET(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
 	SET(CMAKE_CXX_FLAGS_PROFILE ${CMAKE_C_FLAGS_PROFILE})
@@ -99,32 +120,12 @@ IF (CMAKE_COMPILER_IS_GNUCXX)
 	ENDIF (CMAKE_BUILD_TYPE STREQUAL "Coverage")
 ENDIF (CMAKE_COMPILER_IS_GNUCXX)
 
-# Do the windows build
-IF (WIN32)
-	ADD_DEFINITIONS(-DWIN32)
-	IF (CYGWIN)
-		ADD_DEFINITIONS(-DCYGWIN)
-	#   SET(WIN32 1)
-	ENDIF (CYGWIN)
 
-	# It is "not unix" when the code is compiled under windows but not
-	# under cygwin
-	IF (NOT UNIX)
-		ADD_DEFINITIONS(-DWIN32_NOT_UNIX)
-		FIND_PACKAGE(PThreads REQUIRED)
-		FIND_PACKAGE(STLPort REQUIRED)
-		INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include/win32" ${PTHREADS_INCLUDE_DIR} ${STLPORT_INCLUDE_DIR})
-		LINK_LIBRARIES(${PTHREADS_LIBRARY} ${STLPORT_LIBRARIES})
-		ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE)
-	ELSE (NOT UNIX)
-		LINK_LIBRARIES(pthread)
-		IF (CYGWIN)
-			SET(CMAKE_SHARED_LINKER_FLAGS "-Wl")
-		ELSE (CYGWIN)
-			SET(CMAKE_SHARED_LINKER_FLAGS "-Wl,--enable-new-dtags")
-		ENDIF (CYGWIN)
-	ENDIF (NOT UNIX)
-ENDIF (WIN32)
+# Do the cygwin build
+IF (CYGWIN)
+    ADD_DEFINITIONS(-DCYGWIN)
+    LINK_LIBRARIES(pthread)
+ENDIF (CYGWIN)
 
 # ===================================================================
 # Check for existance of various required, optional packages.
@@ -157,7 +158,7 @@ IF(Boost_FOUND)
 	SET(BOOST_PARAMETER_MAX_ARITY 7)
 	ADD_DEFINITIONS(-DBOOST_PARAMETER_MAX_ARITY=${BOOST_PARAMETER_MAX_ARITY})
 ELSE(Boost_FOUND)
-	MESSAGE(FATAL_ERROR "Boost 1.46 or newer is needed to build OpenCog!")
+	MESSAGE(FATAL_ERROR "Boost 1.46 or newer (package libboost-all-dev if using Ubuntu) is needed to build OpenCog!")
 ENDIF(Boost_FOUND)
 
 # Opencog won't compile with Boost 1.51, some kind of conflict with
@@ -235,7 +236,8 @@ ENDIF (NOT DEFINED LIB_DIR_SUFFIX)
 # set default include paths
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR} ${Boost_INCLUDE_DIRS})
 
-# rpath handling
+# RPATH handling (see https://cmake.org/Wiki/CMake_RPATH_handling)
+# Note: RPATH only supported under Linux!
 SET(CMAKE_SKIP_BUILD_RPATH	FALSE)
 SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib/opencog")

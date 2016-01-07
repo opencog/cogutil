@@ -109,3 +109,9 @@ Makefile
 ### Linux ###
 *~
 *.autosave
+
+# Adding in-project build folders to git-ignore.
+# Any folder starting with the name build* is ignored
+# This is useful for cross-platform developers who might
+# want folders such as build-w or build-l for respective platforms
+build*/

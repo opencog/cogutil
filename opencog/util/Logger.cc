@@ -458,8 +458,11 @@ void Logger::backtrace()
 {
     static const unsigned int max_queue_size_allowed = 1024;
     std::ostringstream oss;
+    
+    #ifndef CYGWIN
     prt_backtrace(oss);
-
+    #endif
+    
     msg_queue.push(new std::string(oss.str()));
 
     // If the queue gets too full, block until it's flushed to file or
