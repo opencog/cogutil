@@ -320,13 +320,16 @@ void Logger::set(const Logger& log)
     this->backTraceLevel = log.backTraceLevel;
     this->timestampEnabled = log.timestampEnabled;
     this->printToStdout = log.printToStdout;
-
+    this->syncEnabled = log.syncEnabled;
     this->logEnabled = log.logEnabled;
 
     // Set NULL to force the logger to use a new FILE handle. It is
     // safer that way because closing that file may not close file of
     // the parent logger.
     this->logfile = NULL;
+
+    this->pending_write = false;
+    this->writingLoopActive = false;
 
     lock.unlock();
 
