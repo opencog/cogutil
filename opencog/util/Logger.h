@@ -56,7 +56,7 @@ public:
     /**
      * Convert from string to enum (ignoring case), and vice-versa.
      */
-    static const Level getLevelFromString(const std::string&); // Ignoring case
+    static Level getLevelFromString(const std::string&); // Ignoring case
     static const char* getLevelString(const Level);
 
     // ***********************************************/
@@ -302,7 +302,7 @@ private:
     bool printToStdout;
     bool printLevel;
     bool syncEnabled;
-    FILE *f;
+    FILE *logfile;
 
     /** One single thread does all writing of log messages */
     std::thread writer_thread;
