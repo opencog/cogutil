@@ -29,8 +29,11 @@
 #include <cstdio>
 #include <cstring>
 #include <fstream>
+#include <iostream>
 
 #include <opencog/util/Logger.h>
+
+#include <cxxtest/TestSuite.h>
 
 using namespace opencog;
 
@@ -148,6 +151,36 @@ public:
         LAZY_LOG_INFO << "i = " << ++i;
 
         TS_ASSERT_EQUALS(i, 2);
+    }
+
+    void testComponentLogger()
+    {
+        logger().setLevel(Logger::DEBUG);
+        logger().setComponent("LoggerUTest");
+        std::string logfilename = "__testComponentLogger__.log";
+        logger().setFilename(logfilename);
+
+        logger().debug("message");
+
+        std::ifstream logfile(logfilename);
+        std::string line, resline;
+        if (logfile.is_open())
+        {
+            while (logfile.good())
+            {
+                getline(logfile, line);
+                if (!line.empty())
+                    resline = line;
+            }
+            logfile.close();
+        }
+
+        std::cout << "resline = " << resline << std::endl;
+
+        // Ignore the timestamp (26 first chars)
+        TS_ASSERT_EQUALS(resline.substr(26), "[DEBUG] [LoggerUTest] message");
+
+        remove(logfilename.c_str());
     }
 
 }; // class

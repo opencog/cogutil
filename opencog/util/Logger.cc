@@ -314,6 +314,7 @@ void Logger::set(const Logger& log)
 {
     std::unique_lock<std::mutex> lock(the_mutex);
     this->fileName.assign(log.fileName);
+    this->component.assign(log.component);
     this->currentLevel = log.currentLevel;
     this->backTraceLevel = log.backTraceLevel;
     this->timestampEnabled = log.timestampEnabled;
@@ -364,6 +365,16 @@ void Logger::setFilename(const std::string& s)
 const std::string& Logger::getFilename()
 {
     return fileName;
+}
+
+void Logger::setComponent(const std::string& c)
+{
+    component = c;
+}
+
+const std::string& Logger::getComponent() const
+{
+    return component;
 }
 
 void Logger::setTimestampFlag(bool flag)
@@ -429,6 +440,9 @@ void Logger::log(Logger::Level level, const std::string &txt)
 
     if (printLevel)
         oss << "[" << getLevelString(level) << "] ";
+
+    if (!component.empty())
+        oss << "[" << component << "] ";
 
     oss << txt << std::endl;
 
