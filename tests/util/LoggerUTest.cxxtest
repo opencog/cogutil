@@ -161,6 +161,7 @@ public:
         logger().setFilename(logfilename);
 
         logger().debug("message");
+        logger().flush();
 
         std::ifstream logfile(logfilename);
         std::string line, resline;
