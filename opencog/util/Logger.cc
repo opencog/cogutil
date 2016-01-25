@@ -322,7 +322,12 @@ void Logger::set(const Logger& log)
     this->printToStdout = log.printToStdout;
 
     this->logEnabled = log.logEnabled;
-    this->logfile = log.logfile;
+
+    // Set NULL to force the logger to use a new FILE handle. It is
+    // safer that way because closing that file may not close file of
+    // the parent logger.
+    this->logfile = NULL;
+
     lock.unlock();
 
     startWriteLoop();
