@@ -555,7 +555,7 @@ Logger::Level Logger::getLevelFromString(const std::string& levelStr)
     return BAD_LEVEL;
 }
 
-// create and return the single instance
+// Create and return the single instance
 Logger& opencog::logger()
 {
     static Logger instance;
