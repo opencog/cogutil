@@ -56,7 +56,7 @@ public:
     /**
      * Convert from string to enum (ignoring case), and vice-versa.
      */
-    static const Level getLevelFromString(const std::string&); // Ignoring case
+    static Level getLevelFromString(const std::string&); // Ignoring case
     static const char* getLevelString(const Level);
 
     // ***********************************************/
@@ -111,6 +111,20 @@ public:
     /* filename property */
     void setFilename(const std::string&);
     const std::string& getFilename();
+
+    /**
+     * Set an optional component string. That string will be inserted
+     * between the level and the message, wrapped with brackets, like
+     *
+     * [2016-01-22 13:59:32:832] [DEBUG] [MyComponent] my log message
+     *
+     * If the string is empty, as initially, then no string and no
+     * brackets are inserted. The above message would look like
+     *
+     * [2016-01-22 13:59:32:832] [DEBUG] my log message
+     */
+    void setComponent(const std::string&);
+    const std::string& getComponent() const;
 
     /**
      * If set, log messages are prefixed with a timestamp.
@@ -280,6 +294,7 @@ public:
 private:
 
     std::string fileName;
+    std::string component;
     Level currentLevel;
     Level backTraceLevel;
     bool timestampEnabled;
@@ -287,7 +302,7 @@ private:
     bool printToStdout;
     bool printLevel;
     bool syncEnabled;
-    FILE *f;
+    FILE *logfile;
 
     /** One single thread does all writing of log messages */
     std::thread writer_thread;
@@ -317,7 +332,7 @@ private:
 // singleton instance (following Meyer's design pattern)
 Logger& logger();
 
-// Macro to not evaluate the stream if log level is disabled
+// Macros to not evaluate the stream if log level is disabled
 #define LAZY_LOG_ERROR if(logger().isErrorEnabled()) logger().error()
 #define LAZY_LOG_WARN if(logger().isWarnEnabled()) logger().warn()
 #define LAZY_LOG_INFO if(logger().isInfoEnabled()) logger().info()

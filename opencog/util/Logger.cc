@@ -148,7 +148,7 @@ Logger::~Logger()
     flush();
     stopWriteLoop();
 
-    if (f != NULL) fclose(f);
+    if (logfile != NULL) fclose(logfile);
 }
 
 void Logger::startWriteLoop()
@@ -207,7 +207,7 @@ void Logger::flush()
     }
 
     // Force a write to the disk. Don't need to update metadata, though.
-    if (f) fdatasync(fileno(f));
+    if (logfile) fdatasync(fileno(logfile));
 }
 
 void Logger::writeMsg(const std::string &msg)
@@ -216,9 +216,9 @@ void Logger::writeMsg(const std::string &msg)
     // Delay opening the file until the first logging statement is issued;
     // this allows us to set the main logger's filename without creating
     // a useless log file with the default filename.
-    if (f == NULL)
+    if (logfile == NULL)
     {
-        if ((f = fopen(fileName.c_str(), "a")) == NULL)
+        if ((logfile = fopen(fileName.c_str(), "a")) == NULL)
         {
             fprintf(stderr, "[ERROR] Unable to open log file \"%s\"\n",
                     fileName.c_str());
@@ -237,7 +237,7 @@ void Logger::writeMsg(const std::string &msg)
             const char * cpath = config().path_where_found().c_str();
             if (strcmp("", cpath))
             {
-                fprintf(f, "[INFO] Using config file found at: %s\n",
+                fprintf(logfile, "[INFO] Using config file found at: %s\n",
                    cpath);
 
                 if (printToStdout)
@@ -246,7 +246,7 @@ void Logger::writeMsg(const std::string &msg)
             }
             else
             {
-                fprintf(f, "[INFO] No config file found\n");
+                fprintf(logfile, "[INFO] No config file found\n");
 
                 if (printToStdout)
                     printf("[INFO] No config file found\n");
@@ -255,11 +255,11 @@ void Logger::writeMsg(const std::string &msg)
     }
 
     // Write to file.
-    fprintf(f, "%s", msg.c_str());
+    fprintf(logfile, "%s", msg.c_str());
 
     // Flush, because log messages are important, especially if we
     // are about to crash. So we don't want to have these buffered up.
-    fflush(f);
+    fflush(logfile);
 
     // Stdout writing must be unlocked.
     lock.unlock();
@@ -289,7 +289,7 @@ Logger::Logger(const std::string &fname, Logger::Level level, bool tsEnabled)
     DRD_IGNORE_VAR(this->logEnabled);
     DRD_IGNORE_VAR(this->msg_queue);
 #endif
-    this->f = NULL;
+    this->logfile = NULL;
     this->pending_write = false;
     this->writingLoopActive = false;
 
@@ -314,13 +314,23 @@ void Logger::set(const Logger& log)
 {
     std::unique_lock<std::mutex> lock(the_mutex);
     this->fileName.assign(log.fileName);
+    this->component.assign(log.component);
     this->currentLevel = log.currentLevel;
+    this->printLevel = log.printLevel;
     this->backTraceLevel = log.backTraceLevel;
     this->timestampEnabled = log.timestampEnabled;
     this->printToStdout = log.printToStdout;
-
+    this->syncEnabled = log.syncEnabled;
     this->logEnabled = log.logEnabled;
-    this->f = log.f;
+
+    // Set NULL to force the logger to use a new FILE handle. It is
+    // safer that way because closing that file may not close file of
+    // the parent logger.
+    this->logfile = NULL;
+
+    this->pending_write = false;
+    this->writingLoopActive = false;
+
     lock.unlock();
 
     startWriteLoop();
@@ -354,8 +364,8 @@ void Logger::setFilename(const std::string& s)
     fileName.assign(s);
 
     std::unique_lock<std::mutex> lock(the_mutex);
-    if (f != NULL) fclose(f);
-    f = NULL;
+    if (logfile != NULL) fclose(logfile);
+    logfile = NULL;
     lock.unlock();
 
     enable();
@@ -364,6 +374,16 @@ void Logger::setFilename(const std::string& s)
 const std::string& Logger::getFilename()
 {
     return fileName;
+}
+
+void Logger::setComponent(const std::string& c)
+{
+    component = c;
+}
+
+const std::string& Logger::getComponent() const
+{
+    return component;
 }
 
 void Logger::setTimestampFlag(bool flag)
@@ -429,6 +449,9 @@ void Logger::log(Logger::Level level, const std::string &txt)
 
     if (printLevel)
         oss << "[" << getLevelString(level) << "] ";
+
+    if (!component.empty())
+        oss << "[" << component << "] ";
 
     oss << txt << std::endl;
 
@@ -521,7 +544,7 @@ const char* Logger::getLevelString(const Logger::Level level)
         return levelStrings[level];
 }
 
-const Logger::Level Logger::getLevelFromString(const std::string& levelStr)
+Logger::Level Logger::getLevelFromString(const std::string& levelStr)
 {
     unsigned int nLevels = sizeof(levelStrings) / sizeof(levelStrings[0]);
     const char* lstr = levelStr.c_str();
@@ -532,7 +555,7 @@ const Logger::Level Logger::getLevelFromString(const std::string& levelStr)
     return BAD_LEVEL;
 }
 
-// create and return the single instance
+// Create and return the single instance
 Logger& opencog::logger()
 {
     static Logger instance;

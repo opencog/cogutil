@@ -29,8 +29,11 @@
 #include <cstdio>
 #include <cstring>
 #include <fstream>
+#include <iostream>
 
 #include <opencog/util/Logger.h>
+
+#include <cxxtest/TestSuite.h>
 
 using namespace opencog;
 
@@ -148,6 +151,74 @@ public:
         LAZY_LOG_INFO << "i = " << ++i;
 
         TS_ASSERT_EQUALS(i, 2);
+    }
+
+    void testComponentLogger()
+    {
+        logger().setLevel(Logger::DEBUG);
+        logger().setComponent("LoggerUTest");
+        logger().debug("message");
+        logger().flush();
+
+        // Grep the last line
+        std::ifstream logfile(logger().getFilename());
+        std::string line, resline;
+        if (logfile.is_open())
+        {
+            while (logfile.good())
+            {
+                getline(logfile, line);
+                if (!line.empty())
+                    resline = line;
+            }
+            logfile.close();
+        }
+
+        std::cout << "resline = " << resline << std::endl;
+
+        // Ignore the timestamp (26 first chars)
+        TS_ASSERT_EQUALS(resline.substr(26), "[DEBUG] [LoggerUTest] message");
+
+        // Unset the component
+        logger().setComponent("");
+    }
+
+    // Derive the factory logger, modify some parameters and use
+    // it. The new parameters do not affect the factory logger.
+    void testDerivedLogger()
+    {
+        Logger my_logger(logger());
+        my_logger.setLevel(Logger::DEBUG);
+        my_logger.setComponent("LoggerUTest");
+        my_logger.setFilename("__testDerivedLogger__.log");
+
+        // Log with the component logger
+        my_logger.debug("message");
+        my_logger.flush();
+
+        // Check that the factory logger still works
+        logger().info("factory message");
+        logger().flush();
+
+        std::ifstream logfile(my_logger.getFilename());
+        std::string line, resline;
+        if (logfile.is_open())
+        {
+            while (logfile.good())
+            {
+                getline(logfile, line);
+                if (!line.empty())
+                    resline = line;
+            }
+            logfile.close();
+        }
+
+        std::cout << "resline = " << resline << std::endl;
+
+        // Ignore the timestamp (26 first chars)
+        TS_ASSERT_EQUALS(resline.substr(26), "[DEBUG] [LoggerUTest] message");
+
+        remove(my_logger.getFilename().c_str());
     }
 
 }; // class
