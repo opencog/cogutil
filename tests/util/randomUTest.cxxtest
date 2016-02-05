@@ -64,7 +64,7 @@ public:
 
         MT19937RandGen rng(1);
         for (size_t i = 0; i < size; ++i)
-            ++p[rng.randDiscrete(weights)];
+            ++p[rng.rand_discrete(weights)];
 
         TS_ASSERT_LESS_THAN(p[1], p[2]);
         TS_ASSERT_LESS_THAN(p[3], p[1]);

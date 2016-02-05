@@ -63,19 +63,19 @@ public:
     virtual double randdouble() = 0;
 
     //! random double in [0,1)
-    virtual double randDoubleOneExcluded() = 0;
+    virtual double randdouble_one_excluded() = 0;
 
     //! random int in [0,n)
     virtual int randint(int n) = 0;
 
     //! return -1 or 1 randonly
-    virtual int randPositiveNegative() = 0;
+    virtual int rand_positive_negative() = 0;
 
     //! random boolean
     virtual bool randbool() = 0;
 
     //! random discrete base on weights
-    virtual int randDiscrete(const std::vector<double>&) = 0;
+    virtual int rand_discrete(const std::vector<double>&) = 0;
 };
 
 /** @}*/
