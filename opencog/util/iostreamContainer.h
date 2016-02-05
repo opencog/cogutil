@@ -58,13 +58,13 @@ namespace opencog {
      *                 printed only when the container is not empty
      */
     template<class Out, class It>
-    Out& ostreamContainer(Out& out,
-                          It from,
-                          It to,
-                          const std::string& delimiter = " ",
-                          const std::string& left = "",
-                          const std::string& right = "",
-                          bool empty_lr = true)
+    Out& ostream_container(Out& out,
+                           It from,
+                           It to,
+                           const std::string& delimiter = " ",
+                           const std::string& left = "",
+                           const std::string& right = "",
+                           bool empty_lr = true)
     {
         if(empty_lr || from!=to)
             out << left;
@@ -84,31 +84,31 @@ namespace opencog {
      * like above but consider the entire container
      */
     template<class Out, class Con>
-    Out& ostreamContainer(Out& out,
-                          const Con& container,
-                          const std::string& delimiter = " ",
-                          const std::string& left = "", 
-                          const std::string& right = "",
-                          bool empty_lr = true)
+    Out& ostream_container(Out& out,
+                           const Con& container,
+                           const std::string& delimiter = " ",
+                           const std::string& left = "", 
+                           const std::string& right = "",
+                           bool empty_lr = true)
     {
-        return ostreamContainer(out, container.begin(), container.end(),
-                                delimiter, left, right, empty_lr);
+        return ostream_container(out, container.begin(), container.end(),
+                                 delimiter, left, right, empty_lr);
     }
 
     
     /**
-     * like ostreamContainer but adding a new line at the end
+     * like ostream_container but adding a new line at the end
      */
     template<class Out, class It>
-    Out& ostreamlnContainer(Out& out,
-                            It from,
-                            It to,
-                            const std::string& delimiter = " ",
-                            const std::string& left = "",
-                            const std::string& right = "",
-                            bool empty_lr = true)
+    Out& ostreamln_container(Out& out,
+                             It from,
+                             It to,
+                             const std::string& delimiter = " ",
+                             const std::string& left = "",
+                             const std::string& right = "",
+                             bool empty_lr = true)
     {
-        ostreamContainer(out, from, to, delimiter, left, right, empty_lr);
+        ostream_container(out, from, to, delimiter, left, right, empty_lr);
         out << std::endl;
         return out;
     }
@@ -117,94 +117,94 @@ namespace opencog {
      * like ostreamContainer but adding a new line at the end
      */
     template<class Out, class Con>
-    Out& ostreamlnContainer(Out& out,
-                            const Con& container,
-                            const std::string& delimiter = " ",
-                            const std::string& left = "", 
-                            const std::string& right = "",
-                            bool empty_lr = true)
+    Out& ostreamln_container(Out& out,
+                             const Con& container,
+                             const std::string& delimiter = " ",
+                             const std::string& left = "", 
+                             const std::string& right = "",
+                             bool empty_lr = true)
     {
-        ostreamContainer(out, container.begin(), container.end(),
-                         delimiter, left, right, empty_lr);
+        ostream_container(out, container.begin(), container.end(),
+                          delimiter, left, right, empty_lr);
         out << std::endl;
         return out;
     }
 
     /**
-     * like ostreamContainer but uses std::cout
+     * like ostream_container but uses std::cout
      */
     template<class It>
-    void printContainer(It from,
-                        It to,
-                        const std::string& delimiter = " ",
-                        const std::string& left = "",
-                        const std::string& right = "",
-                        bool empty_lr = true)
+    void print_container(It from,
+                         It to,
+                         const std::string& delimiter = " ",
+                         const std::string& left = "",
+                         const std::string& right = "",
+                         bool empty_lr = true)
     {
-        ostreamContainer(std::cout, from, to,
-                         delimiter, left, right, empty_lr);
+        ostream_container(std::cout, from, to,
+                          delimiter, left, right, empty_lr);
     }
     template<class Con>
-    void printContainer(const Con& container,
-                        const std::string& delimiter = " ",
-                        const std::string& left = "", 
-                        const std::string& right = "",
-                        bool empty_lr = true)
+    void print_container(const Con& container,
+                         const std::string& delimiter = " ",
+                         const std::string& left = "", 
+                         const std::string& right = "",
+                         bool empty_lr = true)
     {
-        ostreamContainer(std::cout, container,
-                         delimiter, left, right, empty_lr);
+        ostream_container(std::cout, container,
+                          delimiter, left, right, empty_lr);
     }
 
     /**
      * like printContainer but with an endline at the end
      */
     template<class It>
-    void printlnContainer(It from,
-                          It to,
-                          const std::string& delimiter = " ",
-                          const std::string& left = "",
-                          const std::string& right = "",
-                          bool empty_lr = true)
+    void println_container(It from,
+                           It to,
+                           const std::string& delimiter = " ",
+                           const std::string& left = "",
+                           const std::string& right = "",
+                           bool empty_lr = true)
     {
-        ostreamlnContainer(std::cout, from, to,
-                           delimiter, left, right, empty_lr);
+        ostreamln_container(std::cout, from, to,
+                            delimiter, left, right, empty_lr);
     }
     template<class Con>
-    void printlnContainer(const Con& container,
-                          const std::string& delimiter = " ",
-                          const std::string& left = "", 
-                          const std::string& right = "",
-                          bool empty_lr = true)
+    void println_container(const Con& container,
+                           const std::string& delimiter = " ",
+                           const std::string& left = "", 
+                           const std::string& right = "",
+                           bool empty_lr = true)
     {
-        ostreamlnContainer(std::cout, container,
-                           delimiter, left, right, empty_lr);
+        ostreamln_container(std::cout, container,
+                            delimiter, left, right, empty_lr);
     }
 
     /**
      * like above but returns a string
      */
     template<class It>
-    std::string containerToStr(It from,
-                               It to,
-                               const std::string& delimiter = " ",
-                               const std::string& left = "",
-                               const std::string& right = "",
-                               bool empty_lr = true)
+    std::string container_to_str(It from,
+                                 It to,
+                                 const std::string& delimiter = " ",
+                                 const std::string& left = "",
+                                 const std::string& right = "",
+                                 bool empty_lr = true)
     {
         std::stringstream ss;
-        return ostreamContainer(ss, from, to,
-                                delimiter, left, right, empty_lr).str();
+        return ostream_container(ss, from, to,
+                                 delimiter, left, right, empty_lr).str();
     }
     template<class Con>
-    std::string containerToStr(const Con& container,
-                               const std::string& delimiter = " ",
-                               const std::string& left = "", 
-                               const std::string& right = "",
-                               bool empty_lr = true)
+    std::string container_to_str(const Con& container,
+                                 const std::string& delimiter = " ",
+                                 const std::string& left = "", 
+                                 const std::string& right = "",
+                                 bool empty_lr = true)
     {
         std::stringstream ss;
-        return ostreamContainer(ss, container,
-                                delimiter, left, right, empty_lr).str();
+        return ostream_container(ss, container,
+                                 delimiter, left, right, empty_lr).str();
     }
 
     //! used by istreamContainer
@@ -254,10 +254,10 @@ namespace opencog {
      * than raising an OC_ASSERT
      */
     template<class In, class OutIt>
-    In& istreamContainer(In& in,
-                         OutIt out,
-                         const std::string& left = "",
-                         const std::string& right = "")
+    In& istream_container(In& in,
+                          OutIt out,
+                          const std::string& left = "",
+                          const std::string& right = "")
     {
         typedef typename OutIt::container_type::value_type T;
 
