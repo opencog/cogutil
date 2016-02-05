@@ -42,7 +42,7 @@ class AltStringTokenizer : public std::vector<std::string>
 {
 public:
     AltStringTokenizer(const std::string &rStr, const std::string &rDelimiters = " ,\n");
-    std::vector<std::string> WithoutEmpty() const;
+    std::vector<std::string> without_empty() const;
 };
 
 //! Tokenize a string one call at a time
@@ -67,19 +67,19 @@ public:
      * Getter and setter for the string to be parsed, that is, to extract
      * its tokens.
      */
-    std::string getString();
-    void setString(const std::string &str);
+    std::string get_string();
+    void set_string(const std::string &str);
 
     //! Getter for the delimiter to the tokens.
-    const std::string & getDelimiter();
+    const std::string & get_delimiter();
     //! Setter for the delimiter to the tokens.
-    void setDelimiter(const std::string &str);
+    void set_delimiter(const std::string &str);
 
     /**
      * Return the next token from the string. If the end of the string is
      * reached the method retuns a empty string ""
      */
-    const std::string nextToken();
+    const std::string next_token();
 
     //! Reset the position pointers to init position.
     void reset();
@@ -96,7 +96,7 @@ private:
     std::string::size_type end;
 
     //! Inform the delimiter size
-    std::string::size_type delimiterSize();
+    std::string::size_type delimiter_size();
 
 }; // class
 

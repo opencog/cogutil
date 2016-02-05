@@ -112,24 +112,24 @@ class CoverTree
          * Does not include the node itself, though technically every node
          * has itself as a child in a cover tree.
          */
-        std::vector<CoverTreeNode*> getChildren(int level) const;
-        void addChild(int level, CoverTreeNode* p);
-        void removeChild(int level, CoverTreeNode* p);
-        void addPoint(const Point& p);
-        void removePoint(const Point& p);
-        const std::vector<Point>& getPoints() { return _points; }
+        std::vector<CoverTreeNode*> get_children(int level) const;
+        void add_child(int level, CoverTreeNode* p);
+        void remove_child(int level, CoverTreeNode* p);
+        void add_point(const Point& p);
+        void remove_point(const Point& p);
+        const std::vector<Point>& get_points() { return _points; }
         double distance(const CoverTreeNode& p) const;
         
-        bool isSingle() const;
-        bool hasPoint(const Point& p) const;
+        bool is_single() const;
+        bool has_point(const Point& p) const;
             
-        const Point& getPoint() const;
+        const Point& get_point() const;
         
         /**
          * Return every child of the node from any level. This is handy for
          * the destructor.
          */
-        std::vector<CoverTreeNode*> getAllChildren() const;
+        std::vector<CoverTreeNode*> get_all_children() const;
     }; // CoverTreeNode class
 
  private:
@@ -142,7 +142,7 @@ class CoverTree
     int _minLevel;//A level beneath which there are no more new nodes.
 
     std::vector<CoverTreeNode*>
-        kNearestNodes(const Point& p, const unsigned int& k) const;
+        k_nearest_nodes(const Point& p, const unsigned int& k) const;
     /**
      * Recursive implementation of the insert algorithm (see paper).
      */
@@ -186,7 +186,7 @@ class CoverTree
      * or equal to base^i distance from its children). See the cover tree
      * papers for details.
      */
-    bool isValidTree() const;
+    bool is_valid_tree() const;
 
     /**
      * Insert newPoint into the cover tree. If newPoint is already present,
@@ -209,9 +209,9 @@ class CoverTree
      * is closest to p, 1th is next, etc). It may return greater than k points
      * if there is a tie for the kth place.
      */
-    std::vector<Point> kNearestNeighbors(const Point& p, const unsigned int& k) const;
+    std::vector<Point> k_nearest_neighbors(const Point& p, const unsigned int& k) const;
 
-    CoverTreeNode* getRoot() const;
+    CoverTreeNode* get_root() const;
 
     /**
      * Print the cover tree.
@@ -254,7 +254,7 @@ CoverTree<Point>::~CoverTree()
 
 template<class Point>
 std::vector<typename CoverTree<Point>::CoverTreeNode*>
-CoverTree<Point>::kNearestNodes(const Point& p, const unsigned int& k) const
+CoverTree<Point>::k_nearest_nodes(const Point& p, const unsigned int& k) const
 {
     if(_root==NULL) return std::vector<CoverTreeNode*>();
     //maxDist is the kth nearest known point to p, and also the farthest
@@ -536,8 +536,8 @@ void CoverTree<Point>::remove(const Point& p)
 }
 
 template<class Point>
-std::vector<Point> CoverTree<Point>::kNearestNeighbors(const Point& p,
-                                                       const unsigned int& k) const
+std::vector<Point> CoverTree<Point>::k_nearest_neighbors(const Point& p,
+                                                         const unsigned int& k) const
 {
     if(_root==NULL) return std::vector<Point>();
     std::vector<CoverTreeNode*> v = kNearestNodes(p, k);
@@ -582,7 +582,7 @@ void CoverTree<Point>::print() const
 }
 
 template<class Point>
-typename CoverTree<Point>::CoverTreeNode* CoverTree<Point>::getRoot() const
+typename CoverTree<Point>::CoverTreeNode* CoverTree<Point>::get_root() const
 {
     return _root;
 }
@@ -594,7 +594,7 @@ CoverTree<Point>::CoverTreeNode::CoverTreeNode(const Point& p) {
 
 template<class Point>
 std::vector<typename CoverTree<Point>::CoverTreeNode*>
-CoverTree<Point>::CoverTreeNode::getChildren(int level) const
+CoverTree<Point>::CoverTreeNode::get_children(int level) const
 {
     typename std::map<int,std::vector<CoverTreeNode*> >::const_iterator
         it = _childMap.find(level);
@@ -605,13 +605,13 @@ CoverTree<Point>::CoverTreeNode::getChildren(int level) const
 }
 
 template<class Point>
-void CoverTree<Point>::CoverTreeNode::addChild(int level, CoverTreeNode* p)
+void CoverTree<Point>::CoverTreeNode::add_child(int level, CoverTreeNode* p)
 {
     _childMap[level].push_back(p);
 }
 
 template<class Point>
-void CoverTree<Point>::CoverTreeNode::removeChild(int level, CoverTreeNode* p)
+void CoverTree<Point>::CoverTreeNode::remove_child(int level, CoverTreeNode* p)
 {
     std::vector<CoverTreeNode*>& v = _childMap[level];
     for(unsigned int i=0;i<v.size();i++) {
@@ -624,14 +624,14 @@ void CoverTree<Point>::CoverTreeNode::removeChild(int level, CoverTreeNode* p)
 }
 
 template<class Point>
-void CoverTree<Point>::CoverTreeNode::addPoint(const Point& p)
+void CoverTree<Point>::CoverTreeNode::add_point(const Point& p)
 {
     if(find(_points.begin(), _points.end(), p) == _points.end())
         _points.push_back(p);
 }
 
 template<class Point>
-void CoverTree<Point>::CoverTreeNode::removePoint(const Point& p)
+void CoverTree<Point>::CoverTreeNode::remove_point(const Point& p)
 {
     typename std::vector<Point>::iterator it =
         find(_points.begin(), _points.end(), p);
@@ -646,23 +646,23 @@ double CoverTree<Point>::CoverTreeNode::distance(const CoverTreeNode& p) const
 }
  
 template<class Point>
-bool CoverTree<Point>::CoverTreeNode::isSingle() const
+bool CoverTree<Point>::CoverTreeNode::is_single() const
 {
     return _points.size() == 1;
 }
 
 template<class Point>
-bool CoverTree<Point>::CoverTreeNode::hasPoint(const Point& p) const
+bool CoverTree<Point>::CoverTreeNode::has_point(const Point& p) const
 {
     return find(_points.begin(), _points.end(), p) != _points.end();
 }
 
 template<class Point>
-const Point& CoverTree<Point>::CoverTreeNode::getPoint() const { return _points[0]; }
+const Point& CoverTree<Point>::CoverTreeNode::get_point() const { return _points[0]; }
 
 template<class Point>
 std::vector<typename CoverTree<Point>::CoverTreeNode*>
-CoverTree<Point>::CoverTreeNode::getAllChildren() const
+CoverTree<Point>::CoverTreeNode::get_all_children() const
 {
     std::vector<CoverTreeNode*> children;
     typename std::map<int,std::vector<CoverTreeNode*> >::const_iterator it;
@@ -673,7 +673,7 @@ CoverTree<Point>::CoverTreeNode::getAllChildren() const
 }
 
 template<class Point>
-bool CoverTree<Point>::isValidTree() const {
+bool CoverTree<Point>::is_valid_tree() const {
     if(_numNodes==0)
         return _root==NULL;
 
