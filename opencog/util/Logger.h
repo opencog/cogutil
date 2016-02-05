@@ -56,8 +56,8 @@ public:
     /**
      * Convert from string to enum (ignoring case), and vice-versa.
      */
-    static Level getLevelFromString(const std::string&); // Ignoring case
-    static const char* getLevelString(const Level);
+    static Level get_level_from_string(const std::string&); // Ignoring case
+    static const char* get_level_string(const Level);
 
     // ***********************************************/
     // Constructors/destructors
@@ -86,31 +86,31 @@ public:
      * Reset the level of messages which will be logged. Every message with
      * log-level lower than or equals to newLevel will be logged.
      */
-    void setLevel(Level);
+    void set_level(Level);
 
     /**
      * Get the current log level that determines which messages will be
      * logged: Every message with log-level lower than or equals to returned
      * level will be logged.
      */
-    Level getLevel() const;
+    Level get_level() const;
 
     /**
      * Set the level of messages which should be logged with back trace.
      * Every message with log-level lower than or equals to the given argument
      * will have back trace.
      */
-    void setBackTraceLevel(Level);
+    void set_backtrace_level(Level);
 
     /**
      * Get the current back trace log level that determines which messages
      * should be logged with back trace.
      */
-    Level getBackTraceLevel() const;
+    Level get_backtrace_level() const;
 
     /* filename property */
-    void setFilename(const std::string&);
-    const std::string& getFilename();
+    void set_filename(const std::string&);
+    const std::string& get_filename();
 
     /**
      * Set an optional component string. That string will be inserted
@@ -123,24 +123,24 @@ public:
      *
      * [2016-01-22 13:59:32:832] [DEBUG] my log message
      */
-    void setComponent(const std::string&);
-    const std::string& getComponent() const;
+    void set_component(const std::string&);
+    const std::string& get_component() const;
 
     /**
      * If set, log messages are prefixed with a timestamp.
      */
-    void setTimestampFlag(bool);
+    void set_timestamp_flag(bool);
 
     /**
      * If set, log messages are printed to the stdout.
      */
-    void setPrintToStdoutFlag(bool);
+    void set_print_to_stdout_flag(bool);
 
     /**
      * If set, the logging level is preinted as a part
      * of the message,
      */
-    void setPrintLevelFlag(bool);
+    void set_print_level_flag(bool);
 
     /**
      * If set, log messages are printed immediately.
@@ -149,14 +149,14 @@ public:
      * minimizes the interference to your runing program;
      * synchronous logging might slow down your program).
      */
-    void setSyncFlag(bool);
+    void set_sync_flag(bool);
 
     /**
      * Set the main logger to print only
      * error level log on stdout (useful when one is only interested
      * in printing cassert logs)
      */
-    void setPrintErrorLevelStdout();
+    void set_print_error_level_stdout();
 
     /**
      * Log a message into log file (passed in constructor) if and only
@@ -279,12 +279,12 @@ public:
      * avoiding unnecessary code for logger. For example:
      * if (isDebugEnabled())  debug(...);
      */
-    bool isEnabled(Level level) const { return level <= currentLevel; }
-    bool isErrorEnabled() const { return ERROR <= currentLevel; }
-    bool isWarnEnabled() const { return WARN <= currentLevel; }
-    bool isInfoEnabled() const { return INFO <= currentLevel; }
-    bool isDebugEnabled() const { return DEBUG <= currentLevel; }
-    bool isFineEnabled() const { return FINE <= currentLevel; }
+    bool is_enabled(Level level) const { return level <= currentLevel; }
+    bool is_error_enabled() const { return ERROR <= currentLevel; }
+    bool is_warn_enabled() const { return WARN <= currentLevel; }
+    bool is_info_enabled() const { return INFO <= currentLevel; }
+    bool is_debug_enabled() const { return DEBUG <= currentLevel; }
+    bool is_fine_enabled() const { return FINE <= currentLevel; }
 
     /**
      * Block until all messages have been written out.
@@ -312,10 +312,10 @@ private:
     concurrent_queue< std::string* > msg_queue;
     bool pending_write;
 
-    void startWriteLoop();
-    void stopWriteLoop();
-    void writingLoop();
-    void writeMsg(const std::string &msg);
+    void start_write_loop();
+    void stop_write_loop();
+    void writing_loop();
+    void write_msg(const std::string &msg);
 
     /**
      * Enable logging messages.
@@ -333,11 +333,11 @@ private:
 Logger& logger();
 
 // Macros to not evaluate the stream if log level is disabled
-#define LAZY_LOG_ERROR if(logger().isErrorEnabled()) logger().error()
-#define LAZY_LOG_WARN if(logger().isWarnEnabled()) logger().warn()
-#define LAZY_LOG_INFO if(logger().isInfoEnabled()) logger().info()
-#define LAZY_LOG_DEBUG if(logger().isDebugEnabled()) logger().debug()
-#define LAZY_LOG_FINE if(logger().isFineEnabled()) logger().fine()
+#define LAZY_LOG_ERROR if(logger().is_error_enabled()) logger().error()
+#define LAZY_LOG_WARN if(logger().is_warn_enabled()) logger().warn()
+#define LAZY_LOG_INFO if(logger().is_info_enabled()) logger().info()
+#define LAZY_LOG_DEBUG if(logger().is_debug_enabled()) logger().debug()
+#define LAZY_LOG_FINE if(logger().is_fine_enabled()) logger().fine()
 
 /** @}*/
 }  // namespace opencog
