@@ -57,7 +57,7 @@ double MT19937RandGen::randdouble() {
 }
   
 //random double in [0,1)
-double MT19937RandGen::randDoubleOneExcluded() {
+double MT19937RandGen::randdouble_one_excluded() {
     std::uniform_real_distribution<double> dis;
     return dis(*this);
 }
@@ -68,7 +68,7 @@ int MT19937RandGen::randint(int n) {
 }
 
 // return -1 or 1 randonly
-int MT19937RandGen::randPositiveNegative(){
+int MT19937RandGen::rand_positive_negative(){
     return (randint(2) == 0) ? 1 : -1;
 }
 
@@ -78,7 +78,7 @@ bool MT19937RandGen::randbool() {
 }
 
 // random integer values according to a discrete distribution
-int MT19937RandGen::randDiscrete(const std::vector<double>& weights)
+int MT19937RandGen::rand_discrete(const std::vector<double>& weights)
 {
     std::discrete_distribution<int> distribution(weights.begin(), weights.end());
     return distribution(*this);

@@ -43,7 +43,7 @@ using namespace opencog;
  * StandardException class
  * ----------------------------------------------------------------------
  */
-void StandardException::parseErrorMessage(const char* fmt, va_list ap, bool logError)
+void StandardException::parse_error_message(const char* fmt, va_list ap, bool logError)
 {
     char buf[MAX_MSG_LENGTH];
 
@@ -52,10 +52,10 @@ void StandardException::parseErrorMessage(const char* fmt, va_list ap, bool logE
     // If buf contains %s %x %d %u etc. because one of the ap's did,
     // then it becomes a horrid strange crash. So be careful, use %s.
     if (logError) opencog::logger().error("%s", buf);
-    setMessage(buf);
+    set_message(buf);
 }
 
-void StandardException::parseErrorMessage(const char *trace, const char * msg, va_list ap, bool logError)
+void StandardException::parse_error_message(const char *trace, const char * msg, va_list ap, bool logError)
 {
     size_t tlen = 0;
     if (trace) tlen = strlen(trace);
@@ -76,7 +76,7 @@ void StandardException::parseErrorMessage(const char *trace, const char * msg, v
         } while (pcnt);
     }
 
-    parseErrorMessage(concatMsg, ap, logError);
+    parse_error_message(concatMsg, ap, logError);
 
     delete [] concatMsg;
 }
@@ -117,7 +117,7 @@ StandardException::~StandardException() _GLIBCXX_USE_NOEXCEPT
     }
 }
 
-const char * StandardException::getMessage() const
+const char * StandardException::get_message() const
 {
     if (message == NULL) {
         return "";
@@ -125,7 +125,7 @@ const char * StandardException::getMessage() const
     return message;
 }
 
-void StandardException::setMessage(const char * msg)
+void StandardException::set_message(const char * msg)
 {
     // clear msg
     if (message != NULL) {
@@ -145,7 +145,7 @@ RuntimeException::RuntimeException(const char *trace, const char* fmt, ...)
 {
     va_list  ap;
     va_start(ap, fmt);
-    parseErrorMessage(trace, fmt, ap);
+    parse_error_message(trace, fmt, ap);
     va_end(ap);
 }
 
@@ -162,7 +162,7 @@ SyntaxException::SyntaxException(const char * trace, const char * fmt, ...)
 {
     va_list  ap;
     va_start(ap, fmt);
-    parseErrorMessage(trace, fmt, ap);
+    parse_error_message(trace, fmt, ap);
     va_end(ap);
 }
 
@@ -175,7 +175,7 @@ IOException::IOException(const char * trace, const char * fmt, ...)
 {
     va_list  ap;
     va_start(ap, fmt);
-    parseErrorMessage(trace, fmt, ap);
+    parse_error_message(trace, fmt, ap);
     va_end(ap);
 }
 
@@ -188,7 +188,7 @@ ComboException::ComboException(const char * trace, const char * fmt, ...)
 {
     va_list  ap;
     va_start(ap, fmt);
-    parseErrorMessage(trace, fmt, ap);
+    parse_error_message(trace, fmt, ap);
     va_end(ap);
 }
 
@@ -201,7 +201,7 @@ IndexErrorException::IndexErrorException(const char * trace, const char * fmt, .
 {
     va_list  ap;
     va_start(ap, fmt);
-    parseErrorMessage(trace, fmt, ap);
+    parse_error_message(trace, fmt, ap);
     va_end(ap);
 }
 
@@ -214,7 +214,7 @@ InvalidParamException::InvalidParamException(const char * trace, const char * fm
 {
     va_list  ap;
     va_start(ap, fmt);
-    parseErrorMessage(trace, fmt, ap, false);
+    parse_error_message(trace, fmt, ap, false);
     va_end(ap);
 }
 
@@ -227,7 +227,7 @@ InconsistenceException::InconsistenceException(const char * trace, const char * 
 {
     va_list  ap;
     va_start(ap, fmt);
-    parseErrorMessage(trace, fmt, ap);
+    parse_error_message(trace, fmt, ap);
     va_end(ap);
 }
 
@@ -240,7 +240,7 @@ FatalErrorException::FatalErrorException(const char * trace, const char * fmt, .
 {
     va_list  ap;
     va_start(ap, fmt);
-    parseErrorMessage(trace, fmt, ap);
+    parse_error_message(trace, fmt, ap);
     va_end(ap);
 }
 
@@ -253,7 +253,7 @@ NetworkException::NetworkException(const char * trace, const char * fmt, ...)
 {
     va_list  ap;
     va_start(ap, fmt);
-    parseErrorMessage(trace, fmt, ap);
+    parse_error_message(trace, fmt, ap);
     va_end(ap);
 }
 
@@ -267,15 +267,15 @@ NotFoundException::NotFoundException(const char * trace, const char * fmt, ...)
     va_list  ap;
     va_start(ap, fmt);
 
-    char * concatMsg = new char[strlen(getMessage()) + strlen(trace) + 1];
+    char * concatMsg = new char[strlen(get_message()) + strlen(trace) + 1];
     *concatMsg = '\0'; // empty c-string
 
-    strcat(concatMsg, getMessage());
+    strcat(concatMsg, get_message());
     strcat(concatMsg, trace);
 
     char buf[MAX_MSG_LENGTH];
     vsnprintf(buf, MAX_MSG_LENGTH, concatMsg, ap);
-    setMessage(buf);
+    set_message(buf);
 
     va_end(ap);
 
@@ -296,7 +296,7 @@ AssertionException::AssertionException(const char* fmt, ...)
     vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
 
-    setMessage(buf);
+    set_message(buf);
     opencog::logger().error("%s", buf);
 }
 
@@ -305,7 +305,7 @@ AssertionException::AssertionException(const char* fmt, va_list ap)
     char    buf[MAX_MSG_LENGTH];
 
     vsnprintf(buf, sizeof(buf), fmt, ap);
-    setMessage(buf);
+    set_message(buf);
     opencog::logger().error("%s", buf);
 }
 

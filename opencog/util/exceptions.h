@@ -55,10 +55,10 @@ protected:
      * Parse error message, substituting formatting characters (such
      * as %s, %d, etc) with their corresponding values.
      */
-    void parseErrorMessage(const char* fmt, va_list ap,
-                          bool logError=true);
-    void parseErrorMessage(const char * trace, const char* fmt,
-                           va_list ap, bool logError=true);
+    void parse_error_message(const char* fmt, va_list ap,
+                             bool logError=true);
+    void parse_error_message(const char * trace, const char* fmt,
+                             va_list ap, bool logError=true);
 
 public:
     /**
@@ -69,7 +69,7 @@ public:
     StandardException& operator=(const StandardException&);
     virtual ~StandardException() _GLIBCXX_USE_NOEXCEPT;
     virtual const char* what() const _GLIBCXX_USE_NOEXCEPT {
-        return getMessage();
+        return get_message();
     }
 
     /**
@@ -77,7 +77,7 @@ public:
      * @return A c-string representing the error message. If no message
      *     have been created just return an empty string.
      */
-    const char* getMessage() const;
+    const char* get_message() const;
 
     /**
      * Set the error message.
@@ -85,7 +85,7 @@ public:
      *    responsable to free the memory allocated in the c-string
      *    parameter.
      */
-    void setMessage(const char *);
+    void set_message(const char *);
 
 }; // StandardException
 

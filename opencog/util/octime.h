@@ -30,7 +30,7 @@ namespace opencog
  */
 
 //! Initializes the reference time that will be used for getting current elapsed times
-void initReferenceTime();
+void init_reference_time();
 
 //! Gets the elapsed time (in milliseconds) since the reference time.
 /**
@@ -38,7 +38,7 @@ void initReferenceTime();
  * The initReferenceTime() function must be called before
  * first invocation of this function.
  */
-unsigned long getElapsedMillis();
+unsigned long get_elapsed_millis();
 
 /** @}*/
 } // namespace opencog

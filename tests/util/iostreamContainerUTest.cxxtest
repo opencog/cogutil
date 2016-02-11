@@ -22,8 +22,8 @@
 
 #include <opencog/util/iostreamContainer.h>
 
-using opencog::ostreamContainer;
-using opencog::istreamContainer;
+using opencog::ostream_container;
+using opencog::istream_container;
 
 using std::stringstream;
 using std::string;
@@ -40,19 +40,19 @@ public:
 
     void test_ostreamContainer() {
         stringstream ss;
-        ostreamContainer(ss, _NN, ";", "{", "}");
+        ostream_container(ss, _NN, ";", "{", "}");
         TS_ASSERT_EQUALS(string("{1;2;3;4}"), ss.str());
     }
     void test_istreamContainer1() {
         std::vector<int> NN;
         stringstream ss("[1 2 3 4] 5");
-        istreamContainer(ss, std::back_inserter(NN), "[", "]");
+        istream_container(ss, std::back_inserter(NN), "[", "]");
         TS_ASSERT_EQUALS(_NN, NN);
     }
     void test_istreamContainer2() {
         std::vector<int> NN;
         stringstream ss("1 2 3 4");
-        istreamContainer(ss, std::back_inserter(NN));
+        istream_container(ss, std::back_inserter(NN));
         TS_ASSERT_EQUALS(_NN, NN);
     }
 };

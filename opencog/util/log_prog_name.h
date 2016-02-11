@@ -49,7 +49,7 @@ bool to_string(const boost::program_options::variable_value& vv,
         str = boost::lexical_cast<std::string>(vv.as<T>());
         return true;
     } else if(vv.value().type() == typeid(std::vector<T>)) {
-        str = opencog::containerToStr(vv.as<std::vector<T> >(), separator.c_str());
+        str = opencog::container_to_str(vv.as<std::vector<T> >(), separator.c_str());
         return true;
     }
     return false;

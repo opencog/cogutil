@@ -105,8 +105,8 @@ public:
         return boost::accumulate(*this | map_values, 0);
     }
 
-    //! Return the element that occurs most frequently
-    T most_frequent() const
+    //! Return the mode, the element that occurs most frequently
+    T mode() const
     {
         T key = super::begin()->first;
         CT cnt = super::begin()->second;

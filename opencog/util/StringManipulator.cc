@@ -27,7 +27,7 @@ using namespace opencog;
 
 #define isvalidtoken(ch) ((ch) == ')' || (ch)== '(' || (ch) == ',' )
 
-std::string StringManipulator::toUpper(const std::string& str) {
+std::string StringManipulator::to_upper(const std::string& str) {
     std::string result;
 
     for (char _c : str) {
@@ -37,7 +37,7 @@ std::string StringManipulator::toUpper(const std::string& str) {
     return result;
 }
 
-std::string StringManipulator::toLower(const std::string& str) {
+std::string StringManipulator::to_lower(const std::string& str) {
     std::string result;
 
     for (char _c : str) {
@@ -96,7 +96,7 @@ void StringManipulator::trim(std::string& str)
     }
 }
 
-bool StringManipulator::isNumber(const std::string& str) {
+bool StringManipulator::is_number(const std::string& str) {
 
     static const boost::regex re("[-\\+]?\\d*\\.?\\d+");
     return boost::regex_match(str, re);
