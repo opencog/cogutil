@@ -75,6 +75,13 @@ namespace opencog
  * onto the queue, along with the element, instead of specifying the
  * method in the ctor. This would really drive home the point that this
  * really is just an async method call.
+ *
+ * The number of threads to use for writing is fixed, when the ctor is
+ * called.  The default is 4 threads.  This can be set to zero, if
+ * desired; as a result, all writes will be *synchronous*.  This can
+ * be a useful thing to do, if this class is being used in a temporary
+ * instance somewhere, and the overhead of creating threads is to be
+ * avoided. (For example, temporary AtomTables used during evaluation.)
  */
 template<typename Writer, typename Element>
 class async_caller
@@ -232,7 +239,7 @@ void async_caller<Writer, Element>::write_loop()
 
 /* ================================================================ */
 /**
- * Enqueue the given element.  Returns immediately after enqueueing.
+ * Enqueue the given element.  Returns immediately after enqueuing.
  * Thread-safe: this my be called concurrently from multiple threads.
  */
 template<typename Writer, typename Element>
@@ -243,8 +250,16 @@ void async_caller<Writer, Element>::enqueue(Element& elt)
 		throw RuntimeException(TRACE_INFO,
 			"Cannot store; async_caller writer threads are being stopped!");
 	if (0 == _thread_count)
-		throw RuntimeException(TRACE_INFO,
-			"Cannot store; No writer threads are running!");
+	{
+		// If there are no async writer threads, then silently perform
+		// a synchronous write.  This situation happens if this class
+		// was constructed with zero writer threads.  The user may want
+		// to do this if this class is being used in a temporary,
+		// transient object, and the user wants to avoid the overhead
+		// of creating threads.
+		(_writer->*_do_write)(elt);
+		return;
+	}
 
 	_store_queue.push(elt);
 
