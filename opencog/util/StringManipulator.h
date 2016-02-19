@@ -51,14 +51,14 @@ public:
      * @param str The string to be converted in upper cases
      * @return The string converted
      */
-    static std::string toUpper(const std::string& str);
+    static std::string to_upper(const std::string& str);
 
     //! Convert a string to lower case
     /**
      * @param str The string to be converted in lower cases
      * @return The string converted
      */
-    static std::string toLower(const std::string& str);
+    static std::string to_lower(const std::string& str);
 
     //! Clean the string
     static std::string clean(const std::string& str);
@@ -80,7 +80,7 @@ public:
      * @param str The string to be checked
      * @return True if it is a number and false if not
      */
-    static bool isNumber(const std::string& str);
+    static bool is_number(const std::string& str);
 
 }; // class
 

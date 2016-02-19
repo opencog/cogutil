@@ -44,13 +44,13 @@ namespace opencog {
 static timeval referenceTime;
 static bool referenceTimeInitialized = false;
 
-void initReferenceTime()
+void init_reference_time()
 {
     gettimeofday(&referenceTime, NULL);
     referenceTimeInitialized = true;
 }
 
-unsigned long getElapsedMillis()
+unsigned long get_elapsed_millis()
 {
     OC_ASSERT(referenceTimeInitialized,
             "utils - refenceTimeInitialized should have been initialized.");

@@ -142,7 +142,7 @@ public:
 
     void testLazyLogger()
     {
-        logger().setLevel(Logger::DEBUG);
+        logger().set_level(Logger::DEBUG);
 
         int i = 0;
 
@@ -155,13 +155,13 @@ public:
 
     void testComponentLogger()
     {
-        logger().setLevel(Logger::DEBUG);
-        logger().setComponent("LoggerUTest");
+        logger().set_level(Logger::DEBUG);
+        logger().set_component("LoggerUTest");
         logger().debug("message");
         logger().flush();
 
         // Grep the last line
-        std::ifstream logfile(logger().getFilename());
+        std::ifstream logfile(logger().get_filename());
         std::string line, resline;
         if (logfile.is_open())
         {
@@ -180,7 +180,7 @@ public:
         TS_ASSERT_EQUALS(resline.substr(26), "[DEBUG] [LoggerUTest] message");
 
         // Unset the component
-        logger().setComponent("");
+        logger().set_component("");
     }
 
     // Derive the factory logger, modify some parameters and use
@@ -188,9 +188,9 @@ public:
     void testDerivedLogger()
     {
         Logger my_logger(logger());
-        my_logger.setLevel(Logger::DEBUG);
-        my_logger.setComponent("LoggerUTest");
-        my_logger.setFilename("__testDerivedLogger__.log");
+        my_logger.set_level(Logger::DEBUG);
+        my_logger.set_component("LoggerUTest");
+        my_logger.set_filename("__testDerivedLogger__.log");
 
         // Log with the component logger
         my_logger.debug("message");
@@ -200,7 +200,7 @@ public:
         logger().info("factory message");
         logger().flush();
 
-        std::ifstream logfile(my_logger.getFilename());
+        std::ifstream logfile(my_logger.get_filename());
         std::string line, resline;
         if (logfile.is_open())
         {
@@ -218,7 +218,7 @@ public:
         // Ignore the timestamp (26 first chars)
         TS_ASSERT_EQUALS(resline.substr(26), "[DEBUG] [LoggerUTest] message");
 
-        remove(my_logger.getFilename().c_str());
+        remove(my_logger.get_filename().c_str());
     }
 
 }; // class

@@ -46,13 +46,13 @@ public:
 
     void testNextToken() {
         StringTokenizer st(toTokenizer, delimiter);
-        std::string result = st.nextToken();
+        std::string result = st.next_token();
         int i = 0;
 
         while (result != "") {
             printf("word: %s, result: %s\n", words[i].c_str(), result.c_str());
             TS_ASSERT(words[i] == result);
-            result = st.nextToken();
+            result = st.next_token();
             i++;
         }
 
@@ -62,17 +62,17 @@ public:
 
     void testSetStringAndDelimiter() {
         StringTokenizer st;
-        st.setString(toTokenizer);
-        TS_ASSERT(st.getString() == toTokenizer);
-        st.setDelimiter(delimiter);
-        TS_ASSERT(st.getDelimiter() == delimiter);
-        std::string result = st.nextToken();
+        st.set_string(toTokenizer);
+        TS_ASSERT(st.get_string() == toTokenizer);
+        st.set_delimiter(delimiter);
+        TS_ASSERT(st.get_delimiter() == delimiter);
+        std::string result = st.next_token();
         int i = 0;
 
         while (result != "") {
             printf("word: %s, result: %s\n", words[i].c_str(), result.c_str());
             TS_ASSERT(words[i] == result);
-            result = st.nextToken();
+            result = st.next_token();
             i++;
         }
 
@@ -84,16 +84,16 @@ public:
         // This test is for a specific case that was causing std::out_of_range when delimiter was present at the end of the string.
         const std::string failingText = "this is a common ";
         StringTokenizer st(failingText, delimiter);
-        st.nextToken();
-        st.nextToken();
-        st.nextToken();
-        st.nextToken();
-        TS_ASSERT(st.nextToken() == "");
-        TS_ASSERT(st.nextToken() == "");
+        st.next_token();
+        st.next_token();
+        st.next_token();
+        st.next_token();
+        TS_ASSERT(st.next_token() == "");
+        TS_ASSERT(st.next_token() == "");
         const std::string failingText2 = "   ";
         StringTokenizer st2(failingText2, delimiter);
-        TS_ASSERT(st2.nextToken() == "");
-        TS_ASSERT(st2.nextToken() == "");
+        TS_ASSERT(st2.next_token() == "");
+        TS_ASSERT(st2.next_token() == "");
     }
 };
 

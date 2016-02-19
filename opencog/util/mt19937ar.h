@@ -48,19 +48,19 @@ public:
     double randdouble();
 
     //! random double in [0,1)
-    double randDoubleOneExcluded();
+    double randdouble_one_excluded();
 
     //! random int in [0,n)
     int randint(int n);
 
     //! return -1 or 1 randonly
-    int randPositiveNegative();
+    int rand_positive_negative();
 
     //! random boolean
     bool randbool();
 
     //! random discrete distribution according to some weights
-    int randDiscrete(const std::vector<double>&);
+    int rand_discrete(const std::vector<double>&);
 };
 
 //! singleton instance (following Meyer's design pattern)

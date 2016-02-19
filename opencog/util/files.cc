@@ -80,7 +80,7 @@ static const std::vector<std::string> paths =
 };
 const std::vector<std::string> opencog::DEFAULT_MODULE_PATHS = paths;
 
-bool opencog::fileExists(const char* filename)
+bool opencog::file_exists(const char* filename)
 {
     std::fstream dumpFile(filename, std::ios::in);
     dumpFile.close();
@@ -101,7 +101,7 @@ bool opencog::exists(const char *fname)
     return true;
 }
 
-void opencog::expandPath(std::string& path)
+void opencog::expand_path(std::string& path)
 {
 
     size_t user_index = path.find(USER_FLAG, 0);
@@ -113,7 +113,7 @@ void opencog::expandPath(std::string& path)
     return;
 }
 
-bool opencog::createDirectory(const char* directory)
+bool opencog::create_directory(const char* directory)
 {
 
 #ifdef WIN32_NOT_CYGWIN
@@ -126,7 +126,7 @@ bool opencog::createDirectory(const char* directory)
     return false;
 }
 
-bool opencog::appendFileContent(const char* filename, std::string &s)
+bool opencog::append_file_content(const char* filename, std::string &s)
 {
     std::ifstream in(filename);
     if (!in.is_open())
@@ -144,7 +144,7 @@ bool opencog::appendFileContent(const char* filename, std::string &s)
     return true;
 }
 
-bool opencog::LoadTextFile(const std::string fname, std::string& dest)
+bool opencog::load_text_file(const std::string fname, std::string& dest)
 {
     FILE *f = fopen(fname.c_str(), "rt");
     if (f == NULL) {
@@ -172,7 +172,7 @@ bool opencog::LoadTextFile(const std::string fname, std::string& dest)
     return true;
 }
 
-std::string getExeName()
+std::string get_exe_name()
 {
     static char buf[PATH_MAX];
     int rslt = readlink("/proc/self/exe", buf, PATH_MAX);
@@ -185,9 +185,9 @@ std::string getExeName()
         return std::string(buf);
 }
 
-std::string getExeDir()
+std::string get_exe_dir()
 {
-    std::string exeName = getExeName();
+    std::string exeName = get_exe_name();
     return exeName.substr(0, exeName.rfind("/")+1);
 }
 

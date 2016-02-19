@@ -146,22 +146,22 @@ Logger::~Logger()
 {
     // Wait for queue to empty
     flush();
-    stopWriteLoop();
+    stop_write_loop();
 
     if (logfile != NULL) fclose(logfile);
 }
 
-void Logger::startWriteLoop()
+void Logger::start_write_loop()
 {
     std::unique_lock<std::mutex> lock(the_mutex);
     if (!writingLoopActive)
     {
         writingLoopActive = true;
-        writer_thread = std::thread(&Logger::writingLoop, this);
+        writer_thread = std::thread(&Logger::writing_loop, this);
     }
 }
 
-void Logger::stopWriteLoop()
+void Logger::stop_write_loop()
 {
     std::unique_lock<std::mutex> lock(the_mutex);
     msg_queue.cancel();
@@ -170,7 +170,7 @@ void Logger::stopWriteLoop()
     writingLoopActive = false;
 }
 
-void Logger::writingLoop()
+void Logger::writing_loop()
 {
     try
     {
@@ -180,7 +180,7 @@ void Logger::writingLoop()
             // from returning prematurely.
             std::string* msg = msg_queue.pop();
             pending_write = true;
-            writeMsg(*msg);
+            write_msg(*msg);
             pending_write = false;
             delete msg;
         }
@@ -210,7 +210,7 @@ void Logger::flush()
     if (logfile) fdatasync(fileno(logfile));
 }
 
-void Logger::writeMsg(const std::string &msg)
+void Logger::write_msg(const std::string &msg)
 {
     std::unique_lock<std::mutex> lock(the_mutex);
     // Delay opening the file until the first logging statement is issued;
@@ -277,7 +277,7 @@ Logger::Logger(const std::string &fname, Logger::Level level, bool tsEnabled)
 {
     this->fileName.assign(fname);
     this->currentLevel = level;
-    this->backTraceLevel = getLevelFromString(opencog::config()["BACK_TRACE_LOG_LEVEL"]);
+    this->backTraceLevel = get_level_from_string(opencog::config()["BACK_TRACE_LOG_LEVEL"]);
 
     this->timestampEnabled = tsEnabled;
     this->printToStdout = false;
@@ -293,7 +293,7 @@ Logger::Logger(const std::string &fname, Logger::Level level, bool tsEnabled)
     this->pending_write = false;
     this->writingLoopActive = false;
 
-    startWriteLoop();
+    start_write_loop();
 }
 
 Logger::Logger(const Logger& log)
@@ -304,7 +304,7 @@ Logger::Logger(const Logger& log)
 
 Logger& Logger::operator=(const Logger& log)
 {
-    this->stopWriteLoop();
+    this->stop_write_loop();
     msg_queue.cancel_reset();
     this->set(log);
     return *this;
@@ -333,33 +333,33 @@ void Logger::set(const Logger& log)
 
     lock.unlock();
 
-    startWriteLoop();
+    start_write_loop();
 }
 
 // ***********************************************/
 // API
 
-void Logger::setLevel(Logger::Level newLevel)
+void Logger::set_level(Logger::Level newLevel)
 {
     currentLevel = newLevel;
 }
 
-Logger::Level Logger::getLevel() const
+Logger::Level Logger::get_level() const
 {
     return currentLevel;
 }
 
-void Logger::setBackTraceLevel(Logger::Level newLevel)
+void Logger::set_backtrace_level(Logger::Level newLevel)
 {
     backTraceLevel = newLevel;
 }
 
-Logger::Level Logger::getBackTraceLevel() const
+Logger::Level Logger::get_backtrace_level() const
 {
     return backTraceLevel;
 }
 
-void Logger::setFilename(const std::string& s)
+void Logger::set_filename(const std::string& s)
 {
     fileName.assign(s);
 
@@ -371,45 +371,45 @@ void Logger::setFilename(const std::string& s)
     enable();
 }
 
-const std::string& Logger::getFilename()
+const std::string& Logger::get_filename()
 {
     return fileName;
 }
 
-void Logger::setComponent(const std::string& c)
+void Logger::set_component(const std::string& c)
 {
     component = c;
 }
 
-const std::string& Logger::getComponent() const
+const std::string& Logger::get_component() const
 {
     return component;
 }
 
-void Logger::setTimestampFlag(bool flag)
+void Logger::set_timestamp_flag(bool flag)
 {
     timestampEnabled = flag;
 }
 
-void Logger::setPrintToStdoutFlag(bool flag)
+void Logger::set_print_to_stdout_flag(bool flag)
 {
     printToStdout = flag;
 }
 
-void Logger::setPrintLevelFlag(bool flag)
+void Logger::set_print_level_flag(bool flag)
 {
     printLevel = flag;
 }
 
-void Logger::setSyncFlag(bool flag)
+void Logger::set_sync_flag(bool flag)
 {
     syncEnabled = flag;
 }
 
-void Logger::setPrintErrorLevelStdout()
+void Logger::set_print_error_level_stdout()
 {
-    setPrintToStdoutFlag(true);
-    setLevel(Logger::ERROR);
+    set_print_to_stdout_flag(true);
+    set_level(Logger::ERROR);
 }
 
 void Logger::enable()
@@ -448,7 +448,7 @@ void Logger::log(Logger::Level level, const std::string &txt)
     }
 
     if (printLevel)
-        oss << "[" << getLevelString(level) << "] ";
+        oss << "[" << get_level_string(level) << "] ";
 
     if (!component.empty())
         oss << "[" << component << "] ";
@@ -536,7 +536,7 @@ void Logger::Fine::operator()(const char *fmt, ...)
     va_list args; va_start(args, fmt); logger.logva(FINE,  fmt, args); va_end(args);
 }
 
-const char* Logger::getLevelString(const Logger::Level level)
+const char* Logger::get_level_string(const Logger::Level level)
 {
     if (level == BAD_LEVEL)
         return "Bad level";
@@ -544,7 +544,7 @@ const char* Logger::getLevelString(const Logger::Level level)
         return levelStrings[level];
 }
 
-Logger::Level Logger::getLevelFromString(const std::string& levelStr)
+Logger::Level Logger::get_level_from_string(const std::string& levelStr)
 {
     unsigned int nLevels = sizeof(levelStrings) / sizeof(levelStrings[0]);
     const char* lstr = levelStr.c_str();

@@ -53,22 +53,22 @@ StringTokenizer::~StringTokenizer()
 {
 }
 
-std::string StringTokenizer::getString()
+std::string StringTokenizer::get_string()
 {
     return str;
 }
 
-void StringTokenizer::setString(const std::string &str)
+void StringTokenizer::set_string(const std::string &str)
 {
     this->str = str;
 }
 
-const std::string & StringTokenizer::getDelimiter()
+const std::string & StringTokenizer::get_delimiter()
 {
     return delimiter;
 }
 
-void StringTokenizer::setDelimiter(const std::string &str)
+void StringTokenizer::set_delimiter(const std::string &str)
 {
     this->delimiter = str;
 }
@@ -79,7 +79,7 @@ void StringTokenizer::reset()
     end = 0;
 }
 
-const std::string StringTokenizer::nextToken()
+const std::string StringTokenizer::next_token()
 {
     OC_ASSERT(str != "", "StringTokenizer - string should not be empty.");
     OC_ASSERT(delimiter != "", "StringTokenized - delimiter should not be empty.");
@@ -98,7 +98,7 @@ const std::string StringTokenizer::nextToken()
     }
 
     do {
-        start = end + delimiterSize();
+        start = end + delimiter_size();
         if (start == str.size()) {
             end = start;
             return "";
@@ -112,7 +112,7 @@ const std::string StringTokenizer::nextToken()
     return str.substr(start, end - start);
 }
 
-std::string::size_type StringTokenizer::delimiterSize()
+std::string::size_type StringTokenizer::delimiter_size()
 {
     return delimiter.size();
 }
@@ -129,7 +129,7 @@ AltStringTokenizer::AltStringTokenizer(const std::string &rStr, const std::strin
     }
 }
 
-std::vector<std::string> AltStringTokenizer::WithoutEmpty() const
+std::vector<std::string> AltStringTokenizer::without_empty() const
 {
     std::vector<std::string> ret;
 

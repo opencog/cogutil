@@ -51,7 +51,7 @@ extern const std::vector<std::string> DEFAULT_MODULE_PATHS;
  * @param filename The name of the file to check if it exists.
  * @return true if file exists, false otherwise
  */
-bool fileExists(const char* filename);
+bool file_exists(const char* filename);
 
 /** Checks whether a file exists */
 bool exists(const char *fname);
@@ -66,7 +66,7 @@ bool exists(const char *fname);
  * IMPORTANT:
  * This function modifies the content of the std::string passed as parameter.
  */
-void expandPath(std::string& path);
+void expand_path(std::string& path);
 
 /**
  * Creates the directory structure based on the path provided.
@@ -74,26 +74,26 @@ void expandPath(std::string& path);
  * @param directory The directory path
  * @return true if the directory is created or already exists. False otherwise
  */
-bool createDirectory(const char* filename);
+bool create_directory(const char* filename);
 
 /**
  * Appends the content of a file with the given name to a string
  * @return true if the file was successfully read into the string
  */
-bool appendFileContent(const char* filename, std::string &s);
+bool append_file_content(const char* filename, std::string &s);
 
 /** Load the contents of a textfile \param fname to \param dest. */
-bool LoadTextFile(const std::string fname, std::string& dest);
+bool load_text_file(const std::string fname, std::string& dest);
 
 /**
  * Get the file name (including absolute path) of current executing file 
  */
-std::string getExeName();
+std::string get_exe_name();
 
 /**
  * Get the absolute path (including "/" at the end) where the current executing file runs
  */
-std::string getExeDir(); 
+std::string get_exe_dir(); 
 
 /** @}*/
 } // namespace opencog
