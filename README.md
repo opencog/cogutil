@@ -36,7 +36,7 @@ a regular OpenCog developer.
 
 ###### binutils BFD library
 > The GNU binutils linker-loader, ahem, cough, "Binary File Description".
-> http://gnu.org/binutils | binutils-dev
+> http://gnu.org/s/binutils | binutils-dev
 > The linker-loader understands calling conventions.
 
 ###### iberty
