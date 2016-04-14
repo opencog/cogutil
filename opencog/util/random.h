@@ -50,6 +50,16 @@ const typename C::value_type& rand_element(const C& c, RandGen& rng = randGen())
     return *std::next(c.begin(), rng.randint(c.size()));
 }
 
+//! Non-const version of above. Pick an element of container c
+//! randomly, with uniform distribution.  \warning it is assumed that
+//! c is non-empty
+template<typename C>
+typename C::value_type& rand_element(C& c, RandGen& rng = randGen())
+{
+    OC_ASSERT(!c.empty());
+    return *std::next(c.begin(), rng.randint(c.size()));
+}
+
 //! Pick an element of container c randomly, with uniform
 //! distribution, and remove it.  \warning it is assumed that c is
 //! non-empty
