@@ -46,6 +46,13 @@ namespace opencog
 extern const std::vector<std::string> DEFAULT_MODULE_PATHS;
 
 /**
+ * Return the set pf paths to search when attempting to a module based
+ * on DEFAULT_MODULE_PATHS and the environment variable
+ * OPENCOG_MODULE_PATHS.
+ */
+std::vector<std::string> get_module_paths();
+
+/**
  * Check if a file exists in the current directory
  *
  * @param filename The name of the file to check if it exists.
