@@ -62,6 +62,12 @@ namespace opencog {
 /// Although you might think that boost::pool already does this, you'd
 /// be wrong.  It would appear that the author of boost::pool did not
 /// understand the problem that needed to be solved.
+///
+/// This is similar to concurrent_queue (also in this directory) but
+/// with a simpler, less sophisticated API.  The main difference is that
+/// this API uses named that make it clear that resources are being
+/// borrowed, and returned, whereas the concurrent_queue has an API that
+/// is geared towards the producer-consumer mode of thinking.
 //
 // This is implemented on top of std::queue, for no particular reason;
 // pretty much any other container would do.

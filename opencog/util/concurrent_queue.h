@@ -37,6 +37,23 @@
  */
 
 //! Represents a thread-safe first in-first out list.
+///
+/// Implements a thread-safe queue: any thread can push stuff onto the
+/// queue, and any other thread can remove stuff from it.  If the queue
+/// is empty, the thread attempting to remove stuff will block.  If the
+/// queue is empty, and something is added to the queue, and there is
+/// some thread blocked on the queue, then that thread will be woken up.
+///
+/// The function provided here is almost identical to that provided by
+/// the pool class (also in this directory), but with a fancier API that
+/// allows cancellation, and other minor utilities. This API is also
+/// most easily understood as a producer-consumer API, with producer
+/// threads adding stuff to the queue, and consumer threads removing
+/// them.  By contrast, the pool API is a borrow-and-return API, which
+/// is really more-or-less the same thing, but just uses a different
+/// mindset.  This API also matches the proposed C++ standard for this
+/// basic idea.
+
 template<typename Element>
 class concurrent_queue
 {
