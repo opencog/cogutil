@@ -187,6 +187,7 @@ void Logger::writing_loop()
     }
     catch (concurrent_queue< std::string* >::Canceled &e)
     {
+        pending_write = false;
         return;
     }
 }
