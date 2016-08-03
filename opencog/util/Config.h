@@ -41,13 +41,8 @@ typedef Config* ConfigFactory(void);
 //! library-wide configuration; keys and values are strings
 class Config
 {
-
 protected:
-
-    const std::string* DEFAULT();
-
-    std::string emptyString;
-    std::map<std::string, std::string> table;
+    std::map<std::string, std::string> _table;
     std::string _path_where_found;
 
 public:
@@ -75,21 +70,21 @@ public:
     void set(const std::string &parameter_name, const std::string &parameter_value);
 
     //! Return current value of a given parameter.
-    const std::string& get(const std::string &parameter_name) const;
+    const std::string& get(const std::string &, const std::string& = "") const;
     //! Return current value of a given parameter.
-    const std::string& operator[](const std::string &name) const;
+    const std::string& operator[](const std::string &) const;
 
     //! Return current value of a given parameter as an integer
-    int get_int(const std::string &parameter_name) const;
+    int get_int(const std::string &, int = 0) const;
 
     //! Return current value of a given parameter as an long
-    long get_long(const std::string &parameter_name) const;
+    long get_long(const std::string &, long = 0) const;
 
     //! Return current value of a given parameter as a double
-    double get_double(const std::string &parameter_name) const;
+    double get_double(const std::string &, double = 0.0) const;
 
     //! Return current value of a given parameter as a boolean
-    bool get_bool(const std::string &parameter_name) const;
+    bool get_bool(const std::string &, bool = false) const;
 
     //! Dump all configuration parameters to a string
     std::string to_string() const;

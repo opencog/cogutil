@@ -39,28 +39,30 @@ public:
     void setUp() {}
     void tearDown() {}
 
-    void testDefault() {
+    void testDefault()
+    {
         TS_ASSERT_THROWS(config()["INVALID_PARAM"], InvalidParamException&);
-        TS_ASSERT(config()["SERVER_PORT"] == "17001");
-        TS_ASSERT(config().get_int("SERVER_PORT") == 17001);
-        TS_ASSERT(config().get_double("SERVER_PORT") == 17001.0);
-        TS_ASSERT(config()["LOG_FILE"] == "opencog_server.log");
-        TS_ASSERT(config()["LOG_LEVEL"] == "info");
-        TS_ASSERT(config()["BACK_TRACE_LOG_LEVEL"] == "error"); // C++ stack traces only on error!
-        TS_ASSERT(config().get_bool("LOG_TO_STDOUT"));
-        TS_ASSERT(config().get_int("SERVER_CYCLE_DURATION") == 100);
+        TS_ASSERT(config().get("SERVER_PORT", "17001") == "17001");
+        TS_ASSERT(config().get_int("SERVER_PORT", 17001) == 17001);
+        TS_ASSERT(config().get_double("SERVER_PORT", 17001.0) == 17001.0);
+        TS_ASSERT(config().get("LOG_FILE", "opencog_server.log") == "opencog_server.log");
+        TS_ASSERT(config().get("LOG_LEVEL", "info") == "info");
+        TS_ASSERT(config().get("BACK_TRACE_LOG_LEVEL", "error") == "error"); // C++ stack traces only on error!
+        TS_ASSERT(config().get_bool("LOG_TO_STDOUT", true));
+        TS_ASSERT(config().get_int("SERVER_CYCLE_DURATION", 100) == 100);
         TS_ASSERT(!config().get_bool("EXTERNAL_TICK_MODE"));
-        TS_ASSERT(config().get_int("STARTING_STI_FUNDS") == 10000);
-        TS_ASSERT(config().get_int("STARTING_LTI_FUNDS") == 10000);
-        TS_ASSERT(config().get_int("STI_FUNDS_BUFFER") == 10000);
-        TS_ASSERT(config().get_int("LTI_FUNDS_BUFFER") == 10000);
-        TS_ASSERT(config().get_int("MIN_STI") == -400);
-        TS_ASSERT(config()["PROMPT"] == "opencog> ");
-        TS_ASSERT(config()["MODULES"] == "libbuiltinreqs.so");
+        TS_ASSERT(config().get_int("STARTING_STI_FUNDS", 10000) == 10000);
+        TS_ASSERT(config().get_int("STARTING_LTI_FUNDS", 10000) == 10000);
+        TS_ASSERT(config().get_int("STI_FUNDS_BUFFER", 10000) == 10000);
+        TS_ASSERT(config().get_int("LTI_FUNDS_BUFFER", 10000) == 10000);
+        TS_ASSERT(config().get_int("MIN_STI", -400) == -400);
+        TS_ASSERT(config().get("PROMPT", "opencog> ") == "opencog> ");
+        TS_ASSERT(config().get("MODULES", "libbuiltinreqs.so") == "libbuiltinreqs.so");
     }
 
 
-    void testLoadFromFile() {
+    void testLoadFromFile()
+    {
         // first, write the configuration file
         const char *config_file_name = "ConfigUTest.config";
         std::ofstream out(config_file_name);
@@ -86,12 +88,12 @@ public:
         config().reset();
 
         // check default parameters before and after loading file
-        TS_ASSERT(config().get_int("STI_FUNDS_BUFFER") == 10000);
-        TS_ASSERT(config().get_int("LTI_FUNDS_BUFFER") == 10000);
+        TS_ASSERT(config().get_int("STI_FUNDS_BUFFER", 10000) == 10000);
+        TS_ASSERT(config().get_int("LTI_FUNDS_BUFFER", 10000) == 10000);
         config().load(config_file_name);
-        TS_ASSERT(config().get_int("STI_FUNDS_BUFFER") == 200);
-        TS_ASSERT(config().get_int("LTI_FUNDS_BUFFER") == 10);
-        TS_ASSERT(!config().get_bool("LOG_TO_STDOUT"));
+        TS_ASSERT(config().get_int("STI_FUNDS_BUFFER", 10000) == 200);
+        TS_ASSERT(config().get_int("LTI_FUNDS_BUFFER", 10000) == 10);
+        TS_ASSERT(!config().get_bool("LOG_TO_STDOUT", true));
 
         // check remaining parameters from file
         TS_ASSERT(config().get("PARAM1") == "VALUE1");
@@ -100,31 +102,33 @@ public:
         TS_ASSERT(config()["COMPOSED PARAMETER NAME 4"] == "VALUE4");
         TS_ASSERT(config()["PARAM5"] == "COMPOSED PARAMETER VALUE 5");
         TS_ASSERT(config()["PARAM6"] == "VALUE6");
-        TS_ASSERT(config().get_int("PARAM7") == 248);
-        TS_ASSERT(config().get_double("PARAM8") == 1.2584);
-        TS_ASSERT(config().get_double("PARAM9") == -29847.167015);
+        TS_ASSERT(config().get_int("PARAM7", 999) == 248);
+        TS_ASSERT(config().get_double("PARAM8", 3.14159) == 1.2584);
+        TS_ASSERT(config().get_double("PARAM9", 2.718281828) == -29847.167015);
 
         // finally, remove the temporary file and free the string with its name
         std::remove(config_file_name);
     }
 
-    void testSet() {
+    void testSet()
+    {
         // reset configuration to default parameters
         config().reset();
 
         // check default parameters before and setting the new value
-        TS_ASSERT(config().get("STI_FUNDS_BUFFER") == "10000");
-        TS_ASSERT(config().get_int("STI_FUNDS_BUFFER") == 10000);
+        TS_ASSERT(config().get("STI_FUNDS_BUFFER", "10000") == "10000");
+        TS_ASSERT(config().get_int("STI_FUNDS_BUFFER", 10000) == 10000);
         config().set("STI_FUNDS_BUFFER", "200");
-        TS_ASSERT(config().get("STI_FUNDS_BUFFER") == "200");
-        TS_ASSERT(config().get_int("STI_FUNDS_BUFFER") == 200);
+        TS_ASSERT(config().get("STI_FUNDS_BUFFER", "10000") == "200");
+        TS_ASSERT(config().get_int("STI_FUNDS_BUFFER", 10000) == 200);
     }
 
     /**
      * Check that setting a boolean parameter and getting an int
      * raises an InvalidParamException
      */
-    void testGetType() {
+    void testGetType()
+    {
         config().reset();
 
         config().set("BOOL_PARAM1", "true");
