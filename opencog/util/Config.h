@@ -42,9 +42,6 @@ typedef Config* ConfigFactory(void);
 class Config
 {
 protected:
-    const std::string* DEFAULT();
-
-    std::string emptyString;
     std::map<std::string, std::string> _table;
     std::string _path_where_found;
 
