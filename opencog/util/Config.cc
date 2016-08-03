@@ -107,11 +107,11 @@ Config::Config()
 
 void Config::reset()
 {
-    table.clear();
+    _table.clear();
     // load default configuration
     for (unsigned int i = 0; DEFAULT()[i] != ""; i += 2) {
-        if (table.find(DEFAULT()[i]) == table.end()) {
-            table[DEFAULT()[i]] = DEFAULT()[i + 1];
+        if (_table.find(DEFAULT()[i]) == _table.end()) {
+            _table[DEFAULT()[i]] = DEFAULT()[i + 1];
         }
     }
 }
@@ -239,7 +239,7 @@ void Config::load(const char* filename, bool resetFirst)
         if (have_name && have_value)
         {
             // Finally, store the entries.
-            table[name] = value;
+            _table[name] = value;
             have_name = false;
             have_value = false;
             value = "";
@@ -250,78 +250,82 @@ void Config::load(const char* filename, bool resetFirst)
 
 const bool Config::has(const string &name) const
 {
-    return (table.find(name) != table.end());
+    return (_table.find(name) != _table.end());
 }
 
 void Config::set(const std::string &parameter_name,
                  const std::string &parameter_value)
 {
-    table[parameter_name] = parameter_value;
+    _table[parameter_name] = parameter_value;
 }
 
-const string& Config::get(const string &name) const
+const string& Config::get(const string& name, const string& dfl) const
 {
-    map<string, string>::const_iterator it = table.find(name);
-    if (it == table.end())
-       throw InvalidParamException(TRACE_INFO,
-                                   "[ERROR] parameter not found (%s)",
-                                   name.c_str());
-    return it->second;
+    if (not has(name)) return dfl;
+    return _table.find(name)->second;
 }
 
 const string& Config::operator[](const string &name) const
 {
-    return get(name);
+    if (not has(name))
+       throw InvalidParamException(TRACE_INFO,
+                                   "[ERROR] parameter not found (%s)",
+                                   name.c_str());
+    return _table.find(name)->second;
 }
 
-int Config::get_int(const string &name) const
+int Config::get_int(const string &name, int dfl) const
 {
+    if (not has(name)) return dfl;
     try {
         return boost::lexical_cast<int>(get(name));
-    } catch(boost::bad_lexical_cast) {
+    } catch (boost::bad_lexical_cast) {
         throw InvalidParamException(TRACE_INFO,
-                                    "[ERROR] invalid integer parameter (%s)",
-                                    name.c_str());
+               "[ERROR] invalid integer parameter (%s)",
+               name.c_str());
     }
 }
 
-long Config::get_long(const string &name) const
+long Config::get_long(const string &name, long dfl) const
 {
+    if (not has(name)) return dfl;
     try {
         return boost::lexical_cast<long>(get(name));
-    } catch(boost::bad_lexical_cast) {
+    } catch (boost::bad_lexical_cast) {
         throw InvalidParamException(TRACE_INFO,
-                                    "[ERROR] invalid long integer parameter (%s)",
-                                    name.c_str());
+               "[ERROR] invalid long integer parameter (%s)",
+               name.c_str());
     }
 }
 
-double Config::get_double(const string &name) const
+double Config::get_double(const string &name, double dfl) const
 {
+    if (not has(name)) return dfl;
     try {
         return boost::lexical_cast<double>(get(name));
-    } catch(boost::bad_lexical_cast) {
+    } catch (boost::bad_lexical_cast) {
         throw InvalidParamException(TRACE_INFO,
-                                    "[ERROR] invalid double parameter (%s)",
-                                    name.c_str());
+               "[ERROR] invalid double parameter (%s)",
+               name.c_str());
     }
 }
 
-bool Config::get_bool(const string &name) const
+bool Config::get_bool(const string &name, bool dfl) const
 {
+    if (not has(name)) return dfl;
     if (boost::iequals(get(name), "true")) return true;
     else if (boost::iequals(get(name), "false")) return false;
     else throw InvalidParamException(TRACE_INFO,
-                                     "[ERROR] invalid bool parameter (%s: %s)",
-                                     name.c_str(), get(name).c_str());
+                "[ERROR] invalid bool parameter (%s: %s)",
+                name.c_str(), get(name).c_str());
 }
 
 std::string Config::to_string() const
 {
     std::ostringstream oss;
     oss << "{\"";
-    for (map<string, string>::const_iterator it = table.begin(); it != table.end(); ++it) {
-        if (it != table.begin()) oss << "\", \"";
+    for (auto it = _table.begin(); it != _table.end(); ++it) {
+        if (it != _table.begin()) oss << "\", \"";
         oss << it->first << "\" => \"" << it->second;
     }
     oss << "\"}";
