@@ -8,7 +8,7 @@
 # -- configure various config files.
 # -- print pretty summary
 #
-# To specify which compiler to use, the environment variables CC and CXX 
+# To specify which compiler to use, the environment variables CC and CXX
 # can override the path to the C and CPP compilers, respectively.
 # CMake will not update these settings internally until both the ./CMakeFiles
 # folder and ./CMakeCache.txt are deleted.
@@ -21,27 +21,31 @@ IF (COMMAND CMAKE_POLICY)
 	CMAKE_POLICY(SET CMP0005 OLD)
 ENDIF (COMMAND CMAKE_POLICY)
 
+IF (CMAKE_VERSION VERSION_GREATER 3.0.2)
+	CMAKE_POLICY(SET CMP0037 OLD)
+ENDIF (CMAKE_VERSION VERSION_GREATER 3.0.2)
+
 # Only list install files that have actually changed
-set( CMAKE_INSTALL_MESSAGE "LAZY" )
+SET(CMAKE_INSTALL_MESSAGE "LAZY")
 
 PROJECT(cogutils)
 
-if(WIN32) # Windows host but not cygwin
-    MESSAGE(FATAL_ERROR "You must use Cygwin if compiling under Windows.")
-    
-    # Previous definitions used for win32 (non cygwin) compilation.
-    # For reference only 
-    
-    # ADD_DEFINITIONS(-DWIN32_NOT_UNIX)
-    # FIND_PACKAGE(PThreads REQUIRED)
-    # FIND_PACKAGE(STLPort REQUIRED)
-    # INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include/win32" ${PTHREADS_INCLUDE_DIR} ${STLPORT_INCLUDE_DIR})
-    # LINK_LIBRARIES(${PTHREADS_LIBRARY} ${STLPORT_LIBRARIES})
-    # ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE)
-ENDIF(WIN32)
+IF (WIN32) # Windows host but not cygwin
+	MESSAGE(FATAL_ERROR "You must use Cygwin if compiling under Windows.")
+
+	# Previous definitions used for win32 (non cygwin) compilation.
+	# For reference only
+
+	# ADD_DEFINITIONS(-DWIN32_NOT_UNIX)
+	# FIND_PACKAGE(PThreads REQUIRED)
+	# FIND_PACKAGE(STLPort REQUIRED)
+	# INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include/win32" ${PTHREADS_INCLUDE_DIR} ${STLPORT_INCLUDE_DIR})
+	# LINK_LIBRARIES(${PTHREADS_LIBRARY} ${STLPORT_LIBRARIES})
+	# ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE)
+ENDIF (WIN32)
 
 IF (NOT CMAKE_COMPILER_IS_GNUCXX) # Compiler is not gcc
-    MESSAGE(FATAL_ERROR "Only the gcc compiler is supported at this time") 
+	MESSAGE(FATAL_ERROR "Only the gcc compiler is supported at this time")
 ENDIF (NOT CMAKE_COMPILER_IS_GNUCXX)
 
 # uncomment to be in Release mode [default]
@@ -67,7 +71,7 @@ ENDIF (CMAKE_BUILD_TYPE STREQUAL "")
 MESSAGE(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 ADD_DEFINITIONS(-DPROJECT_SOURCE_DIR=\\"${CMAKE_SOURCE_DIR}\\"
-                -DPROJECT_BINARY_DIR=\\"${CMAKE_BINARY_DIR}\\")
+	            -DPROJECT_BINARY_DIR=\\"${CMAKE_BINARY_DIR}\\")
 
 # add the 'lib' dir to cmake's module search path
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/lib/")
@@ -123,8 +127,8 @@ ENDIF (CMAKE_COMPILER_IS_GNUCXX)
 
 # Do the cygwin build
 IF (CYGWIN)
-    ADD_DEFINITIONS(-DCYGWIN)
-    LINK_LIBRARIES(pthread)
+	ADD_DEFINITIONS(-DCYGWIN)
+	LINK_LIBRARIES(pthread)
 ENDIF (CYGWIN)
 
 # ===================================================================
@@ -151,7 +155,7 @@ SET(Boost_USE_MULTITHREADED ON)
 # program_options needed by some combo utilities
 FIND_PACKAGE(Boost 1.46 COMPONENTS date_time filesystem program_options regex serialization system thread REQUIRED)
 
-IF(Boost_FOUND)
+IF (Boost_FOUND)
 	SET(Boost_FOUND_SAVE 1)
 
 	# Boost.Signals2 requires this in signal_type.hpp
@@ -159,13 +163,13 @@ IF(Boost_FOUND)
 	ADD_DEFINITIONS(-DBOOST_PARAMETER_MAX_ARITY=${BOOST_PARAMETER_MAX_ARITY})
 ELSE(Boost_FOUND)
 	MESSAGE(FATAL_ERROR "Boost 1.46 or newer (package libboost-all-dev if using Ubuntu) is needed to build OpenCog!")
-ENDIF(Boost_FOUND)
+ENDIF (Boost_FOUND)
 
 # Opencog won't compile with Boost 1.51, some kind of conflict with
 # hash functions, see github bugs 1 and 36
-IF(105100 EQUAL ${Boost_VERSION})
+IF (105100 EQUAL ${Boost_VERSION})
 	MESSAGE(FATAL_ERROR "Boost version 1.51 will not work with OpenCog.  Please use a different version.")
-ENDIF(105100 EQUAL ${Boost_VERSION})
+ENDIF (105100 EQUAL ${Boost_VERSION})
 MESSAGE(STATUS "Boost version ${Boost_VERSION} found.")
 
 # Optional boost packages; can build without these.
@@ -173,9 +177,9 @@ FIND_PACKAGE(Boost 1.46 COMPONENTS python program_options QUIET)
 FIND_PACKAGE(Boost 1.46 COMPONENTS math_c99 QUIET)
 
 # Arghhh. Except cmake is treating above as required, not optional. #$%**&
-IF(Boost_FOUND_SAVE)
+IF (Boost_FOUND_SAVE)
 	SET(Boost_FOUND 1)
-ENDIF(Boost_FOUND_SAVE)
+ENDIF (Boost_FOUND_SAVE)
 
 FIND_PACKAGE(Cxxtest)
 IF (NOT CXXTEST_FOUND)
@@ -197,9 +201,9 @@ ENDIF (IBERTY_FOUND)
 # ==========================================================
 # Decide what to build, based on the packages found.
 
-IF(Boost_FOUND)
+IF (Boost_FOUND)
 	SET(HAVE_UTIL 1)
-ENDIF(Boost_FOUND)
+ENDIF (Boost_FOUND)
 
 # ===================================================================
 # global includes
@@ -294,16 +298,16 @@ SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 FILE(READ "${CMAKE_SOURCE_DIR}/opencog/util/cogutil.h" _CU_H_CONTENTS)
 STRING(REGEX MATCH
-    "#define COGUTIL_MAJOR_VERSION ([0-9]+)"
-    _ "${_CU_H_CONTENTS}")
+	"#define COGUTIL_MAJOR_VERSION ([0-9]+)"
+	_ "${_CU_H_CONTENTS}")
 SET(CPACK_PACKAGE_VERSION_MAJOR ${CMAKE_MATCH_1})
 STRING(REGEX MATCH
-    "#define COGUTIL_MINOR_VERSION ([0-9]+)"
-    _ "${_CU_H_CONTENTS}")
+	"#define COGUTIL_MINOR_VERSION ([0-9]+)"
+	_ "${_CU_H_CONTENTS}")
 SET(CPACK_PACKAGE_VERSION_MINOR ${CMAKE_MATCH_1})
 STRING(REGEX MATCH
-    "#define COGUTIL_MICRO_VERSION ([0-9]+)"
-    _ "${_CU_H_CONTENTS}")
+	"#define COGUTIL_MICRO_VERSION ([0-9]+)"
+	_ "${_CU_H_CONTENTS}")
 SET(CPACK_PACKAGE_VERSION_PATCH ${CMAKE_MATCH_1})
 SET(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 SET(CPACK_BINARY_STGZ "OFF")
