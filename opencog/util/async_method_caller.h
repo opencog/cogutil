@@ -22,8 +22,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _OC_ASYNC_WRITER_H
-#define _OC_ASYNC_WRITER_H
+#ifndef _OC_ASYNC_WRITER_CONST_H
+#define _OC_ASYNC_WRITER_CONST_H
 
 #include <atomic>
 #include <mutex>
@@ -95,16 +95,16 @@ class async_caller
 		bool _stopping_writers;
 
 		Writer* _writer;
-		void (Writer::*_do_write)(Element&);
+		void (Writer::*_do_write)(const Element&);
 
 		void start_writer_thread();
 		void stop_writer_threads();
 		void write_loop();
 
 	public:
-		async_caller(Writer*, void (Writer::*)(Element&), int nthreads=4);
+		async_caller(Writer*, void (Writer::*)(const Element&), int nthreads=4);
 		~async_caller();
-		void enqueue(Element&);
+		void enqueue(const Element&);
 		void flush_queue();
 };
 
@@ -119,7 +119,7 @@ class async_caller
 /// to 4 if not specified.
 template<typename Writer, typename Element>
 async_caller<Writer, Element>::async_caller(Writer* wr,
-                                            void (Writer::*cb)(Element&),
+                                            void (Writer::*cb)(const Element&),
                                             int nthreads)
 {
 	_writer = wr;
@@ -243,7 +243,7 @@ void async_caller<Writer, Element>::write_loop()
  * Thread-safe: this my be called concurrently from multiple threads.
  */
 template<typename Writer, typename Element>
-void async_caller<Writer, Element>::enqueue(Element& elt)
+void async_caller<Writer, Element>::enqueue(const Element& elt)
 {
 	// Sanity checks.
 	if (_stopping_writers)
