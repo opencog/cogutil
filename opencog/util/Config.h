@@ -25,8 +25,10 @@
 #ifndef _OPENCOG_CONFIG_H
 #define _OPENCOG_CONFIG_H
 
-#include <string>
+#include <fstream>
 #include <map>
+#include <string>
+#include <vector>
 
 namespace opencog
 {
@@ -44,6 +46,10 @@ class Config
 protected:
     std::map<std::string, std::string> _table;
     std::string _path_where_found;
+    bool _had_to_search;
+    std::string _abs_path;
+
+    void check_for_file(std::ifstream&, const char *, const char *);
 
 public:
     //! constructor
@@ -51,19 +57,22 @@ public:
     //! destructor
     Config();
 
-    //! Returns a new Config instance
+    //! Returns a new Config instance.
     static Config* createInstance(void);
 
-    //! reset configuration to default
+    //! Reset configuration to default.
     virtual void reset();
 
     //! Load passed file and redefines values for parameters.
     void load(const char* config_file, bool resetFirst = true);
 
-    //! location of the file
-    const std::string& path_where_found() { return _path_where_found; }
+    //! Location at which the config file was found.
+    const std::string& path_where_found() const { return _path_where_found; }
 
-    //! Checks whether a parameter exists
+    //! List of paths that were searched, in looking for the config file.
+    const std::vector<std::string> search_paths() const;
+
+    //! Return true if a parameter exists.
     const bool has(const std::string &parameter_name) const;
 
     //! Set the value of a given parameter.
@@ -74,19 +83,19 @@ public:
     //! Return current value of a given parameter.
     const std::string& operator[](const std::string &) const;
 
-    //! Return current value of a given parameter as an integer
+    //! Return current value of a given parameter as an integer.
     int get_int(const std::string &, int = 0) const;
 
-    //! Return current value of a given parameter as an long
+    //! Return current value of a given parameter as an long.
     long get_long(const std::string &, long = 0) const;
 
-    //! Return current value of a given parameter as a double
+    //! Return current value of a given parameter as a double.
     double get_double(const std::string &, double = 0.0) const;
 
-    //! Return current value of a given parameter as a boolean
+    //! Return current value of a given parameter as a boolean.
     bool get_bool(const std::string &, bool = false) const;
 
-    //! Dump all configuration parameters to a string
+    //! Dump all configuration parameters to a string.
     std::string to_string() const;
 };
 
