@@ -48,6 +48,7 @@ protected:
     std::string _path_where_found;
     bool _had_to_search;
     std::string _abs_path;
+    std::string _cfg_filename;
 
     void check_for_file(std::ifstream&, const char *, const char *);
 
@@ -71,6 +72,9 @@ public:
 
     //! List of paths that were searched, in looking for the config file.
     const std::vector<std::string> search_paths() const;
+
+    //! Name of the file that was actually searched for.
+    const std::string& search_file() const { return _cfg_filename; }
 
     //! Return true if a parameter exists.
     const bool has(const std::string &parameter_name) const;

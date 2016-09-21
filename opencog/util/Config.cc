@@ -82,6 +82,7 @@ void Config::reset()
     _table.clear();
     _had_to_search = true;
     _abs_path = "";
+    _cfg_filename = "";
 }
 
 static const char* DEFAULT_CONFIG_FILENAME = "opencog.conf";
@@ -163,6 +164,8 @@ void Config::load(const char* filename, bool resetFirst)
 
     // Reset to default values
     if (resetFirst) reset();
+
+    _cfg_filename = filename;
 
     ifstream fin;
 
