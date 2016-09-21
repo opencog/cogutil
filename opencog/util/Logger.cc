@@ -247,20 +247,31 @@ void Logger::write_msg(const std::string &msg)
             }
             else
             {
-                fprintf(logfile, "[INFO] No config file found\n");
-                fprintf(logfile, "[INFO] Searched for \"%s\"\n",
-                        config().search_file().c_str());
-                std::vector<std::string> paths = config().search_paths();
-                for (auto& path : paths)
-                    fprintf(logfile, "[INFO] Searched at %s\n", path.c_str());
-
-                if (printToStdout)
+                cpath = config().search_file().c_str();
+                if (0 == strcmp("", cpath))
                 {
-                    printf("[INFO] No config file found\n");
-                    printf("[INFO] Searched for \"%s\"\n",
+                    fprintf(logfile,
+                            "[INFO] Logger started before any config file was loaded\n");
+                    if (printToStdout)
+                        printf("[INFO] Logger started before any config file was loaded\n");
+                }
+                else
+                {
+                    fprintf(logfile, "[INFO] No config file found\n");
+                    fprintf(logfile, "[INFO] Searched for \"%s\"\n",
                             config().search_file().c_str());
+                    std::vector<std::string> paths = config().search_paths();
                     for (auto& path : paths)
-                        printf("[INFO] Searched at %s\n", path.c_str());
+                        fprintf(logfile, "[INFO] Searched at %s\n", path.c_str());
+
+                    if (printToStdout)
+                    {
+                        printf("[INFO] No config file found\n");
+                        printf("[INFO] Searched for \"%s\"\n",
+                                config().search_file().c_str());
+                        for (auto& path : paths)
+                            printf("[INFO] Searched at %s\n", path.c_str());
+                    }
                 }
             }
         }
@@ -494,11 +505,11 @@ void Logger::backtrace()
 {
     static const unsigned int max_queue_size_allowed = 1024;
     std::ostringstream oss;
-    
+
     #ifndef CYGWIN
     prt_backtrace(oss);
     #endif
-    
+
     msg_queue.push(new std::string(oss.str()));
 
     // If the queue gets too full, block until it's flushed to file or
