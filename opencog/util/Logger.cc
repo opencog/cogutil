@@ -249,7 +249,7 @@ void Logger::write_msg(const std::string &msg)
             {
                 fprintf(logfile, "[INFO] No config file found\n");
                 fprintf(logfile, "[INFO] Searched for \"%s\"\n",
-                        config().search_file());
+                        config().search_file().c_str());
                 std::vector<std::string> paths = config().search_paths();
                 for (auto& path : paths)
                     fprintf(logfile, "[INFO] Searched at %s\n", path.c_str());
@@ -258,7 +258,7 @@ void Logger::write_msg(const std::string &msg)
                 {
                     printf("[INFO] No config file found\n");
                     printf("[INFO] Searched for \"%s\"\n",
-                            config().search_file());
+                            config().search_file().c_str());
                     for (auto& path : paths)
                         printf("[INFO] Searched at %s\n", path.c_str());
                 }
