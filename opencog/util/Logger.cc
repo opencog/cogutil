@@ -248,9 +248,16 @@ void Logger::write_msg(const std::string &msg)
             else
             {
                 fprintf(logfile, "[INFO] No config file found\n");
+                std::vector<std::string> paths = config().search_paths();
+                for (auto& path : paths)
+                    fprintf(logfile, "[INFO] Searched %s\n", path.c_str());
 
                 if (printToStdout)
+                {
                     printf("[INFO] No config file found\n");
+                    for (auto& path : paths)
+                        fprintf(logfile, "[INFO] Searched %s\n", path.c_str());
+                }
             }
         }
     }
