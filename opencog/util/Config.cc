@@ -254,12 +254,13 @@ void Config::load(const char* filename, bool resetFirst)
 
         else if (line.find_first_not_of(blank_chars) != string::npos)
         {
-            // This will print the diagnostics to the default log file
+            // This might print the diagnostics to the default log file
             // location.  Note that the config file itself contains the
             // log file location that is supposed to be used, so this
             // printing is happening "too early", before the logger is
             // fully initialized. Such is life; this is still a lot easier
             // than debugging the thrown exception in a debugger.
+            setup_logger();
             logger().warn("Invalid config file entry at line %d in %s\n",
                   line_number, path_where_found().c_str());
 
@@ -280,6 +281,15 @@ void Config::load(const char* filename, bool resetFirst)
     fin.close();
 
     // Finish configuring the logger...
+    setup_logger();
+
+    // And then finally, at long last!!! report what happened.
+    logger().info("Using config file found at: %s\n",
+                  path_where_found().c_str());
+}
+
+void Config::setup_logger()
+{
     if (has("LOG_FILE"))
         logger().set_filename(get("LOG_FILE"));
     if (has("LOG_LEVEL"))
@@ -290,10 +300,6 @@ void Config::load(const char* filename, bool resetFirst)
         logger().set_print_to_stdout_flag(get_bool("LOG_TO_STDOUT"));
     if (has("LOG_TIMESTAMP"))
         logger().set_timestamp_flag(get_bool("LOG_TIMESTAMP"));
-
-    // And then finally, at long last!!! report what happened.
-    logger().info("Using config file found at: %s\n",
-                  path_where_found().c_str());
 }
 
 const bool Config::has(const string &name) const

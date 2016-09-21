@@ -47,6 +47,7 @@ protected:
     std::string _cfg_filename;
 
     void check_for_file(std::ifstream&, const char *, const char *);
+    void setup_logger();
 
 public:
     //! constructor

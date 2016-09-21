@@ -87,7 +87,7 @@ public:
      */
     void set_level(Level);
     void set_level(const std::string& str) {
-        set_level(get_level_from_string(str);
+        set_level(get_level_from_string(str));
     }
 
     /**
@@ -104,7 +104,7 @@ public:
      */
     void set_backtrace_level(Level);
     void set_backtrace_level(const std::string& str) {
-        set_backtrace_level(get_level_from_string(str);
+        set_backtrace_level(get_level_from_string(str));
     }
 
     /**
