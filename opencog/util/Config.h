@@ -36,10 +36,6 @@ namespace opencog
  *  @{
  */
 
-class Config;
-
-typedef Config* ConfigFactory(void);
-
 //! library-wide configuration; keys and values are strings
 class Config
 {
@@ -64,7 +60,7 @@ public:
     //! Reset configuration to default.
     virtual void reset();
 
-    //! Load passed file and redefines values for parameters.
+    //! Parse the indicated file for parameter values.
     void load(const char* config_file, bool resetFirst = true);
 
     //! Location at which the config file was found.
@@ -109,6 +105,7 @@ public:
  *      is changed with the createInstance provided@n
  *      it is a temporary dirty hack@n
  */
+typedef Config* ConfigFactory(void);
 Config& config(ConfigFactory* = Config::createInstance,
                bool overwrite = false);
 
