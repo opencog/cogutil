@@ -80,6 +80,7 @@ Config::Config()
 void Config::reset()
 {
     _table.clear();
+    _had_to_search = true;
 }
 
 static const char* DEFAULT_CONFIG_FILENAME = "opencog.conf";
@@ -105,6 +106,47 @@ static const char* DEFAULT_CONFIG_PATHS[] =
     NULL
 };
 
+const std::vector<std::string> Config::search_paths() const
+{
+    std::vector<std::string> paths;
+    if (_had_to_search)
+    {
+         int i=0;
+         while (DEFAULT_CONFIG_PATHS[i])
+         {
+             paths.push_back(DEFAULT_CONFIG_PATHS[i]);
+             i++;
+         }
+    }
+    return paths;
+}
+
+void Config::check_for_file(std::ifstream& fin,
+                            const char* path_str, const char* filename)
+{
+    boost::filesystem::path configPath(path_str);
+    configPath /= filename;
+
+    if (not boost::filesystem::exists(configPath)) return;
+
+    // Try to open the config file
+    fin.open(configPath.string().c_str());
+    if (fin and fin.good() and fin.is_open())
+    {
+        // Huh?? WTF?? Are you telling me that boost searches the CWD
+        // by default? That sure feels like a security hole to me...
+        if ('/' != configPath.string()[0])
+        {
+            char buff[PATH_MAX+1];
+            char *p = getcwd(buff, PATH_MAX);
+            if (p) {
+                _path_where_found = buff;
+                _path_where_found += '/';
+            }
+        }
+        _path_where_found += configPath.string();
+    }
+}
 
 // constructor
 void Config::load(const char* filename, bool resetFirst)
@@ -112,35 +154,25 @@ void Config::load(const char* filename, bool resetFirst)
     if (NULL == filename or 0 == filename[0])
         filename = DEFAULT_CONFIG_FILENAME;
 
-    if (resetFirst) {
-        // Reset to default values
-        reset();
-    }
+    // Reset to default values
+    if (resetFirst) reset();
 
-    // Search for the filename in a bunch of typical locations.
     ifstream fin;
-    for (int i = 0; DEFAULT_CONFIG_PATHS[i] != NULL; ++i)
+
+    // If the filename specifies an absolute path, go directly there.
+    if ('/' == filename[0])
     {
-        boost::filesystem::path configPath(DEFAULT_CONFIG_PATHS[i]);
-        configPath /= filename;
-        if (boost::filesystem::exists(configPath))
+        _had_to_search = false;
+        check_for_file(fin, "", filename);
+    }
+    else
+    {
+        // Search for the filename in a bunch of typical locations.
+        for (int i = 0; DEFAULT_CONFIG_PATHS[i] != NULL; ++i)
         {
-            // Read and process the config file
-            fin.open(configPath.string().c_str());
+            check_for_file(fin, DEFAULT_CONFIG_PATHS[i], filename);
             if (fin and fin.good() and fin.is_open())
-            {
-                if ('/' != configPath.string()[0])
-                {
-                    char buff[PATH_MAX+1];
-                    char *p = getcwd(buff, PATH_MAX);
-                    if (p) {
-                        _path_where_found = buff;
-                        _path_where_found += '/';
-                    }
-                }
-                _path_where_found += configPath.string();
                 break;
-            }
         }
     }
 
@@ -156,6 +188,7 @@ void Config::load(const char* filename, bool resetFirst)
     bool have_name = false;
     bool have_value = false;
 
+    // Read and parse the config file.
     while (++line_number, fin.good() and getline(fin, line))
     {
         string::size_type idx;
