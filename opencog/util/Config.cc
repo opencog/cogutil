@@ -81,6 +81,7 @@ void Config::reset()
 {
     _table.clear();
     _had_to_search = true;
+    _abs_path = "";
 }
 
 static const char* DEFAULT_CONFIG_FILENAME = "opencog.conf";
@@ -118,6 +119,10 @@ const std::vector<std::string> Config::search_paths() const
              i++;
          }
     }
+    else
+    {
+        paths.push_back(_abs_path);
+    }
     return paths;
 }
 
@@ -133,6 +138,7 @@ void Config::check_for_file(std::ifstream& fin,
     fin.open(configPath.string().c_str());
     if (fin and fin.good() and fin.is_open())
     {
+#if 0
         // Huh?? WTF?? Are you telling me that boost searches the CWD
         // by default? That sure feels like a security hole to me...
         if ('/' != configPath.string()[0])
@@ -144,6 +150,7 @@ void Config::check_for_file(std::ifstream& fin,
                 _path_where_found += '/';
             }
         }
+#endif
         _path_where_found += configPath.string();
     }
 }
@@ -163,6 +170,7 @@ void Config::load(const char* filename, bool resetFirst)
     if ('/' == filename[0])
     {
         _had_to_search = false;
+        _abs_path = filename;
         check_for_file(fin, "", filename);
     }
     else

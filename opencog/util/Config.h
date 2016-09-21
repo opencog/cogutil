@@ -47,6 +47,7 @@ protected:
     std::map<std::string, std::string> _table;
     std::string _path_where_found;
     bool _had_to_search;
+    std::string _abs_path;
 
     void check_for_file(std::ifstream&, const char *, const char *);
 
