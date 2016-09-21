@@ -81,6 +81,7 @@ Config::Config()
 void Config::reset()
 {
     _table.clear();
+    _no_config_loaded = true;
     _had_to_search = true;
     _abs_path = "";
     _cfg_filename = "";
@@ -204,6 +205,8 @@ void Config::load(const char* filename, bool resetFirst)
              "unable to open file \"%s\"", filename);
     }
 
+    _no_config_loaded = false;
+
     string line;
     string name;
     string value;
@@ -308,12 +311,16 @@ void Config::setup_logger()
 
 const bool Config::has(const string &name) const
 {
+    if (_no_config_loaded)
+        logger().warn("No configuration file was loaded! Param=%s",
+                      name.c_str());
     return (_table.find(name) != _table.end());
 }
 
 void Config::set(const std::string &parameter_name,
                  const std::string &parameter_value)
 {
+    _no_config_loaded = false;
     _table[parameter_name] = parameter_value;
 }
 

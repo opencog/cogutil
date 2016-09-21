@@ -41,8 +41,9 @@ class Config
 {
 protected:
     std::map<std::string, std::string> _table;
-    std::string _path_where_found;
+    bool _no_config_loaded;
     bool _had_to_search;
+    std::string _path_where_found;
     std::string _abs_path;
     std::string _cfg_filename;
 
