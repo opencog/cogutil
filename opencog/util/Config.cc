@@ -138,9 +138,9 @@ void Config::check_for_file(std::ifstream& fin,
     fin.open(configPath.string().c_str());
     if (fin and fin.good() and fin.is_open())
     {
-#if 0
-        // Huh?? WTF?? Are you telling me that boost searches the CWD
-        // by default? That sure feels like a security hole to me...
+        // XXX FIXME Allowing boost to search relative paths is
+        // a security bug waiting to happen. Right now, it seems
+        // like a very very unlikely thing, but it is a bug!
         if ('/' != configPath.string()[0])
         {
             char buff[PATH_MAX+1];
@@ -150,7 +150,6 @@ void Config::check_for_file(std::ifstream& fin,
                 _path_where_found += '/';
             }
         }
-#endif
         _path_where_found += configPath.string();
     }
 }
