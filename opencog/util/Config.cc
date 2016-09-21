@@ -279,7 +279,19 @@ void Config::load(const char* filename, bool resetFirst)
     }
     fin.close();
 
-    // Finish configing the logger, and report what happened.
+    // Finish configuring the logger...
+    if (has("LOG_FILE"))
+        logger().set_filename(get("LOG_FILE"));
+    if (has("LOG_LEVEL"))
+        logger().set_level(get("LOG_LEVEL"));
+    if (has("BACK_TRACE_LOG_LEVEL"))
+        logger().set_backtrace_level(get("BACK_TRACE_LOG_LEVEL"));
+    if (has("LOG_TO_STDOUT"))
+        logger().set_print_to_stdout_flag(get_bool("LOG_TO_STDOUT"));
+    if (has("LOG_TIMESTAMP"))
+        logger().set_timestamp_flag(get_bool("LOG_TIMESTAMP"));
+
+    // And then finally, at long last!!! report what happened.
     logger().info("Using config file found at: %s\n",
                   path_where_found().c_str());
 }

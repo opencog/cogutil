@@ -57,7 +57,6 @@
 #include <opencog/util/platform.h>
 
 #include "Logger.h"
-#include "Config.h"
 
 #ifdef __APPLE__
 #define fdatasync fsync
@@ -254,8 +253,7 @@ Logger::Logger(const std::string &fname, Logger::Level level, bool tsEnabled)
 {
     this->fileName.assign(fname);
     this->currentLevel = level;
-    this->backTraceLevel = get_level_from_string(
-            opencog::config().get("BACK_TRACE_LOG_LEVEL", "error"));
+    this->backTraceLevel = ERROR;
 
     this->timestampEnabled = tsEnabled;
     this->printToStdout = false;
