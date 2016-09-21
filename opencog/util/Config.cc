@@ -23,6 +23,7 @@
  */
 
 #include "Config.h"
+#include "Logger.h"
 
 #include <iostream>
 #include <fstream>
@@ -80,8 +81,10 @@ Config::Config()
 void Config::reset()
 {
     _table.clear();
+    _no_config_loaded = true;
     _had_to_search = true;
     _abs_path = "";
+    _cfg_filename = "";
 }
 
 static const char* DEFAULT_CONFIG_FILENAME = "opencog.conf";
@@ -99,7 +102,6 @@ static const char* DEFAULT_CONFIG_PATHS[] =
     "../../../lib/",
     "../../../../lib/", // yes, really needed for some test cases!
     CONFDIR,
-    "", // If you don't have this, then absolute paths won't work!
 #ifndef WIN32
     "/etc/opencog",
     "/etc",
@@ -138,9 +140,9 @@ void Config::check_for_file(std::ifstream& fin,
     fin.open(configPath.string().c_str());
     if (fin and fin.good() and fin.is_open())
     {
-#if 0
-        // Huh?? WTF?? Are you telling me that boost searches the CWD
-        // by default? That sure feels like a security hole to me...
+        // XXX FIXME Allowing boost to search relative paths is
+        // a security bug waiting to happen. Right now, it seems
+        // like a very very unlikely thing, but it is a bug!
         if ('/' != configPath.string()[0])
         {
             char buff[PATH_MAX+1];
@@ -150,7 +152,6 @@ void Config::check_for_file(std::ifstream& fin,
                 _path_where_found += '/';
             }
         }
-#endif
         _path_where_found += configPath.string();
     }
 }
@@ -163,6 +164,8 @@ void Config::load(const char* filename, bool resetFirst)
 
     // Reset to default values
     if (resetFirst) reset();
+
+    _cfg_filename = filename;
 
     ifstream fin;
 
@@ -186,8 +189,23 @@ void Config::load(const char* filename, bool resetFirst)
 
     // Whoops, failed.
     if (!fin or !fin.good() or !fin.is_open())
+    {
+        // This will print the diagnostics to the default log file
+        // location.  Note that the config file itself contains the
+        // log file location that is supposed to be used, so this
+        // printing is happening "too early", before the logger is
+        // fully initialized. Such is life; this is still a lot easier
+        // than debugging the thrown exception in a debugger.
+        logger().warn("No config file found!\n");
+        logger().warn("Searched for \"%s\"\n", search_file().c_str());
+        for (auto& path : search_paths())
+        logger().warn("Searched at %s\n", path.c_str());
+
         throw IOException(TRACE_INFO,
              "unable to open file \"%s\"", filename);
+    }
+
+    _no_config_loaded = false;
 
     string line;
     string name;
@@ -239,8 +257,19 @@ void Config::load(const char* filename, bool resetFirst)
 
         else if (line.find_first_not_of(blank_chars) != string::npos)
         {
+            // This might print the diagnostics to the default log file
+            // location.  Note that the config file itself contains the
+            // log file location that is supposed to be used, so this
+            // printing is happening "too early", before the logger is
+            // fully initialized. Such is life; this is still a lot easier
+            // than debugging the thrown exception in a debugger.
+            setup_logger();
+            logger().warn("Invalid config file entry at line %d in %s\n",
+                  line_number, path_where_found().c_str());
+
             throw InvalidParamException(TRACE_INFO,
-                  "[ERROR] invalid configuration entry (line %d)", line_number);
+                  "[ERROR] invalid configuration entry (line %d)",
+                  line_number);
         }
 
         if (have_name && have_value)
@@ -253,16 +282,45 @@ void Config::load(const char* filename, bool resetFirst)
         }
     }
     fin.close();
+
+    // Finish configuring the logger... The config file itself
+    // contains the location of the log file. This is working around
+    // a chicken-and-egg problem with reporting config file issues.
+    // Such is life; this is a lot easier than debugging screwed-up
+    // file-path craziness in a debugger. We MUST log the path!!!
+    setup_logger();
+
+    // And then finally, at long last!!! report what happened.
+    logger().info("Using config file found at: %s\n",
+                  path_where_found().c_str());
+}
+
+void Config::setup_logger()
+{
+    if (has("LOG_FILE"))
+        logger().set_filename(get("LOG_FILE"));
+    if (has("LOG_LEVEL"))
+        logger().set_level(get("LOG_LEVEL"));
+    if (has("BACK_TRACE_LOG_LEVEL"))
+        logger().set_backtrace_level(get("BACK_TRACE_LOG_LEVEL"));
+    if (has("LOG_TO_STDOUT"))
+        logger().set_print_to_stdout_flag(get_bool("LOG_TO_STDOUT"));
+    if (has("LOG_TIMESTAMP"))
+        logger().set_timestamp_flag(get_bool("LOG_TIMESTAMP"));
 }
 
 const bool Config::has(const string &name) const
 {
+    if (_no_config_loaded)
+        logger().warn("No configuration file was loaded! Param=%s",
+                      name.c_str());
     return (_table.find(name) != _table.end());
 }
 
 void Config::set(const std::string &parameter_name,
                  const std::string &parameter_value)
 {
+    _no_config_loaded = false;
     _table[parameter_name] = parameter_value;
 }
 

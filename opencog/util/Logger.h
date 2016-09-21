@@ -44,7 +44,6 @@ namespace opencog
 //! logging evens
 class Logger
 {
-
     void set(const Logger&);
     bool writingLoopActive;
 public:
@@ -87,6 +86,9 @@ public:
      * log-level lower than or equals to newLevel will be logged.
      */
     void set_level(Level);
+    void set_level(const std::string& str) {
+        set_level(get_level_from_string(str));
+    }
 
     /**
      * Get the current log level that determines which messages will be
@@ -101,6 +103,9 @@ public:
      * will have back trace.
      */
     void set_backtrace_level(Level);
+    void set_backtrace_level(const std::string& str) {
+        set_backtrace_level(get_level_from_string(str));
+    }
 
     /**
      * Get the current back trace log level that determines which messages
@@ -163,7 +168,7 @@ public:
      * if passed level is lower than or equal to the current log level
      * of this Logger instance.
      */
-    void log (Level level, const std::string &txt);
+    void log(Level level, const std::string &);
     // void error(const std::string &txt);
     // void warn (const std::string &txt);
     // void info (const std::string &txt);

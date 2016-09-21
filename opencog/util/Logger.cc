@@ -57,7 +57,6 @@
 #include <opencog/util/platform.h>
 
 #include "Logger.h"
-#include "Config.h"
 
 #ifdef __APPLE__
 #define fdatasync fsync
@@ -229,37 +228,6 @@ void Logger::write_msg(const std::string &msg)
         }
 
         enable();
-
-        // Log the config file location. We do that here, because
-        // we can't do it any earlier, because the config file
-        // specifies the log location.
-        if (INFO <= currentLevel)
-        {
-            const char * cpath = config().path_where_found().c_str();
-            if (strcmp("", cpath))
-            {
-                fprintf(logfile, "[INFO] Using config file found at: %s\n",
-                   cpath);
-
-                if (printToStdout)
-                    printf("[INFO] Using config file found at: %s\n",
-                           cpath);
-            }
-            else
-            {
-                fprintf(logfile, "[INFO] No config file found\n");
-                std::vector<std::string> paths = config().search_paths();
-                for (auto& path : paths)
-                    fprintf(logfile, "[INFO] Searched %s\n", path.c_str());
-
-                if (printToStdout)
-                {
-                    printf("[INFO] No config file found\n");
-                    for (auto& path : paths)
-                        fprintf(logfile, "[INFO] Searched %s\n", path.c_str());
-                }
-            }
-        }
     }
 
     // Write to file.
@@ -285,8 +253,7 @@ Logger::Logger(const std::string &fname, Logger::Level level, bool tsEnabled)
 {
     this->fileName.assign(fname);
     this->currentLevel = level;
-    this->backTraceLevel = get_level_from_string(
-            opencog::config().get("BACK_TRACE_LOG_LEVEL", "error"));
+    this->backTraceLevel = ERROR;
 
     this->timestampEnabled = tsEnabled;
     this->printToStdout = false;
@@ -490,11 +457,11 @@ void Logger::backtrace()
 {
     static const unsigned int max_queue_size_allowed = 1024;
     std::ostringstream oss;
-    
+
     #ifndef CYGWIN
     prt_backtrace(oss);
     #endif
-    
+
     msg_queue.push(new std::string(oss.str()));
 
     // If the queue gets too full, block until it's flushed to file or
