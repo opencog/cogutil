@@ -189,17 +189,20 @@ void Config::load(const char* filename, bool resetFirst)
     // Whoops, failed.
     if (!fin or !fin.good() or !fin.is_open())
     {
-        logger().info("No config file found!\n");
-        logger().info("Searched for \"%s\"\n", search_file().c_str());
+        // This will print the diagnostics to the default log file
+        // location.  Note that the config file itself contains the
+        // log file location that is supposed to be used, so this
+        // printing is happening "too early", before the logger is
+        // fully initialized. Such is life; this is still a lot easier
+        // than debugging the thrown exception in a debugger.
+        logger().warn("No config file found!\n");
+        logger().warn("Searched for \"%s\"\n", search_file().c_str());
         for (auto& path : search_paths())
-        logger().info("Searched at %s\n", path.c_str());
+        logger().warn("Searched at %s\n", path.c_str());
 
         throw IOException(TRACE_INFO,
              "unable to open file \"%s\"", filename);
     }
-
-    logger().info("Using config file found at: %s\n",
-                  path_where_found().c_str());
 
     string line;
     string name;
@@ -251,8 +254,18 @@ void Config::load(const char* filename, bool resetFirst)
 
         else if (line.find_first_not_of(blank_chars) != string::npos)
         {
+            // This will print the diagnostics to the default log file
+            // location.  Note that the config file itself contains the
+            // log file location that is supposed to be used, so this
+            // printing is happening "too early", before the logger is
+            // fully initialized. Such is life; this is still a lot easier
+            // than debugging the thrown exception in a debugger.
+            logger().warn("Invalid config file entry at line %d in %s\n",
+                  line_number, path_where_found().c_str());
+
             throw InvalidParamException(TRACE_INFO,
-                  "[ERROR] invalid configuration entry (line %d)", line_number);
+                  "[ERROR] invalid configuration entry (line %d)",
+                  line_number);
         }
 
         if (have_name && have_value)
@@ -265,6 +278,10 @@ void Config::load(const char* filename, bool resetFirst)
         }
     }
     fin.close();
+
+    // Finish configing the logger, and report what happened.
+    logger().info("Using config file found at: %s\n",
+                  path_where_found().c_str());
 }
 
 const bool Config::has(const string &name) const
