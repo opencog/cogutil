@@ -23,6 +23,7 @@
  */
 
 #include "Config.h"
+#include "Logger.h"
 
 #include <iostream>
 #include <fstream>
@@ -187,8 +188,18 @@ void Config::load(const char* filename, bool resetFirst)
 
     // Whoops, failed.
     if (!fin or !fin.good() or !fin.is_open())
+    {
+        logger().info("No config file found!\n");
+        logger().info("Searched for \"%s\"\n", search_file().c_str());
+        for (auto& path : search_paths())
+        logger().info("Searched at %s\n", path.c_str());
+
         throw IOException(TRACE_INFO,
              "unable to open file \"%s\"", filename);
+    }
+
+    logger().info("Using config file found at: %s\n",
+                  path_where_found().c_str());
 
     string line;
     string name;
