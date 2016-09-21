@@ -280,7 +280,11 @@ void Config::load(const char* filename, bool resetFirst)
     }
     fin.close();
 
-    // Finish configuring the logger...
+    // Finish configuring the logger... The config file itself
+    // contains the location of the log file. This is working around
+    // a chicken-and-egg problem with reporting config file issues.
+    // Such is life; this is a lot easier than debugging screwed-up
+    // file-path craziness in a debugger. We MUST log the path!!!
     setup_logger();
 
     // And then finally, at long last!!! report what happened.
