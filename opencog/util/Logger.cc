@@ -229,52 +229,6 @@ void Logger::write_msg(const std::string &msg)
         }
 
         enable();
-
-        // Log the config file location. We do that here, because
-        // we can't do it any earlier, because the config file
-        // specifies the log location.
-        if (INFO <= currentLevel)
-        {
-            const char * cpath = config().path_where_found().c_str();
-            if (strcmp("", cpath))
-            {
-                fprintf(logfile, "[INFO] Using config file found at: %s\n",
-                   cpath);
-
-                if (printToStdout)
-                    printf("[INFO] Using config file found at: %s\n",
-                           cpath);
-            }
-            else
-            {
-                cpath = config().search_file().c_str();
-                if (0 == strcmp("", cpath))
-                {
-                    fprintf(logfile,
-                            "[INFO] Logger started before any config file was loaded\n");
-                    if (printToStdout)
-                        printf("[INFO] Logger started before any config file was loaded\n");
-                }
-                else
-                {
-                    fprintf(logfile, "[INFO] No config file found\n");
-                    fprintf(logfile, "[INFO] Searched for \"%s\"\n",
-                            config().search_file().c_str());
-                    std::vector<std::string> paths = config().search_paths();
-                    for (auto& path : paths)
-                        fprintf(logfile, "[INFO] Searched at %s\n", path.c_str());
-
-                    if (printToStdout)
-                    {
-                        printf("[INFO] No config file found\n");
-                        printf("[INFO] Searched for \"%s\"\n",
-                                config().search_file().c_str());
-                        for (auto& path : paths)
-                            printf("[INFO] Searched at %s\n", path.c_str());
-                    }
-                }
-            }
-        }
     }
 
     // Write to file.
