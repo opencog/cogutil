@@ -303,11 +303,28 @@ class NotEvaluatableException : public RuntimeException
 public:
     /**
      * Constructor
-     * Nothing to be logged; tis simply breaks us out of inner loops.
+     * Nothing to be logged; this simply breaks us out of inner loops.
      */
     NotEvaluatableException(void);
 
 }; // NotEvaluatableException
+
+/**
+ * Exception thrown when an expression is of the wrong type.
+ *
+ * This exception will not log an error when thrown, because the
+ * exception is thrown during normal processing, and is not an error.
+ */
+class TypeCheckException : public RuntimeException
+{
+public:
+    /**
+     * Constructor
+     * Nothing to be logged; this simply breaks us out of inner loops.
+     */
+    TypeCheckException(void);
+
+}; // TypeCheckException
 
 /**
  * Exception thrown when the DeleteLink executes.
@@ -320,7 +337,7 @@ class DeleteException : public RuntimeException
 public:
     /**
      * Constructor
-     * Nothing to be logged; tis simply breaks us out of inner loops.
+     * Nothing to be logged; this simply breaks us out of inner loops.
      */
     DeleteException(void);
 
