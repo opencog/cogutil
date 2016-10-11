@@ -324,3 +324,11 @@ DeleteException::DeleteException(void)
  */
 NotEvaluatableException::NotEvaluatableException(void)
 {}
+
+/*
+ * ----------------------------------------------------------------------
+ * TypeCheckException class
+ * ----------------------------------------------------------------------
+ */
+TypeCheckException::TypeCheckException(void)
+{}
