@@ -308,27 +308,3 @@ AssertionException::AssertionException(const char* fmt, va_list ap)
     set_message(buf);
     opencog::logger().error("%s", buf);
 }
-
-/*
- * ----------------------------------------------------------------------
- * DeleteException class
- * ----------------------------------------------------------------------
- */
-DeleteException::DeleteException(void)
-{}
-
-/*
- * ----------------------------------------------------------------------
- * NotEvaluatableException class
- * ----------------------------------------------------------------------
- */
-NotEvaluatableException::NotEvaluatableException(void)
-{}
-
-/*
- * ----------------------------------------------------------------------
- * TypeCheckException class
- * ----------------------------------------------------------------------
- */
-TypeCheckException::TypeCheckException(void)
-{}
