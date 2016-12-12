@@ -23,6 +23,8 @@
 #ifndef OPENCOG_UTIL_GEOMETRIC_MEAN_MIRROR
 #define OPENCOG_UTIL_GEOMETRIC_MEAN_MIRROR
 
+#include  <cmath>
+
 #include <boost/mpl/placeholders.hpp>
 #include <boost/accumulators/framework/accumulator_base.hpp>
 #include <boost/accumulators/framework/extractor.hpp>
