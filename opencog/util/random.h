@@ -60,6 +60,25 @@ auto rand_element(C& c, RandGen& rng = randGen()) -> typename C::value_type &
     return *std::next(c.begin(), rng.randint(c.size()));
 }
 
+//! Pick an element of container c randomly, with distribution d.
+//! \warning it is assumed that c is non-empty
+template<typename C, typename D>
+const auto& rand_element(const C& c, D& d, RandGen& rng = randGen())
+{
+    OC_ASSERT(!c.empty());
+    return *std::next(c.begin(), d(rng));
+}
+
+//! Non-const version of above. Pick an element of container c
+//! randomly, with uniform distribution.  \warning it is assumed that
+//! c is non-empty
+template<typename C, typename D>
+auto& rand_element(C& c, D& d, RandGen& rng = randGen())
+{
+    OC_ASSERT(!c.empty());
+    return *std::next(c.begin(), d(rng));
+}
+
 //! Pick an element of container c randomly, with uniform
 //! distribution, and remove it.  \warning it is assumed that c is
 //! non-empty
