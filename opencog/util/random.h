@@ -44,7 +44,7 @@ namespace opencog {
 //! Pick an element of container c randomly, with uniform
 //! distribution.  \warning it is assumed that c is non-empty
 template<typename C>
-const auto rand_element(const C& c, RandGen& rng = randGen()) -> typename C::value_type const &
+const typename C::value_type& rand_element(const C& c, RandGen& rng=randGen())
 {
     OC_ASSERT(!c.empty());
     return *std::next(c.begin(), rng.randint(c.size()));
@@ -54,7 +54,7 @@ const auto rand_element(const C& c, RandGen& rng = randGen()) -> typename C::val
 //! randomly, with uniform distribution.  \warning it is assumed that
 //! c is non-empty
 template<typename C>
-auto rand_element(C& c, RandGen& rng = randGen()) -> typename C::value_type &
+typename C::value_type& rand_element(C& c, RandGen& rng=randGen())
 {
     OC_ASSERT(!c.empty());
     return *std::next(c.begin(), rng.randint(c.size()));
@@ -63,7 +63,7 @@ auto rand_element(C& c, RandGen& rng = randGen()) -> typename C::value_type &
 //! Pick an element of container c randomly, with distribution d.
 //! \warning it is assumed that c is non-empty
 template<typename C, typename D>
-const auto& rand_element(const C& c, D& d, RandGen& rng = randGen())
+const typename C::value_type& rand_element(const C& c, D& d, RandGen& rng=randGen())
 {
     OC_ASSERT(!c.empty());
     return *std::next(c.begin(), d(rng));
@@ -73,7 +73,7 @@ const auto& rand_element(const C& c, D& d, RandGen& rng = randGen())
 //! randomly, with uniform distribution.  \warning it is assumed that
 //! c is non-empty
 template<typename C, typename D>
-auto& rand_element(C& c, D& d, RandGen& rng = randGen())
+typename C::value_type& rand_element(C& c, D& d, RandGen& rng=randGen())
 {
     OC_ASSERT(!c.empty());
     return *std::next(c.begin(), d(rng));
@@ -83,7 +83,7 @@ auto& rand_element(C& c, D& d, RandGen& rng = randGen())
 //! distribution, and remove it.  \warning it is assumed that c is
 //! non-empty
 template<typename C>
-typename C::value_type rand_element_erase(C& c, RandGen& rng = randGen())
+typename C::value_type rand_element_erase(C& c, RandGen& rng=randGen())
 {
     OC_ASSERT(!c.empty());
     auto it = std::next(c.begin(), rng.randint(c.size()));
