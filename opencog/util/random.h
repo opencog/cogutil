@@ -44,7 +44,7 @@ namespace opencog {
 //! Pick an element of container c randomly, with uniform
 //! distribution.  \warning it is assumed that c is non-empty
 template<typename C>
-const auto& rand_element(const C& c, RandGen& rng = randGen())
+const auto rand_element(const C& c, RandGen& rng = randGen()) -> typename C::value_type const &
 {
     OC_ASSERT(!c.empty());
     return *std::next(c.begin(), rng.randint(c.size()));
@@ -54,7 +54,7 @@ const auto& rand_element(const C& c, RandGen& rng = randGen())
 //! randomly, with uniform distribution.  \warning it is assumed that
 //! c is non-empty
 template<typename C>
-auto& rand_element(C& c, RandGen& rng = randGen())
+auto rand_element(C& c, RandGen& rng = randGen()) -> typename C::value_type &
 {
     OC_ASSERT(!c.empty());
     return *std::next(c.begin(), rng.randint(c.size()));
