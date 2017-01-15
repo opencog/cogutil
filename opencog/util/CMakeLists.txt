@@ -114,6 +114,7 @@ INSTALL(FILES
 	ranking.h
 	recent_val.h
 	selection.h
+	sigslot.h
 	StringManipulator.h
 	StringTokenizer.h
 	tbb.h
