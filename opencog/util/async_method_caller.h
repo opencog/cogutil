@@ -83,6 +83,10 @@ namespace opencog
  * be a useful thing to do, if this class is being used in a temporary
  * instance somewhere, and the overhead of creating threads is to be
  * avoided. (For example, temporary AtomTables used during evaluation.)
+ *
+ * Note that setting the number of threads to the number of hardware
+ * cores is not necessarily a good idea; there are situations where
+ * this seems to slow the system down.
  */
 template<typename Writer, typename Element>
 class async_caller
@@ -91,12 +95,14 @@ class async_caller
 		concurrent_queue<Element> _store_queue;
 		std::vector<std::thread> _write_threads;
 		std::mutex _write_mutex;
-		unsigned int _thread_count;
-		bool _stopping_writers;
+		std::mutex _enqueue_mutex;
 		std::atomic<unsigned long> _busy_writers;
 
 		Writer* _writer;
 		void (Writer::*_do_write)(const Element&);
+
+		unsigned int _thread_count;
+		bool _stopping_writers;
 
 		void start_writer_thread();
 		void stop_writer_threads();
@@ -107,18 +113,19 @@ class async_caller
 		~async_caller();
 		void enqueue(const Element&);
 		void flush_queue();
+		void barrier();
 
 		// Utilities for monitoring performance.
 		// _item_count == number of items queued;
 		// _drain_count == number of times the high watermark was hit.
 		// _drain_msec == accumulated number of millisecs to drain.
 		// _drain_concurrent == number of threads that hit queue-full.
+		bool _in_drain;
 		std::atomic<unsigned long> _item_count;
 		std::atomic<unsigned long> _flush_count;
 		std::atomic<unsigned long> _drain_count;
 		std::atomic<unsigned long> _drain_msec;
 		std::atomic<unsigned long> _drain_slowest_msec;
-		bool _in_drain;
 		std::atomic<unsigned long> _drain_concurrent;
 };
 
@@ -218,7 +225,7 @@ void async_caller<Writer, Element>::stop_writer_threads()
 }
 
 
-/// Drain the pending queue.
+/// Drain the pending queue.  Non-synchronizing.
 ///
 /// This is NOT synchronizing! It does NOT prevent other threads from
 /// concurrently adding to the queue! Thus, if these other threads are
@@ -235,6 +242,30 @@ void async_caller<Writer, Element>::flush_queue()
 {
 	// std::this_thread::sleep_for(std::chrono::microseconds(10));
 	usleep(10);
+	_flush_count++;
+	while (0 < _store_queue.size() or 0 < _busy_writers);
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		// usleep(1000);
+	}
+}
+
+/// Drain the pending queue.  Synchronizing.
+///
+/// This forces a drain of the pending work queue. It prevents other
+/// threads from adding to the queue, while this is being done.
+/// Forward progress is guaranteed: this method will return in finite
+/// time.
+///
+/// Caution: the code here is slightly racey; a writer could still be
+/// busy, even though this returns. This is because there is a small
+/// window in write_loop, between the dequeue, and the busy_writer
+/// increment. I guess we should fix this...
+
+template<typename Writer, typename Element>
+void async_caller<Writer, Element>::barrier()
+{
+	std::unique_lock<std::mutex> lock(_enqueue_mutex);
 	_flush_count++;
 	while (0 < _store_queue.size() or 0 < _busy_writers);
 	{
@@ -281,8 +312,6 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 		throw RuntimeException(TRACE_INFO,
 			"Cannot store; async_caller writer threads are being stopped!");
 
-	_item_count++;
-
 	if (0 == _thread_count)
 	{
 		// If there are no async writer threads, then silently perform
@@ -291,11 +320,20 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 		// to do this if this class is being used in a temporary,
 		// transient object, and the user wants to avoid the overhead
 		// of creating threads.
+		_item_count++;
 		(_writer->*_do_write)(elt);
 		return;
 	}
 
-	_store_queue.push(elt);
+	// The _store_queue.push(elt) does not need a lock, itself; its
+	// perfectly thread-safe. However, the flush barrier does need to
+	// be able to halt everyone else from enqueing more stuff, so we
+	// do need to use a lock for that.
+	{
+		std::unique_lock<std::mutex> lock(_enqueue_mutex);
+		_store_queue.push(elt);
+		_item_count++;
+	}
 
 	// If the writer threads are falling behind, mitigate.
 	// Right now, this will be real simple: just spin and wait
