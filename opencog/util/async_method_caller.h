@@ -26,6 +26,7 @@
 #define _OC_ASYNC_WRITER_CONST_H
 
 #include <atomic>
+#include <chrono>
 #include <mutex>
 #include <thread>
 #include <vector>
@@ -110,6 +111,7 @@ class async_caller
 		// Utilities for monitoring performance.
 		std::atomic<unsigned long> _item_count;
 		std::atomic<unsigned long> _drain_count;
+		std::atomic<unsigned long> _drain_msec;
 };
 
 
@@ -133,6 +135,7 @@ async_caller<Writer, Element>::async_caller(Writer* wr,
 	_busy_writers = 0;
 	_item_count = 0;
 	_drain_count = 0;
+	_drain_msec = 0;
 
 	for (int i=0; i<nthreads; i++)
 	{
@@ -280,16 +283,24 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 
 	if (HIGH_WATER_MARK < _store_queue.size())
 	{
-		unsigned long cnt = 0;
+		// unsigned long cnt = 0;
+		auto start = std::chrono::steady_clock::now();
 		do
 		{
 			// std::this_thread::sleep_for(std::chrono::milliseconds(1));
 			usleep(1000);
-			cnt++;
+			// cnt++;
 		}
 		while (LOW_WATER_MARK < _store_queue.size());
-		logger().debug("async_caller overfull queue; had to sleep %d millisecs to drain!", cnt);
+
+		// Sleep might not be accurate, so measure elapsed time directly.
+		auto end = std::chrono::steady_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+		unsigned long msec = duration.count();
+
+		logger().debug("async_caller overfull queue; had to sleep %d millisecs to drain!", msec);
 		_drain_count++;
+		_drain_msec += msec;
 	}
 }
 
