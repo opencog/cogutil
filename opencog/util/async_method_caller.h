@@ -106,6 +106,10 @@ class async_caller
 		~async_caller();
 		void enqueue(const Element&);
 		void flush_queue();
+
+		// Utilities for monitoring performance.
+		std::atomic<unsigned long> _item_count;
+		std::atomic<unsigned long> _drain_count;
 };
 
 
@@ -127,6 +131,8 @@ async_caller<Writer, Element>::async_caller(Writer* wr,
 	_stopping_writers = false;
 	_thread_count = 0;
 	_busy_writers = 0;
+	_item_count = 0;
+	_drain_count = 0;
 
 	for (int i=0; i<nthreads; i++)
 	{
@@ -249,6 +255,9 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 	if (_stopping_writers)
 		throw RuntimeException(TRACE_INFO,
 			"Cannot store; async_caller writer threads are being stopped!");
+
+	_item_count++;
+
 	if (0 == _thread_count)
 	{
 		// If there are no async writer threads, then silently perform
@@ -280,6 +289,7 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 		}
 		while (LOW_WATER_MARK < _store_queue.size());
 		logger().debug("async_caller overfull queue; had to sleep %d millisecs to drain!", cnt);
+		_drain_count++;
 	}
 }
 
