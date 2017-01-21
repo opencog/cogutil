@@ -114,6 +114,7 @@ class async_caller
 		// _drain_msec == accumulated number of millisecs to drain.
 		// _drain_concurrent == number of threads that hit queue-full.
 		std::atomic<unsigned long> _item_count;
+		std::atomic<unsigned long> _flush_count;
 		std::atomic<unsigned long> _drain_count;
 		std::atomic<unsigned long> _drain_msec;
 		std::atomic<unsigned long> _drain_slowest_msec;
@@ -141,6 +142,7 @@ async_caller<Writer, Element>::async_caller(Writer* wr,
 	_thread_count = 0;
 	_busy_writers = 0;
 	_item_count = 0;
+	_flush_count = 0;
 	_drain_count = 0;
 	_drain_msec = 0;
 	_drain_slowest_msec = 0;
@@ -217,19 +219,27 @@ void async_caller<Writer, Element>::stop_writer_threads()
 
 
 /// Drain the pending queue.
-/// Caution: this is slightly racy; a writer could still be busy
-/// even though this returns. (There's a window in write_loop, between
-/// the dequeue, and the busy_writer increment. I guess we should fix
-/// this...
+///
+/// This is NOT synchronizing! It does NOT prevent other threads from
+/// concurrently adding to the queue! Thus, if these other threads are
+/// adding at a high rate, this call might not return for a long time;
+/// it might never return! There is no gaurantee of forward progress!
+///
+/// Even if there are no other threads adding to the queue, the code
+/// here is slightly racey; a writer could still be busy, even though
+/// this returns. This is because there is a small window in write_loop,
+/// between the dequeue, and the busy_writer increment. I guess we
+/// should fix this...
 template<typename Writer, typename Element>
 void async_caller<Writer, Element>::flush_queue()
 {
 	// std::this_thread::sleep_for(std::chrono::microseconds(10));
 	usleep(10);
+	_flush_count++;
 	while (0 < _store_queue.size() or 0 < _busy_writers);
 	{
-		// std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		usleep(1000);
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		// usleep(1000);
 	}
 }
 
