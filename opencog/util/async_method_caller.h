@@ -109,6 +109,9 @@ class async_caller
 		void flush_queue();
 
 		// Utilities for monitoring performance.
+		// _item_count == number of items queued;
+		// _drain_count == number of times the high watermark was hit.
+		// _drain_msec == accumulated number of millisecs to drain.
 		std::atomic<unsigned long> _item_count;
 		std::atomic<unsigned long> _drain_count;
 		std::atomic<unsigned long> _drain_msec;
