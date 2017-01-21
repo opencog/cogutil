@@ -115,6 +115,7 @@ class async_caller
 		std::atomic<unsigned long> _item_count;
 		std::atomic<unsigned long> _drain_count;
 		std::atomic<unsigned long> _drain_msec;
+		std::atomic<unsigned long> _drain_slowest_msec;
 };
 
 
@@ -139,6 +140,7 @@ async_caller<Writer, Element>::async_caller(Writer* wr,
 	_item_count = 0;
 	_drain_count = 0;
 	_drain_msec = 0;
+	_drain_slowest_msec = 0;
 
 	for (int i=0; i<nthreads; i++)
 	{
@@ -252,7 +254,9 @@ void async_caller<Writer, Element>::write_loop()
 /* ================================================================ */
 /**
  * Enqueue the given element.  Returns immediately after enqueuing.
- * Thread-safe: this my be called concurrently from multiple threads.
+ * Thread-safe: this may be called concurrently from multiple threads.
+ * If the queue is over-full, then this will block until the que is
+ * mostly drained...
  */
 template<typename Writer, typename Element>
 void async_caller<Writer, Element>::enqueue(const Element& elt)
@@ -281,6 +285,11 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 	// If the writer threads are falling behind, mitigate.
 	// Right now, this will be real simple: just spin and wait
 	// for things to catch up.  Maybe we should launch more threads!?
+	// Note also: even as we block this thread, wiating for the drain
+	// to complete, other threads might be filling the queue back up.
+	// If it does over-fill, then those threads will also block, one
+	// by one, until we hit a metastable state, where the active
+	// (non-stalled) fillers and emptiers are in balance.
 #define HIGH_WATER_MARK 100
 #define LOW_WATER_MARK 10
 
@@ -290,8 +299,8 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 		auto start = std::chrono::steady_clock::now();
 		do
 		{
-			// std::this_thread::sleep_for(std::chrono::milliseconds(1));
-			usleep(1000);
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			// usleep(1000);
 			// cnt++;
 		}
 		while (LOW_WATER_MARK < _store_queue.size());
@@ -304,6 +313,7 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 		logger().debug("async_caller overfull queue; had to sleep %d millisecs to drain!", msec);
 		_drain_count++;
 		_drain_msec += msec;
+		if (_drain_slowest_msec < msec) _drain_slowest_msec = msec;
 	}
 }
 
