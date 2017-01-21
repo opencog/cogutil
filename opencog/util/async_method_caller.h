@@ -92,8 +92,8 @@ class async_caller
 		std::vector<std::thread> _write_threads;
 		std::mutex _write_mutex;
 		unsigned int _thread_count;
-		std::atomic<unsigned long> _busy_writers;
 		bool _stopping_writers;
+		std::atomic<unsigned long> _busy_writers;
 
 		Writer* _writer;
 		void (Writer::*_do_write)(const Element&);
@@ -112,10 +112,13 @@ class async_caller
 		// _item_count == number of items queued;
 		// _drain_count == number of times the high watermark was hit.
 		// _drain_msec == accumulated number of millisecs to drain.
+		// _drain_concurrent == number of threads that hit queue-full.
 		std::atomic<unsigned long> _item_count;
 		std::atomic<unsigned long> _drain_count;
 		std::atomic<unsigned long> _drain_msec;
 		std::atomic<unsigned long> _drain_slowest_msec;
+		bool _in_drain;
+		std::atomic<unsigned long> _drain_concurrent;
 };
 
 
@@ -141,6 +144,8 @@ async_caller<Writer, Element>::async_caller(Writer* wr,
 	_drain_count = 0;
 	_drain_msec = 0;
 	_drain_slowest_msec = 0;
+	_in_drain = false;
+	_drain_concurrent = 0;
 
 	for (int i=0; i<nthreads; i++)
 	{
@@ -295,6 +300,8 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 
 	if (HIGH_WATER_MARK < _store_queue.size())
 	{
+		if (_in_drain) _drain_concurrent ++;
+		_in_drain = true;
 		// unsigned long cnt = 0;
 		auto start = std::chrono::steady_clock::now();
 		do
@@ -304,6 +311,7 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 			// cnt++;
 		}
 		while (LOW_WATER_MARK < _store_queue.size());
+		_in_drain = false;
 
 		// Sleep might not be accurate, so measure elapsed time directly.
 		auto end = std::chrono::steady_clock::now();
