@@ -301,6 +301,8 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 	if (HIGH_WATER_MARK < _store_queue.size())
 	{
 		if (_in_drain) _drain_concurrent ++;
+		else _drain_count++;
+
 		_in_drain = true;
 		// unsigned long cnt = 0;
 		auto start = std::chrono::steady_clock::now();
@@ -319,7 +321,6 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 		unsigned long msec = duration.count();
 
 		logger().debug("async_caller overfull queue; had to sleep %d millisecs to drain!", msec);
-		_drain_count++;
 		_drain_msec += msec;
 		if (_drain_slowest_msec < msec) _drain_slowest_msec = msec;
 	}
