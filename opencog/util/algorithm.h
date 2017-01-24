@@ -302,13 +302,22 @@ template<typename Set> std::set<Set> powerset(const Set& s)
  * Maybe boost offers something like that already but I can't find it.
  */
 template<typename Indices, typename Seq>
-Seq seq_filtered(const Seq& seq, const Indices& indices) {
+Seq seq_filtered(const Seq& seq, const Indices& indices)
+{
     Seq res;
     for (const auto& idx : indices)
         res.push_back(seq[idx]);
     return res;
 }
 
+/**
+ * Return true if el is in s.
+ */
+template<typename Set>
+bool is_in(const typename Set::value_type& el, const Set& s)
+{
+	return s.find(el) != s.end();
+}
     
 /** @}*/
 } //~namespace opencog
