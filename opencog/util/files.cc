@@ -77,8 +77,10 @@ static const std::vector<std::string> paths =
     CMAKE_INSTALL_PREFIX "/share",
     DATADIR,         // this too is an install dir
 #ifndef WIN32
+    "/usr/local/lib64/",  // lib64 is used on CentOS systems.
     "/usr/local/lib/",    // search local first, then system.
     "/usr/local/share/",  // search local first, then system.
+    "/usr/lib64/",
     "/usr/lib/",
     "/usr/share/",
     "/opt/",
