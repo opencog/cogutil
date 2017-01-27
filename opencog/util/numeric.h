@@ -270,20 +270,20 @@ template<typename Int> Int ndigits(Int x, Int base = 10) {
 }
 
 //! returns true iff x >= min and x <= max
-template<typename FloatT> bool isBetween(FloatT x, FloatT min_, FloatT max_)
+template<typename FloatT> bool is_between(FloatT x, FloatT min_, FloatT max_)
 {
     return x >= min_ && x <= max_;
 }
 
 //! returns true iff abs(x - y) <= epsilon
-template<typename FloatT> bool isWithin(FloatT x, FloatT y, FloatT epsilon)
+template<typename FloatT> bool is_within(FloatT x, FloatT y, FloatT epsilon)
 {
     return std::abs(x - y) <= epsilon;
 }
 
 //! compare 2 FloatT with precision epsilon,
 /// note that, unlike isWithin, the precision adapts with the scale of x and y
-template<typename FloatT> bool isApproxEq(FloatT x, FloatT y, FloatT epsilon)
+template<typename FloatT> bool is_approx_eq(FloatT x, FloatT y, FloatT epsilon)
 {
     FloatT diff = std::abs(x - y);
     FloatT amp = std::abs(x + y);
@@ -294,9 +294,9 @@ template<typename FloatT> bool isApproxEq(FloatT x, FloatT y, FloatT epsilon)
 
 //! compare 2 FloatT with precision EPSILON
 /// note that, unlike isWithin, the precision adapts with the scale of x and y
-template<typename FloatT> bool isApproxEq(FloatT x, FloatT y)
+template<typename FloatT> bool is_approx_eq(FloatT x, FloatT y)
 {
-    return isApproxEq(x, y, static_cast<FloatT>(EPSILON));
+    return is_approx_eq(x, y, static_cast<FloatT>(EPSILON));
 }
 
 /**
@@ -311,17 +311,17 @@ Float bound(Float x, Float l, Float u)
 }
     
 //! useful for entropy
-template<typename FloatT> FloatT weightInformation(FloatT p)
+template<typename FloatT> FloatT weighted_information(FloatT p)
 {
     return p > PROB_EPSILON? -p * opencog::log2(p) : 0;
 }
 
 //! compute the binary entropy of probability p
-template<typename FloatT> FloatT binaryEntropy(FloatT p)
+template<typename FloatT> FloatT binary_entropy(FloatT p)
 {
     OC_ASSERT(p >= 0 && p <= 1,
               "binaryEntropy: probability %f is not between 0 and 1", p);
-    return weightInformation(p) + weightInformation(1.0 - p);
+    return weighted_information(p) + weighted_information(1.0 - p);
 }
 
 /**
@@ -339,7 +339,7 @@ template<typename It> double entropy(It from, It to)
 {
     double res = 0;
     for(; from != to; ++from)
-        res += weightInformation(*from);
+        res += weighted_information(*from);
     return res;
 }
 
