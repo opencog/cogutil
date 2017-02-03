@@ -127,6 +127,9 @@ class async_caller
 		std::atomic<unsigned long> _drain_msec;
 		std::atomic<unsigned long> _drain_slowest_msec;
 		std::atomic<unsigned long> _drain_concurrent;
+
+		unsigned long get_busy_writers() const { return _busy_writers; }
+		unsigned long get_queue_size() const { return _store_queue.size(); }
 };
 
 
