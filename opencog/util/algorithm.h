@@ -244,6 +244,18 @@ Set set_difference(const Set& s1, const Set& s2) {
     return res;
 }
 
+/**
+ * \return (s1 - s2) union (s2 - s1)
+ * s1 and s2 must be sorted
+ */
+template<typename Set>
+Set set_symmetric_difference(const Set& s1, const Set& s2) {
+    Set res;
+    std::set_symmetric_difference(s1.begin(), s1.end(), s2.begin(), s2.end(),
+                                  std::inserter(res, res.end()));
+    return res;
+}
+
 //! Predicate maps to the range [0, n)
 //! n-1 values (the pivots) are copied to out
 template<typename It, typename Pred, typename Out>
