@@ -35,7 +35,7 @@ using namespace opencog;
 
 // PUBLIC METHODS: 
 
-MT19937RandGen::MT19937RandGen(unsigned long s) {
+MT19937RandGen::MT19937RandGen(result_type s) {
     seed(s);
 }
 

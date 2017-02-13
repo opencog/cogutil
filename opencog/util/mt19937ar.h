@@ -36,7 +36,7 @@ class MT19937RandGen : public RandGen
 {
 public: 
 
-    MT19937RandGen(unsigned long s);
+    MT19937RandGen(result_type s);
 
     //! random int between 0 and max rand number.
     int randint();
