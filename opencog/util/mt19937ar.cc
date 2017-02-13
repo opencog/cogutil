@@ -64,7 +64,10 @@ double MT19937RandGen::randdouble_one_excluded() {
 
 //random int in [0,n)
 int MT19937RandGen::randint(int n) {
-    return (int)randint() % n;
+    if ( 0 == n)
+        return n;
+    else
+        return (int)randint() % n;
 }
 
 // return -1 or 1 randonly
