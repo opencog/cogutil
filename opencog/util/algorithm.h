@@ -325,10 +325,10 @@ Seq seq_filtered(const Seq& seq, const Indices& indices)
 /**
  * Return true if el is in s.
  */
-template<typename Set>
-bool is_in(const typename Set::value_type& el, const Set& s)
+template<typename Container>
+bool is_in(const typename Container::value_type& el, const Container& c)
 {
-	return s.find(el) != s.end();
+	return std::find(c.begin(), c.end(), el) != c.end();
 }
     
 /** @}*/
