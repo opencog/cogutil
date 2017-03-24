@@ -46,6 +46,7 @@ ADD_LIBRARY(cogutil SHARED
 	platform
 	random
 	ranking
+	StringManipulator
 	StringTokenizer
 	tree
 	${WIN32_GETOPT_FILES}
@@ -114,6 +115,7 @@ INSTALL(FILES
 	recent_val.h
 	selection.h
 	sigslot.h
+	StringManipulator.h
 	StringTokenizer.h
 	tbb.h
 	tree.h
