@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Take a log file and return the difference in seconds between the
-# timestamps of the first and last logs. This is convenient to
+# Take a log file and return the difference in hour:min:sec between
+# the timestamps of the first and last logs. This is convenient to
 # estimate the runtime of some process.
 
 if [ $# != 1 ]; then
@@ -28,5 +28,6 @@ done < <(grep "$grep_timestamps_re" "$LOGFILE")
 
 FIRST_SEC="$(date -d "$FIRST_DATE" +%s)"
 LAST_SEC="$(date -d "$LAST_DATE" +%s)"
+DIFF_SEC="$((LAST_SEC - FIRST_SEC))"
 
-echo "$((LAST_SEC - FIRST_SEC))sec"
+date -u -d @${DIFF_SEC} +"%T"
