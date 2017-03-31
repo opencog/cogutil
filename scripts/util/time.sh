@@ -2,7 +2,8 @@
 
 # Take a log file and return the difference in hour:min:sec between
 # the timestamps of the first and last logs. This is convenient to
-# estimate the runtime of some process.
+# estimate the runtime of some process. Will not work if the time if
+# greater than 24h!
 
 if [ $# != 1 ]; then
     echo "Wrong number of arguments"
