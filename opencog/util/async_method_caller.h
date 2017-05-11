@@ -130,6 +130,7 @@ class async_caller
 
 		unsigned long get_busy_writers() const { return _busy_writers; }
 		unsigned long get_queue_size() const { return _store_queue.size(); }
+		void clear_stats();
 };
 
 
@@ -151,13 +152,9 @@ async_caller<Writer, Element>::async_caller(Writer* wr,
 	_stopping_writers = false;
 	_thread_count = 0;
 	_busy_writers = 0;
-	_item_count = 0;
-	_flush_count = 0;
-	_drain_count = 0;
-	_drain_msec = 0;
-	_drain_slowest_msec = 0;
 	_in_drain = false;
-	_drain_concurrent = 0;
+
+	clear_stats();
 
 	for (int i=0; i<nthreads; i++)
 	{
@@ -169,6 +166,17 @@ template<typename Writer, typename Element>
 async_caller<Writer, Element>::~async_caller()
 {
 	stop_writer_threads();
+}
+
+template<typename Writer, typename Element>
+void async_caller<Writer, Element>::clear_stats()
+{
+	_item_count = 0;
+	_flush_count = 0;
+	_drain_count = 0;
+	_drain_msec = 0;
+	_drain_slowest_msec = 0;
+	_drain_concurrent = 0;
 }
 
 /* ================================================================ */
