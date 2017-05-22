@@ -174,7 +174,7 @@ public:
         std::unique_lock<std::mutex> lock(the_mutex);
 
         // Use two nested loops here.  It can happen that the cond
-        // wakes up, and yet the queue is empty.
+        // wakes up, and yet the set is empty.
         do
         {
             while (the_set.empty() and not is_canceled)
@@ -190,13 +190,13 @@ public:
         return retval;
     }
 
-    /// A weak barrier.  This will block as long as the queue is empty,
-    /// returning only when the queue isn't. It's "weak", because while
-    /// it waits, other threads may push and then pop something from
-    /// the queue, while this thread slept the entire time. However,
-    /// if this call does return, then the queue is almost surely not
+    /// A weak barrier.  This will block as long as the set is empty,
+    /// returning only when the set isn't. It's "weak", because while
+    /// it waits, other threads may insert and then remove something from
+    /// the set, while this thread slept the entire time. However,
+    /// if this call does return, then the set is almost surely not
     /// empty.  "Almost surely" means that none of the other threads
-    /// that are currently waiting to pop from the queue will be woken.
+    /// that are currently waiting to get from the set will be woken.
     void barrier()
     {
         std::unique_lock<std::mutex> lock(the_mutex);

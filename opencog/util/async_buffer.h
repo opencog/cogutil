@@ -104,7 +104,7 @@ template<typename Writer, typename Element>
 class async_buffer
 {
 	private:
-		concurrent_queue<Element> _store_queue;
+		concurrent_set<Element> _store_set;
 		std::vector<std::thread> _write_threads;
 		std::mutex _write_mutex;
 		std::mutex _enqueue_mutex;
@@ -123,12 +123,12 @@ class async_buffer
 	public:
 		async_buffer(Writer*, void (Writer::*)(const Element&), int nthreads=4);
 		~async_buffer();
-		void enqueue(const Element&);
-		void flush_queue();
+		void insert(const Element&);
+		void flush();
 		void barrier();
 
 		// Utilities for monitoring performance.
-		// _item_count == number of items queued;
+		// _item_count == number of items in the set;
 		// _drain_count == number of times the high watermark was hit.
 		// _drain_msec == accumulated number of millisecs to drain.
 		// _drain_concurrent == number of threads that hit queue-full.
@@ -141,7 +141,7 @@ class async_buffer
 		std::atomic<unsigned long> _drain_concurrent;
 
 		unsigned long get_busy_writers() const { return _busy_writers; }
-		unsigned long get_queue_size() const { return _store_queue.size(); }
+		unsigned long get_size() const { return _store_set.size(); }
 		void clear_stats();
 };
 
@@ -217,7 +217,7 @@ void async_buffer<Writer, Element>::stop_writer_threads()
 	_stopping_writers = true;
 
 	// Spin a while, until the writeer threads are (mostly) done.
-	while (not _store_queue.is_empty())
+	while (not _store_set.is_empty())
 	{
 		// std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		usleep(1000);
@@ -225,7 +225,7 @@ void async_buffer<Writer, Element>::stop_writer_threads()
 
 	// Now tell all the threads that they are done.
 	// I.e. cancel all the threads.
-	_store_queue.cancel();
+	_store_set.cancel();
 	while (0 < _write_threads.size())
 	{
 		_write_threads.back().join();
@@ -233,13 +233,13 @@ void async_buffer<Writer, Element>::stop_writer_threads()
 		_thread_count --;
 	}
 
-	// OK, so we've joined all the threads, but the queue
+	// OK, so we've joined all the threads, but the set
 	// might not be totally empty; some dregs might remain.
 	// Drain it now, single-threadedly.
-	_store_queue.cancel_reset();
-	while (not _store_queue.is_empty())
+	_store_set.cancel_reset();
+	while (not _store_set.is_empty())
 	{
-		Element elt = _store_queue.pop();
+		Element elt = _store_set.get();
 		(_writer->*_do_write)(elt);
 	}
 	
@@ -248,7 +248,7 @@ void async_buffer<Writer, Element>::stop_writer_threads()
 }
 
 
-/// Drain the pending queue.  Non-synchronizing.
+/// Drain the set.  Non-synchronizing.
 ///
 /// This is NOT synchronizing! It does NOT prevent other threads from
 /// concurrently adding to the queue! Thus, if these other threads are
@@ -261,22 +261,22 @@ void async_buffer<Writer, Element>::stop_writer_threads()
 /// between the dequeue, and the busy_writer increment. I guess we
 /// should fix this...
 template<typename Writer, typename Element>
-void async_buffer<Writer, Element>::flush_queue()
+void async_buffer<Writer, Element>::flush()
 {
 	// std::this_thread::sleep_for(std::chrono::microseconds(10));
 	usleep(10);
 	_flush_count++;
-	while (0 < _store_queue.size() or 0 < _busy_writers);
+	while (0 < _store_set.size() or 0 < _busy_writers);
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		// usleep(1000);
 	}
 }
 
-/// Drain the pending queue.  Synchronizing.
+/// Drain the set.  Synchronizing.
 ///
-/// This forces a drain of the pending work queue. It prevents other
-/// threads from adding to the queue, while this is being done.
+/// This forces a drain of the pending work-set. It prevents other
+/// threads from adding to the set, while this is being done.
 /// Forward progress is guaranteed: this method will return in finite
 /// time.
 ///
@@ -290,14 +290,14 @@ void async_buffer<Writer, Element>::barrier()
 {
 	std::unique_lock<std::mutex> lock(_enqueue_mutex);
 	_flush_count++;
-	while (0 < _store_queue.size() or 0 < _busy_writers);
+	while (0 < _store_set.size() or 0 < _busy_writers);
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		// usleep(1000);
 	}
 }
 
-/// A single write thread. Reads elements from queue, and invokes the
+/// A single write thread. Reads elements from set, and invokes the
 /// method on them.
 template<typename Writer, typename Element>
 void async_buffer<Writer, Element>::write_loop()
@@ -306,13 +306,13 @@ void async_buffer<Writer, Element>::write_loop()
 	{
 		while (true)
 		{
-			Element elt = _store_queue.pop();
-			_busy_writers ++; // Bad -- window after pop returns, before increment!
+			Element elt = _store_set.get();
+			_busy_writers ++; // Bad -- window after get returns, before increment!
 			(_writer->*_do_write)(elt);
 			_busy_writers --;
 		}
 	}
-	catch (typename concurrent_queue<Element>::Canceled& e)
+	catch (typename concurrent_set<Element>::Canceled& e)
 	{
 		// We are so out of here. Nothing to do, just exit this thread.
 		return;
@@ -322,13 +322,13 @@ void async_buffer<Writer, Element>::write_loop()
 
 /* ================================================================ */
 /**
- * Enqueue the given element.  Returns immediately after enqueuing.
+ * Insert the given element.  Returns immediately after inserting.
  * Thread-safe: this may be called concurrently from multiple threads.
- * If the queue is over-full, then this will block until the que is
+ * If the set is over-full, then this will block until the set is
  * mostly drained...
  */
 template<typename Writer, typename Element>
-void async_buffer<Writer, Element>::enqueue(const Element& elt)
+void async_buffer<Writer, Element>::insert(const Element& elt)
 {
 	// Sanity checks.
 	if (_stopping_writers)
@@ -348,13 +348,13 @@ void async_buffer<Writer, Element>::enqueue(const Element& elt)
 		return;
 	}
 
-	// The _store_queue.push(elt) does not need a lock, itself; its
+	// The _store_set.insert(elt) does not need a lock, itself; its
 	// perfectly thread-safe. However, the flush barrier does need to
 	// be able to halt everyone else from enqueing more stuff, so we
 	// do need to use a lock for that.
 	{
 		std::unique_lock<std::mutex> lock(_enqueue_mutex);
-		_store_queue.push(elt);
+		_store_set.insert(elt);
 		_item_count++;
 	}
 
@@ -362,14 +362,14 @@ void async_buffer<Writer, Element>::enqueue(const Element& elt)
 	// Right now, this will be real simple: just spin and wait
 	// for things to catch up.  Maybe we should launch more threads!?
 	// Note also: even as we block this thread, wiating for the drain
-	// to complete, other threads might be filling the queue back up.
+	// to complete, other threads might be filling the set back up.
 	// If it does over-fill, then those threads will also block, one
 	// by one, until we hit a metastable state, where the active
 	// (non-stalled) fillers and emptiers are in balance.
 #define HIGH_WATER_MARK 100
 #define LOW_WATER_MARK 10
 
-	if (HIGH_WATER_MARK < _store_queue.size())
+	if (HIGH_WATER_MARK < _store_set.size())
 	{
 		if (_in_drain) _drain_concurrent ++;
 		else _drain_count++;
@@ -383,7 +383,7 @@ void async_buffer<Writer, Element>::enqueue(const Element& elt)
 			// usleep(1000);
 			// cnt++;
 		}
-		while (LOW_WATER_MARK < _store_queue.size());
+		while (LOW_WATER_MARK < _store_set.size());
 		_in_drain = false;
 
 		// Sleep might not be accurate, so measure elapsed time directly.
@@ -391,7 +391,7 @@ void async_buffer<Writer, Element>::enqueue(const Element& elt)
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 		unsigned long msec = duration.count();
 
-		logger().debug("async_buffer overfull queue; had to sleep %d millisecs to drain!", msec);
+		logger().debug("async_buffer overfull set; had to sleep %d millisecs to drain!", msec);
 		_drain_msec += msec;
 		if (_drain_slowest_msec < msec) _drain_slowest_msec = msec;
 	}

@@ -312,7 +312,7 @@ void async_caller<Writer, Element>::write_loop()
 /**
  * Enqueue the given element.  Returns immediately after enqueuing.
  * Thread-safe: this may be called concurrently from multiple threads.
- * If the queue is over-full, then this will block until the que is
+ * If the queue is over-full, then this will block until the queue is
  * mostly drained...
  */
 template<typename Writer, typename Element>
