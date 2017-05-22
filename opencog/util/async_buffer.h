@@ -109,6 +109,8 @@ class async_buffer
 		std::mutex _write_mutex;
 		std::mutex _enqueue_mutex;
 		std::atomic<unsigned long> _busy_writers;
+		size_t _high_watermark;
+		size_t _low_watermark;
 
 		Writer* _writer;
 		void (Writer::*_do_write)(const Element&);
@@ -126,6 +128,8 @@ class async_buffer
 		void insert(const Element&);
 		void flush();
 		void barrier();
+
+		void set_watermarks(size_t, size_t);
 
 		// Utilities for monitoring performance.
 		// _item_count == number of items in the set;
@@ -150,6 +154,9 @@ class async_buffer
 /* ================================================================ */
 // Constructors
 
+#define DEFAULT_HIGH_WATER_MARK 100
+#define DEFAULT_LOW_WATER_MARK 10
+
 /// Writer: the class whose method will be called.
 /// cb: the method that will be called.
 /// nthreads: the number of threads in the writer pool to use. Defaults
@@ -166,6 +173,9 @@ async_buffer<Writer, Element>::async_buffer(Writer* wr,
 	_busy_writers = 0;
 	_in_drain = false;
 
+	_high_watermark = DEFAULT_HIGH_WATER_MARK;
+	_low_watermark = DEFAULT_LOW_WATER_MARK;
+
 	clear_stats();
 
 	for (int i=0; i<nthreads; i++)
@@ -178,6 +188,13 @@ template<typename Writer, typename Element>
 async_buffer<Writer, Element>::~async_buffer()
 {
 	stop_writer_threads();
+}
+
+template<typename Writer, typename Element>
+void async_buffer<Writer, Element>::set_watermarks(size_t hi, size_t lo)
+{
+	_high_watermark = hi;
+	_low_watermark = lo;
 }
 
 template<typename Writer, typename Element>
@@ -366,10 +383,8 @@ void async_buffer<Writer, Element>::insert(const Element& elt)
 	// If it does over-fill, then those threads will also block, one
 	// by one, until we hit a metastable state, where the active
 	// (non-stalled) fillers and emptiers are in balance.
-#define HIGH_WATER_MARK 100
-#define LOW_WATER_MARK 10
 
-	if (HIGH_WATER_MARK < _store_set.size())
+	if (_high_watermark < _store_set.size())
 	{
 		if (_in_drain) _drain_concurrent ++;
 		else _drain_count++;
@@ -383,7 +398,7 @@ void async_buffer<Writer, Element>::insert(const Element& elt)
 			// usleep(1000);
 			// cnt++;
 		}
-		while (LOW_WATER_MARK < _store_set.size());
+		while (_low_watermark < _store_set.size());
 		_in_drain = false;
 
 		// Sleep might not be accurate, so measure elapsed time directly.
