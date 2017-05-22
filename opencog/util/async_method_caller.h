@@ -134,6 +134,8 @@ class async_caller
 
 		unsigned long get_busy_writers() const { return _busy_writers; }
 		unsigned long get_queue_size() const { return _store_queue.size(); }
+		unsigned long get_high_watermark() const { return _high_watermark; }
+		unsigned long get_low_watermark() const { return _low_watermark; }
 		void clear_stats();
 };
 

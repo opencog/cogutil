@@ -158,6 +158,10 @@ class async_buffer
 
 		unsigned long get_busy_writers() const { return _busy_writers; }
 		unsigned long get_size() const { return _store_set.size(); }
+		unsigned long get_high_watermark() const { return _high_watermark; }
+		unsigned long get_low_watermark() const { return _low_watermark; }
+		bool stalling() const { return _stall_writers; }
+
 		void clear_stats();
 };
 
