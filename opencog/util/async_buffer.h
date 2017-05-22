@@ -53,11 +53,18 @@ namespace opencog
  * times with the same data, if will be called only once, for that
  * data item.
  *
- * This deduplication can be very handy if the method is writing data,
+ * This de-duplication can be very handy if the method is writing data,
  * can the caller is repeatedly asking for the same data to be written.
- * By bufferring up and deduplicating the write requests, this class
+ * By bufferring up and de-duplicating the write requests, this class
  * can reduce load on the system, especially if a delay is introduced,
  * so that the requests buffer up before being serviced.
+ *
+ * By default, this class attempts to service requests as soon as they
+ * are queued up. However, if the stall() flag is set, then no writing
+ * will be done, until at least the low_watermark amount of work
+ * accumulates. This can be useful to force the de-duplication mechanism
+ * to do it's work: there need to be a minimum number of  unique
+ * elements queued up before processing starts.
  *
  * In other respects, it provides the same advantages that the
  * async_caller calss does: The buffering helps, if each call
@@ -196,6 +203,18 @@ async_buffer<Writer, Element>::~async_buffer()
 	stop_writer_threads();
 }
 
+/// Set the high and low watermarks for processing. These are useful
+/// for preventing excessive backlogs of unprocessed elements from
+/// accumulating. When enqueueing new work, any threads that encounter
+/// an unprocessed backlog exceeding the high watermark will block
+/// until the backlog drops below the low watermark.  Note that if
+/// some threads are blocked, waiting for this drain to occur, that
+/// this does not prevent other threads from adding more work, as long
+/// as those other threads did not see a large backlog.
+///
+/// If write-stalling is enabled, then no writing will be done until
+/// at least the low_watermark number of elements have accumulated.
+///
 template<typename Writer, typename Element>
 void async_buffer<Writer, Element>::set_watermarks(size_t hi, size_t lo)
 {

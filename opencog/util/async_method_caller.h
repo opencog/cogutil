@@ -178,6 +178,15 @@ async_caller<Writer, Element>::~async_caller()
 	stop_writer_threads();
 }
 
+/// Set the high and low watermarks for processing. These are useful
+/// for preventing excessive backlogs of unprocessed elements from
+/// accumulating. When enqueueing new work, any threads that encounter
+/// an unprocessed backlog exceeding the high watermark will block
+/// until the backlog drops below the low watermark.  Note that if
+/// some threads are blocked, waiting for this drain to occur, that
+/// this does not prevent other threads from adding more work, as long
+/// as those other threads did not see a large backlog.
+///
 template<typename Writer, typename Element>
 void async_caller<Writer, Element>::set_watermarks(size_t hi, size_t lo)
 {
