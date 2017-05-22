@@ -1,9 +1,9 @@
 /*
  * FUNCTION:
- * Multi-threaded asynchronous write queue.
+ * Multi-threaded asynchronous write buffer.
  *
  * HISTORY:
- * Copyright (c) 2013, 2015 Linas Vepstas <linasvepstas@gmail.com>
+ * Copyright (c) 2013, 2015, 2017 Linas Vepstas <linasvepstas@gmail.com>
  *
  * LICENSE:
  * This program is free software; you can redistribute it and/or modify
@@ -22,8 +22,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _OC_ASYNC_WRITER_H
-#define _OC_ASYNC_WRITER_H
+#ifndef _OC_ASYNC_BUFFER_H
+#define _OC_ASYNC_BUFFER_H
 
 #include <atomic>
 #include <chrono>
@@ -31,8 +31,7 @@
 #include <thread>
 #include <vector>
 
-#include <opencog/util/concurrent_queue.h>
-#include <opencog/util/concurrent_stack.h>
+#include <opencog/util/concurrent_set.h>
 #include <opencog/util/exceptions.h>
 #include <opencog/util/Logger.h>
 #include <opencog/util/macros.h>
@@ -44,11 +43,24 @@ namespace opencog
  */
 
 /**
- * Thread-safe, multi-threaded asynchronous write queue.
+ * Thread-safe, multi-threaded asynchronous write buffer.
  *
- * This class provides a simple way to call a method on a class,
- * asynchronously. That is, the method is called in a *different*
- * thread, at some later time. This can be very handy if the method
+ * This class provides a simple way to write de-duplicated data,
+ * asynchornously. It is similar to the async_caller class, in that
+ * it calls the indicated method in some different thread, at some
+ * later time. Unlike the async caller, it de-duplicates the data
+ * before making the call.  That is, if the call is queued multiple
+ * times with the same data, if will be called only once, for that
+ * data item.
+ *
+ * This deduplication can be very handy if the method is writing data,
+ * can the caller is repeatedly asking for the same data to be written.
+ * By bufferring up and deduplicating the write requests, this class
+ * can reduce load on the system, especially if a delay is introduced,
+ * so that the requests buffer up before being serviced.
+ *
+ * In other respects, it provides the same advantages that the
+ * async_caller calss does: The buffering helps, if each call
  * takes a long time to run, or if it blocks waiting on I/O.  By
  * running in a different thread, it allows the current thread to
  * return immediately.  It also enables concurrency: a large number of
@@ -59,21 +71,21 @@ namespace opencog
  * there doesn't seem to be ...
  *
  * This class allows a simple implmentation of a thread-safe, multi-
- * threaded write queue. It is currently used by the persistant storage
- * class, to write atoms out to disk.
+ * threaded de-duplicating write buffer. It is currently used by the
+ * persistant storage class, to write atoms out to disk.
  *
- * What actually happens is this: The given elements are placed on a
- * queue (in a thread-safe manner -- thie enqueue function can be safely
- * called from multiple threads.) This queue is then serviced and
- * drained by a pool of active threads, which dequeue the elements, and
+ * What actually happens is this: The given elements are placed in a
+ * set (in a thread-safe manner -- thie enqueue function can be safely
+ * called from multiple threads.) This set is then serviced and
+ * drained by a pool of active threads, which remove the elements, and
  * call the method on each one.
  *
  * The implementation is very simple: it uses a fixed-size thread pool.
- * It uses hi/lo watermarks to stall and drain the queue, if it gets too
- * long. This could probably be made spiffier.
+ * It uses hi/lo watermarks to stall and drain the set, if it gets too
+ * large. This could probably be made spiffier.
  *
  * It would also be clearer to the user, if we placed the method to call
- * onto the queue, along with the element, instead of specifying the
+ * into the set, along with the element, instead of specifying the
  * method in the ctor. This would really drive home the point that this
  * really is just an async method call. XXX TODO FIXME someday.
  *
@@ -89,7 +101,7 @@ namespace opencog
  * this seems to slow the system down.
  */
 template<typename Writer, typename Element>
-class async_caller
+class async_buffer
 {
 	private:
 		concurrent_queue<Element> _store_queue;
@@ -109,8 +121,8 @@ class async_caller
 		void write_loop();
 
 	public:
-		async_caller(Writer*, void (Writer::*)(const Element&), int nthreads=4);
-		~async_caller();
+		async_buffer(Writer*, void (Writer::*)(const Element&), int nthreads=4);
+		~async_buffer();
 		void enqueue(const Element&);
 		void flush_queue();
 		void barrier();
@@ -143,7 +155,7 @@ class async_caller
 /// nthreads: the number of threads in the writer pool to use. Defaults
 /// to 4 if not specified.
 template<typename Writer, typename Element>
-async_caller<Writer, Element>::async_caller(Writer* wr,
+async_buffer<Writer, Element>::async_buffer(Writer* wr,
                                             void (Writer::*cb)(const Element&),
                                             int nthreads)
 {
@@ -163,13 +175,13 @@ async_caller<Writer, Element>::async_caller(Writer* wr,
 }
 
 template<typename Writer, typename Element>
-async_caller<Writer, Element>::~async_caller()
+async_buffer<Writer, Element>::~async_buffer()
 {
 	stop_writer_threads();
 }
 
 template<typename Writer, typename Element>
-void async_caller<Writer, Element>::clear_stats()
+void async_buffer<Writer, Element>::clear_stats()
 {
 	_item_count = 0;
 	_flush_count = 0;
@@ -184,23 +196,23 @@ void async_caller<Writer, Element>::clear_stats()
 /// Start a single writer thread.
 /// May be called multiple times.
 template<typename Writer, typename Element>
-void async_caller<Writer, Element>::start_writer_thread()
+void async_buffer<Writer, Element>::start_writer_thread()
 {
-	// logger().info("async_caller: starting a writer thread");
+	// logger().info("async_buffer: starting a writer thread");
 	std::unique_lock<std::mutex> lock(_write_mutex);
 	if (_stopping_writers)
 		throw RuntimeException(TRACE_INFO,
-			"Cannot start; async_caller writer threads are being stopped!");
+			"Cannot start; async_buffer writer threads are being stopped!");
 
-	_write_threads.push_back(std::thread(&async_caller::write_loop, this));
+	_write_threads.push_back(std::thread(&async_buffer::write_loop, this));
 	_thread_count ++;
 }
 
 /// Stop all writer threads, but only after they are done writing.
 template<typename Writer, typename Element>
-void async_caller<Writer, Element>::stop_writer_threads()
+void async_buffer<Writer, Element>::stop_writer_threads()
 {
-	// logger().info("async_caller: stopping all writer threads");
+	// logger().info("async_buffer: stopping all writer threads");
 	std::unique_lock<std::mutex> lock(_write_mutex);
 	_stopping_writers = true;
 
@@ -249,7 +261,7 @@ void async_caller<Writer, Element>::stop_writer_threads()
 /// between the dequeue, and the busy_writer increment. I guess we
 /// should fix this...
 template<typename Writer, typename Element>
-void async_caller<Writer, Element>::flush_queue()
+void async_buffer<Writer, Element>::flush_queue()
 {
 	// std::this_thread::sleep_for(std::chrono::microseconds(10));
 	usleep(10);
@@ -274,7 +286,7 @@ void async_caller<Writer, Element>::flush_queue()
 /// increment. I guess we should fix this...
 
 template<typename Writer, typename Element>
-void async_caller<Writer, Element>::barrier()
+void async_buffer<Writer, Element>::barrier()
 {
 	std::unique_lock<std::mutex> lock(_enqueue_mutex);
 	_flush_count++;
@@ -288,7 +300,7 @@ void async_caller<Writer, Element>::barrier()
 /// A single write thread. Reads elements from queue, and invokes the
 /// method on them.
 template<typename Writer, typename Element>
-void async_caller<Writer, Element>::write_loop()
+void async_buffer<Writer, Element>::write_loop()
 {
 	try
 	{
@@ -316,12 +328,12 @@ void async_caller<Writer, Element>::write_loop()
  * mostly drained...
  */
 template<typename Writer, typename Element>
-void async_caller<Writer, Element>::enqueue(const Element& elt)
+void async_buffer<Writer, Element>::enqueue(const Element& elt)
 {
 	// Sanity checks.
 	if (_stopping_writers)
 		throw RuntimeException(TRACE_INFO,
-			"Cannot store; async_caller writer threads are being stopped!");
+			"Cannot store; async_buffer writer threads are being stopped!");
 
 	if (0 == _thread_count)
 	{
@@ -379,7 +391,7 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 		unsigned long msec = duration.count();
 
-		logger().debug("async_caller overfull queue; had to sleep %d millisecs to drain!", msec);
+		logger().debug("async_buffer overfull queue; had to sleep %d millisecs to drain!", msec);
 		_drain_msec += msec;
 		if (_drain_slowest_msec < msec) _drain_slowest_msec = msec;
 	}
@@ -388,4 +400,4 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 /** @}*/
 } // namespace opencog
 
-#endif // _OC_ASYNC_WRITER_H
+#endif // _OC_ASYNC_BUFFER_H

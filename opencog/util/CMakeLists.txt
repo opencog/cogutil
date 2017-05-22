@@ -73,6 +73,7 @@ ADD_SUBDIRECTORY(boost_ext)
 INSTALL(FILES
 	ansi.h
 	algorithm.h
+	async_buffer.h
 	async_method_caller.h
 	backtrace-symbols.h
 	based_variant.h
