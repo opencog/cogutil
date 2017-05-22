@@ -83,6 +83,7 @@ INSTALL(FILES
 	Counter.h
 	Cover_Tree.h
 	concurrent_queue.h
+	concurrent_set.h
 	concurrent_stack.h
 	digraph.h
 	dorepeat.h
