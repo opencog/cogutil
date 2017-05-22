@@ -366,7 +366,7 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 	// If the writer threads are falling behind, mitigate.
 	// Right now, this will be real simple: just spin and wait
 	// for things to catch up.  Maybe we should launch more threads!?
-	// Note also: even as we block this thread, wiating for the drain
+	// Note also: even as we block this thread, waiting for the drain
 	// to complete, other threads might be filling the queue back up.
 	// If it does over-fill, then those threads will also block, one
 	// by one, until we hit a metastable state, where the active

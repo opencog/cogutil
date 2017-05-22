@@ -118,6 +118,8 @@ class async_buffer
 		unsigned int _thread_count;
 		bool _stopping_writers;
 
+		bool _stall_writers;
+
 		void start_writer_thread();
 		void stop_writer_threads();
 		void write_loop();
@@ -130,14 +132,17 @@ class async_buffer
 		void barrier();
 
 		void set_watermarks(size_t, size_t);
+		void stall(bool);
 
 		// Utilities for monitoring performance.
-		// _item_count == number of items in the set;
+		// _item_count == number of attempted insertions;
+		// _duplicate_count == number of duplicates dropped.
 		// _drain_count == number of times the high watermark was hit.
 		// _drain_msec == accumulated number of millisecs to drain.
 		// _drain_concurrent == number of threads that hit queue-full.
 		bool _in_drain;
 		std::atomic<unsigned long> _item_count;
+		std::atomic<unsigned long> _duplicate_count;
 		std::atomic<unsigned long> _flush_count;
 		std::atomic<unsigned long> _drain_count;
 		std::atomic<unsigned long> _drain_msec;
@@ -171,6 +176,7 @@ async_buffer<Writer, Element>::async_buffer(Writer* wr,
 	_stopping_writers = false;
 	_thread_count = 0;
 	_busy_writers = 0;
+	_stall_writers = false;
 	_in_drain = false;
 
 	_high_watermark = DEFAULT_HIGH_WATER_MARK;
@@ -197,10 +203,24 @@ void async_buffer<Writer, Element>::set_watermarks(size_t hi, size_t lo)
 	_low_watermark = lo;
 }
 
+/// Intentionally stall the writer threads, prevent them from writing
+/// until at least _low_watermark elements have accumulated in the pool.
+/// The goal here is to allow the de-duplication services to actually
+/// do thier work.  This has the dangerous side-effect of potentially
+/// leaving eleemnts in the set forever, never quite getting them
+/// written out. Caveat emptor! You may want to flush periodically,
+/// to avoid this situation.
+template<typename Writer, typename Element>
+void async_buffer<Writer, Element>::stall(bool st)
+{
+	_stall_writers = st;
+}
+
 template<typename Writer, typename Element>
 void async_buffer<Writer, Element>::clear_stats()
 {
 	_item_count = 0;
+	_duplicate_count = 0;
 	_flush_count = 0;
 	_drain_count = 0;
 	_drain_msec = 0;
@@ -229,6 +249,8 @@ void async_buffer<Writer, Element>::start_writer_thread()
 template<typename Writer, typename Element>
 void async_buffer<Writer, Element>::stop_writer_threads()
 {
+	_stall_writers = false;
+
 	// logger().info("async_buffer: stopping all writer threads");
 	std::unique_lock<std::mutex> lock(_write_mutex);
 	_stopping_writers = true;
@@ -280,6 +302,8 @@ void async_buffer<Writer, Element>::stop_writer_threads()
 template<typename Writer, typename Element>
 void async_buffer<Writer, Element>::flush()
 {
+	bool save_stall = _stall_writers;
+	_stall_writers = false;
 	// std::this_thread::sleep_for(std::chrono::microseconds(10));
 	usleep(10);
 	_flush_count++;
@@ -288,6 +312,8 @@ void async_buffer<Writer, Element>::flush()
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		// usleep(1000);
 	}
+
+	_stall_writers = save_stall;
 }
 
 /// Drain the set.  Synchronizing.
@@ -306,12 +332,15 @@ template<typename Writer, typename Element>
 void async_buffer<Writer, Element>::barrier()
 {
 	std::unique_lock<std::mutex> lock(_enqueue_mutex);
+	bool save_stall = _stall_writers;
+	_stall_writers = false;
 	_flush_count++;
 	while (0 < _store_set.size() or 0 < _busy_writers);
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		// usleep(1000);
 	}
+	_stall_writers = save_stall;
 }
 
 /// A single write thread. Reads elements from set, and invokes the
@@ -323,6 +352,12 @@ void async_buffer<Writer, Element>::write_loop()
 	{
 		while (true)
 		{
+			// Do nothing, if asked to stall.
+			while (_stall_writers and _store_set.size() < _low_watermark)
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(3));
+			}
+
 			Element elt = _store_set.get();
 			_busy_writers ++; // Bad -- window after get returns, before increment!
 			(_writer->*_do_write)(elt);
@@ -371,14 +406,16 @@ void async_buffer<Writer, Element>::insert(const Element& elt)
 	// do need to use a lock for that.
 	{
 		std::unique_lock<std::mutex> lock(_enqueue_mutex);
+		size_t before = _store_set.size();
 		_store_set.insert(elt);
 		_item_count++;
+		if (before == _store_set.size()) _duplicate_count++;
 	}
 
 	// If the writer threads are falling behind, mitigate.
 	// Right now, this will be real simple: just spin and wait
 	// for things to catch up.  Maybe we should launch more threads!?
-	// Note also: even as we block this thread, wiating for the drain
+	// Note also: even as we block this thread, waiting for the drain
 	// to complete, other threads might be filling the set back up.
 	// If it does over-fill, then those threads will also block, one
 	// by one, until we hit a metastable state, where the active
