@@ -36,23 +36,33 @@
  *  @{
  */
 
-//! Represents a thread-safe first in-first out list.
+//! Represents a thread-safe set.
 ///
-/// Implements a thread-safe queue: any thread can push stuff onto the
-/// queue, and any other thread can remove stuff from it.  If the queue
+/// Implements a thread-safe set: any thread can intsert stuff into the
+/// set, and any other thread can remove stuff from it.  If the set
 /// is empty, the thread attempting to remove stuff will block.  If the
-/// queue is empty, and something is added to the queue, and there is
-/// some thread blocked on the queue, then that thread will be woken up.
+/// set is empty, and something is added to the set, and there is
+/// some thread blocked on the set, then that thread will be woken up.
 ///
 /// The function provided here is almost identical to that provided by
-/// the pool class (also in this directory), but with a fancier API that
-/// allows cancellation, and other minor utilities. This API is also
-/// most easily understood as a producer-consumer API, with producer
-/// threads adding stuff to the queue, and consumer threads removing
-/// them.  By contrast, the pool API is a borrow-and-return API, which
-/// is really more-or-less the same thing, but just uses a different
-/// mindset.  This API also matches the proposed C++ standard for this
-/// basic idea.
+/// the concurrent_stack/concurrent_queue classes (in this directory)
+/// except that the class behaves like a set: an item can be inserted
+/// into the set many times, and, if its not removed, then it will only
+/// ever appear in it once.  In essence, it avoids redundancy, as
+/// compared to items placed in a queue/stack.
+///
+/// In other respects, it behaves like the concurrent queue/stack
+/// classes: when an item is gotten, it is removed (erased) from the set.
+/// It employes the same cancellation and condition-wait mechanisms
+/// as those classes, thus ensuring proper concurrency.
+///
+/// The Element class must have an std::less associated with it, as that
+/// is used to determine if an element is already in the set.  When
+/// getting elements from the set, they will be gotten from the "front",
+/// i.e. based on what std::less returned.  This means that there are no
+/// round-robin or "fair" fetching guarantees of any sort; in fact, the
+/// gets are guaranteed to NOT be fair.  This may result in unexpected
+/// behavior.
 
 template<typename Element>
 class concurrent_set
