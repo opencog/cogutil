@@ -36,10 +36,12 @@
  *  @{
  */
 
-//! Represents a thread-safe set.
+//! Represents a thread-safe std::set. Because a set can only ever hold
+/// a single copy of an item, this provides a basic de-duplication
+/// service.
 ///
-/// Implements a thread-safe set: any thread can intsert stuff into the
-/// set, and any other thread can remove stuff from it.  If the set
+/// This implements a thread-safe set: any thread can insert stuff into
+/// the set, and any other thread can remove stuff from it.  If the set
 /// is empty, the thread attempting to remove stuff will block.  If the
 /// set is empty, and something is added to the set, and there is
 /// some thread blocked on the set, then that thread will be woken up.
