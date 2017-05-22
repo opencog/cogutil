@@ -1,9 +1,9 @@
 /*
  * FUNCTION:
- * Multi-threaded asynchronous write queue.
+ * Multi-threaded asynchronous write buffer.
  *
  * HISTORY:
- * Copyright (c) 2013, 2015 Linas Vepstas <linasvepstas@gmail.com>
+ * Copyright (c) 2013, 2015, 2017 Linas Vepstas <linasvepstas@gmail.com>
  *
  * LICENSE:
  * This program is free software; you can redistribute it and/or modify
@@ -22,8 +22,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _OC_ASYNC_WRITER_H
-#define _OC_ASYNC_WRITER_H
+#ifndef _OC_ASYNC_BUFFER_H
+#define _OC_ASYNC_BUFFER_H
 
 #include <atomic>
 #include <chrono>
@@ -31,8 +31,7 @@
 #include <thread>
 #include <vector>
 
-#include <opencog/util/concurrent_queue.h>
-#include <opencog/util/concurrent_stack.h>
+#include <opencog/util/concurrent_set.h>
 #include <opencog/util/exceptions.h>
 #include <opencog/util/Logger.h>
 #include <opencog/util/macros.h>
@@ -44,11 +43,31 @@ namespace opencog
  */
 
 /**
- * Thread-safe, multi-threaded asynchronous write queue.
+ * Thread-safe, multi-threaded asynchronous write buffer.
  *
- * This class provides a simple way to call a method on a class,
- * asynchronously. That is, the method is called in a *different*
- * thread, at some later time. This can be very handy if the method
+ * This class provides a simple way to write de-duplicated data,
+ * asynchornously. It is similar to the async_caller class, in that
+ * it calls the indicated method in some different thread, at some
+ * later time. Unlike the async caller, it de-duplicates the data
+ * before making the call.  That is, if the call is queued multiple
+ * times with the same data, if will be called only once, for that
+ * data item.
+ *
+ * This de-duplication can be very handy if the method is writing data,
+ * can the caller is repeatedly asking for the same data to be written.
+ * By bufferring up and de-duplicating the write requests, this class
+ * can reduce load on the system, especially if a delay is introduced,
+ * so that the requests buffer up before being serviced.
+ *
+ * By default, this class attempts to service requests as soon as they
+ * are queued up. However, if the stall() flag is set, then no writing
+ * will be done, until at least the low_watermark amount of work
+ * accumulates. This can be useful to force the de-duplication mechanism
+ * to do it's work: there need to be a minimum number of  unique
+ * elements queued up before processing starts.
+ *
+ * In other respects, it provides the same advantages that the
+ * async_caller calss does: The buffering helps, if each call
  * takes a long time to run, or if it blocks waiting on I/O.  By
  * running in a different thread, it allows the current thread to
  * return immediately.  It also enables concurrency: a large number of
@@ -59,21 +78,21 @@ namespace opencog
  * there doesn't seem to be ...
  *
  * This class allows a simple implmentation of a thread-safe, multi-
- * threaded write queue. It is currently used by the persistant storage
- * class, to write atoms out to disk.
+ * threaded de-duplicating write buffer. It is currently used by the
+ * persistant storage class, to write atoms out to disk.
  *
- * What actually happens is this: The given elements are placed on a
- * queue (in a thread-safe manner -- thie enqueue function can be safely
- * called from multiple threads.) This queue is then serviced and
- * drained by a pool of active threads, which dequeue the elements, and
+ * What actually happens is this: The given elements are placed in a
+ * set (in a thread-safe manner -- thie enqueue function can be safely
+ * called from multiple threads.) This set is then serviced and
+ * drained by a pool of active threads, which remove the elements, and
  * call the method on each one.
  *
  * The implementation is very simple: it uses a fixed-size thread pool.
- * It uses hi/lo watermarks to stall and drain the queue, if it gets too
- * long. This could probably be made spiffier.
+ * It uses hi/lo watermarks to stall and drain the set, if it gets too
+ * large. This could probably be made spiffier.
  *
  * It would also be clearer to the user, if we placed the method to call
- * onto the queue, along with the element, instead of specifying the
+ * into the set, along with the element, instead of specifying the
  * method in the ctor. This would really drive home the point that this
  * really is just an async method call. XXX TODO FIXME someday.
  *
@@ -89,10 +108,10 @@ namespace opencog
  * this seems to slow the system down.
  */
 template<typename Writer, typename Element>
-class async_caller
+class async_buffer
 {
 	private:
-		concurrent_queue<Element> _store_queue;
+		concurrent_set<Element> _store_set;
 		std::vector<std::thread> _write_threads;
 		std::mutex _write_mutex;
 		std::mutex _enqueue_mutex;
@@ -106,26 +125,31 @@ class async_caller
 		unsigned int _thread_count;
 		bool _stopping_writers;
 
+		bool _stall_writers;
+
 		void start_writer_thread();
 		void stop_writer_threads();
 		void write_loop();
 
 	public:
-		async_caller(Writer*, void (Writer::*)(const Element&), int nthreads=4);
-		~async_caller();
-		void enqueue(const Element&);
-		void flush_queue();
+		async_buffer(Writer*, void (Writer::*)(const Element&), int nthreads=4);
+		~async_buffer();
+		void insert(const Element&);
+		void flush();
 		void barrier();
 
 		void set_watermarks(size_t, size_t);
+		void stall(bool);
 
 		// Utilities for monitoring performance.
-		// _item_count == number of items queued;
+		// _item_count == number of attempted insertions;
+		// _duplicate_count == number of duplicates dropped.
 		// _drain_count == number of times the high watermark was hit.
 		// _drain_msec == accumulated number of millisecs to drain.
 		// _drain_concurrent == number of threads that hit queue-full.
 		bool _in_drain;
 		std::atomic<unsigned long> _item_count;
+		std::atomic<unsigned long> _duplicate_count;
 		std::atomic<unsigned long> _flush_count;
 		std::atomic<unsigned long> _drain_count;
 		std::atomic<unsigned long> _drain_msec;
@@ -133,9 +157,11 @@ class async_caller
 		std::atomic<unsigned long> _drain_concurrent;
 
 		unsigned long get_busy_writers() const { return _busy_writers; }
-		unsigned long get_queue_size() const { return _store_queue.size(); }
+		unsigned long get_size() const { return _store_set.size(); }
 		unsigned long get_high_watermark() const { return _high_watermark; }
 		unsigned long get_low_watermark() const { return _low_watermark; }
+		bool stalling() const { return _stall_writers; }
+
 		void clear_stats();
 };
 
@@ -152,7 +178,7 @@ class async_caller
 /// nthreads: the number of threads in the writer pool to use. Defaults
 /// to 4 if not specified.
 template<typename Writer, typename Element>
-async_caller<Writer, Element>::async_caller(Writer* wr,
+async_buffer<Writer, Element>::async_buffer(Writer* wr,
                                             void (Writer::*cb)(const Element&),
                                             int nthreads)
 {
@@ -161,6 +187,7 @@ async_caller<Writer, Element>::async_caller(Writer* wr,
 	_stopping_writers = false;
 	_thread_count = 0;
 	_busy_writers = 0;
+	_stall_writers = false;
 	_in_drain = false;
 
 	_high_watermark = DEFAULT_HIGH_WATER_MARK;
@@ -175,7 +202,7 @@ async_caller<Writer, Element>::async_caller(Writer* wr,
 }
 
 template<typename Writer, typename Element>
-async_caller<Writer, Element>::~async_caller()
+async_buffer<Writer, Element>::~async_buffer()
 {
 	stop_writer_threads();
 }
@@ -189,17 +216,34 @@ async_caller<Writer, Element>::~async_caller()
 /// this does not prevent other threads from adding more work, as long
 /// as those other threads did not see a large backlog.
 ///
+/// If write-stalling is enabled, then no writing will be done until
+/// at least the low_watermark number of elements have accumulated.
+///
 template<typename Writer, typename Element>
-void async_caller<Writer, Element>::set_watermarks(size_t hi, size_t lo)
+void async_buffer<Writer, Element>::set_watermarks(size_t hi, size_t lo)
 {
 	_high_watermark = hi;
 	_low_watermark = lo;
 }
 
+/// Intentionally stall the writer threads, prevent them from writing
+/// until at least _low_watermark elements have accumulated in the pool.
+/// The goal here is to allow the de-duplication services to actually
+/// do thier work.  This has the dangerous side-effect of potentially
+/// leaving eleemnts in the set forever, never quite getting them
+/// written out. Caveat emptor! You may want to flush periodically,
+/// to avoid this situation.
 template<typename Writer, typename Element>
-void async_caller<Writer, Element>::clear_stats()
+void async_buffer<Writer, Element>::stall(bool st)
+{
+	_stall_writers = st;
+}
+
+template<typename Writer, typename Element>
+void async_buffer<Writer, Element>::clear_stats()
 {
 	_item_count = 0;
+	_duplicate_count = 0;
 	_flush_count = 0;
 	_drain_count = 0;
 	_drain_msec = 0;
@@ -212,28 +256,30 @@ void async_caller<Writer, Element>::clear_stats()
 /// Start a single writer thread.
 /// May be called multiple times.
 template<typename Writer, typename Element>
-void async_caller<Writer, Element>::start_writer_thread()
+void async_buffer<Writer, Element>::start_writer_thread()
 {
-	// logger().info("async_caller: starting a writer thread");
+	// logger().info("async_buffer: starting a writer thread");
 	std::unique_lock<std::mutex> lock(_write_mutex);
 	if (_stopping_writers)
 		throw RuntimeException(TRACE_INFO,
-			"Cannot start; async_caller writer threads are being stopped!");
+			"Cannot start; async_buffer writer threads are being stopped!");
 
-	_write_threads.push_back(std::thread(&async_caller::write_loop, this));
+	_write_threads.push_back(std::thread(&async_buffer::write_loop, this));
 	_thread_count ++;
 }
 
 /// Stop all writer threads, but only after they are done writing.
 template<typename Writer, typename Element>
-void async_caller<Writer, Element>::stop_writer_threads()
+void async_buffer<Writer, Element>::stop_writer_threads()
 {
-	// logger().info("async_caller: stopping all writer threads");
+	_stall_writers = false;
+
+	// logger().info("async_buffer: stopping all writer threads");
 	std::unique_lock<std::mutex> lock(_write_mutex);
 	_stopping_writers = true;
 
 	// Spin a while, until the writeer threads are (mostly) done.
-	while (not _store_queue.is_empty())
+	while (not _store_set.is_empty())
 	{
 		// std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		usleep(1000);
@@ -241,7 +287,7 @@ void async_caller<Writer, Element>::stop_writer_threads()
 
 	// Now tell all the threads that they are done.
 	// I.e. cancel all the threads.
-	_store_queue.cancel();
+	_store_set.cancel();
 	while (0 < _write_threads.size())
 	{
 		_write_threads.back().join();
@@ -249,13 +295,13 @@ void async_caller<Writer, Element>::stop_writer_threads()
 		_thread_count --;
 	}
 
-	// OK, so we've joined all the threads, but the queue
+	// OK, so we've joined all the threads, but the set
 	// might not be totally empty; some dregs might remain.
 	// Drain it now, single-threadedly.
-	_store_queue.cancel_reset();
-	while (not _store_queue.is_empty())
+	_store_set.cancel_reset();
+	while (not _store_set.is_empty())
 	{
-		Element elt = _store_queue.pop();
+		Element elt = _store_set.get();
 		(_writer->*_do_write)(elt);
 	}
 	
@@ -264,7 +310,7 @@ void async_caller<Writer, Element>::stop_writer_threads()
 }
 
 
-/// Drain the pending queue.  Non-synchronizing.
+/// Drain the set.  Non-synchronizing.
 ///
 /// This is NOT synchronizing! It does NOT prevent other threads from
 /// concurrently adding to the queue! Thus, if these other threads are
@@ -277,22 +323,26 @@ void async_caller<Writer, Element>::stop_writer_threads()
 /// between the dequeue, and the busy_writer increment. I guess we
 /// should fix this...
 template<typename Writer, typename Element>
-void async_caller<Writer, Element>::flush_queue()
+void async_buffer<Writer, Element>::flush()
 {
+	bool save_stall = _stall_writers;
+	_stall_writers = false;
 	// std::this_thread::sleep_for(std::chrono::microseconds(10));
 	usleep(10);
 	_flush_count++;
-	while (0 < _store_queue.size() or 0 < _busy_writers);
+	while (0 < _store_set.size() or 0 < _busy_writers);
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		// usleep(1000);
 	}
+
+	_stall_writers = save_stall;
 }
 
-/// Drain the pending queue.  Synchronizing.
+/// Drain the set.  Synchronizing.
 ///
-/// This forces a drain of the pending work queue. It prevents other
-/// threads from adding to the queue, while this is being done.
+/// This forces a drain of the pending work-set. It prevents other
+/// threads from adding to the set, while this is being done.
 /// Forward progress is guaranteed: this method will return in finite
 /// time.
 ///
@@ -302,33 +352,42 @@ void async_caller<Writer, Element>::flush_queue()
 /// increment. I guess we should fix this...
 
 template<typename Writer, typename Element>
-void async_caller<Writer, Element>::barrier()
+void async_buffer<Writer, Element>::barrier()
 {
 	std::unique_lock<std::mutex> lock(_enqueue_mutex);
+	bool save_stall = _stall_writers;
+	_stall_writers = false;
 	_flush_count++;
-	while (0 < _store_queue.size() or 0 < _busy_writers);
+	while (0 < _store_set.size() or 0 < _busy_writers);
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		// usleep(1000);
 	}
+	_stall_writers = save_stall;
 }
 
-/// A single write thread. Reads elements from queue, and invokes the
+/// A single write thread. Reads elements from set, and invokes the
 /// method on them.
 template<typename Writer, typename Element>
-void async_caller<Writer, Element>::write_loop()
+void async_buffer<Writer, Element>::write_loop()
 {
 	try
 	{
 		while (true)
 		{
-			Element elt = _store_queue.pop();
-			_busy_writers ++; // Bad -- window after pop returns, before increment!
+			// Do nothing, if asked to stall.
+			while (_stall_writers and _store_set.size() < _low_watermark)
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(3));
+			}
+
+			Element elt = _store_set.get();
+			_busy_writers ++; // Bad -- window after get returns, before increment!
 			(_writer->*_do_write)(elt);
 			_busy_writers --;
 		}
 	}
-	catch (typename concurrent_queue<Element>::Canceled& e)
+	catch (typename concurrent_set<Element>::Canceled& e)
 	{
 		// We are so out of here. Nothing to do, just exit this thread.
 		return;
@@ -338,18 +397,18 @@ void async_caller<Writer, Element>::write_loop()
 
 /* ================================================================ */
 /**
- * Enqueue the given element.  Returns immediately after enqueuing.
+ * Insert the given element.  Returns immediately after inserting.
  * Thread-safe: this may be called concurrently from multiple threads.
- * If the queue is over-full, then this will block until the queue is
+ * If the set is over-full, then this will block until the set is
  * mostly drained...
  */
 template<typename Writer, typename Element>
-void async_caller<Writer, Element>::enqueue(const Element& elt)
+void async_buffer<Writer, Element>::insert(const Element& elt)
 {
 	// Sanity checks.
 	if (_stopping_writers)
 		throw RuntimeException(TRACE_INFO,
-			"Cannot store; async_caller writer threads are being stopped!");
+			"Cannot store; async_buffer writer threads are being stopped!");
 
 	if (0 == _thread_count)
 	{
@@ -364,26 +423,28 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 		return;
 	}
 
-	// The _store_queue.push(elt) does not need a lock, itself; its
+	// The _store_set.insert(elt) does not need a lock, itself; its
 	// perfectly thread-safe. However, the flush barrier does need to
 	// be able to halt everyone else from enqueing more stuff, so we
 	// do need to use a lock for that.
 	{
 		std::unique_lock<std::mutex> lock(_enqueue_mutex);
-		_store_queue.push(elt);
+		size_t before = _store_set.size();
+		_store_set.insert(elt);
 		_item_count++;
+		if (before == _store_set.size()) _duplicate_count++;
 	}
 
 	// If the writer threads are falling behind, mitigate.
 	// Right now, this will be real simple: just spin and wait
 	// for things to catch up.  Maybe we should launch more threads!?
 	// Note also: even as we block this thread, waiting for the drain
-	// to complete, other threads might be filling the queue back up.
+	// to complete, other threads might be filling the set back up.
 	// If it does over-fill, then those threads will also block, one
 	// by one, until we hit a metastable state, where the active
 	// (non-stalled) fillers and emptiers are in balance.
 
-	if (_high_watermark < _store_queue.size())
+	if (_high_watermark < _store_set.size())
 	{
 		if (_in_drain) _drain_concurrent ++;
 		else _drain_count++;
@@ -397,7 +458,7 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 			// usleep(1000);
 			// cnt++;
 		}
-		while (_low_watermark < _store_queue.size());
+		while (_low_watermark < _store_set.size());
 		_in_drain = false;
 
 		// Sleep might not be accurate, so measure elapsed time directly.
@@ -405,7 +466,7 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 		unsigned long msec = duration.count();
 
-		logger().debug("async_caller overfull queue; had to sleep %d millisecs to drain!", msec);
+		logger().debug("async_buffer overfull set; had to sleep %d millisecs to drain!", msec);
 		_drain_msec += msec;
 		if (_drain_slowest_msec < msec) _drain_slowest_msec = msec;
 	}
@@ -414,4 +475,4 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 /** @}*/
 } // namespace opencog
 
-#endif // _OC_ASYNC_WRITER_H
+#endif // _OC_ASYNC_BUFFER_H

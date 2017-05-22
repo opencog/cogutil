@@ -73,6 +73,7 @@ ADD_SUBDIRECTORY(boost_ext)
 INSTALL(FILES
 	ansi.h
 	algorithm.h
+	async_buffer.h
 	async_method_caller.h
 	backtrace-symbols.h
 	based_variant.h
@@ -83,6 +84,7 @@ INSTALL(FILES
 	Counter.h
 	Cover_Tree.h
 	concurrent_queue.h
+	concurrent_set.h
 	concurrent_stack.h
 	digraph.h
 	dorepeat.h
