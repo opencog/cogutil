@@ -347,7 +347,7 @@ void Logger::set_filename(const std::string& s)
     enable();
 }
 
-const std::string& Logger::get_filename()
+const std::string& Logger::get_filename() const
 {
     return fileName;
 }
