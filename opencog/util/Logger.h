@@ -115,7 +115,7 @@ public:
 
     /* filename property */
     void set_filename(const std::string&);
-    const std::string& get_filename();
+    const std::string& get_filename() const;
 
     /**
      * Set an optional component string. That string will be inserted
