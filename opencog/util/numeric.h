@@ -285,8 +285,8 @@ template<typename FloatT> bool is_within(FloatT x, FloatT y, FloatT epsilon)
 /// note that, unlike isWithin, the precision adapts with the scale of x and y
 template<typename FloatT> bool is_approx_eq(FloatT x, FloatT y, FloatT epsilon)
 {
-    FloatT diff = std::abs(x - y);
-    FloatT amp = std::abs(x + y);
+    FloatT diff = std::fabs(x - y);
+    FloatT amp = std::fabs(x + y);
     if (amp*amp > epsilon)
         return diff <= epsilon * amp;
     else return diff <= epsilon;
