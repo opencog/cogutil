@@ -147,13 +147,15 @@ ENDIF (BFD_FOUND)
 # Check for boost. We need dynamic-linked, threaded libs by default.
 SET(Boost_USE_STATIC_LIBS OFF)
 SET(Boost_USE_MULTITHREADED ON)
+# The minimum boost version required for building.
+SET(MIN_BOOST 1.46)
 
 # Required boost packages
 # hypertable requires boost iostreams
 # boost-1.49 no longer has a libboost_iostreams
 # 1.46 is minimum for required filesystem support
 # program_options needed by some combo utilities
-FIND_PACKAGE(Boost 1.46 COMPONENTS date_time filesystem program_options regex serialization system thread REQUIRED)
+FIND_PACKAGE(Boost ${MIN_BOOST} COMPONENTS date_time filesystem program_options regex serialization system thread REQUIRED)
 
 IF (Boost_FOUND)
 	SET(Boost_FOUND_SAVE 1)
@@ -162,7 +164,7 @@ IF (Boost_FOUND)
 	SET(BOOST_PARAMETER_MAX_ARITY 7)
 	ADD_DEFINITIONS(-DBOOST_PARAMETER_MAX_ARITY=${BOOST_PARAMETER_MAX_ARITY})
 ELSE(Boost_FOUND)
-	MESSAGE(FATAL_ERROR "Boost 1.46 or newer (package libboost-all-dev if using Ubuntu) is needed to build OpenCog!")
+	MESSAGE(FATAL_ERROR "Boost ${MIN_BOOST} or newer (package libboost-all-dev if using Ubuntu) is needed to build OpenCog!")
 ENDIF (Boost_FOUND)
 
 # Opencog won't compile with Boost 1.51, some kind of conflict with
@@ -173,8 +175,8 @@ ENDIF (105100 EQUAL ${Boost_VERSION})
 MESSAGE(STATUS "Boost version ${Boost_VERSION} found.")
 
 # Optional boost packages; can build without these.
-FIND_PACKAGE(Boost 1.46 COMPONENTS python program_options QUIET)
-FIND_PACKAGE(Boost 1.46 COMPONENTS math_c99 QUIET)
+FIND_PACKAGE(Boost ${MIN_BOOST} COMPONENTS python program_options QUIET)
+FIND_PACKAGE(Boost ${MIN_BOOST} COMPONENTS math_c99 QUIET)
 
 # Arghhh. Except cmake is treating above as required, not optional. #$%**&
 IF (Boost_FOUND_SAVE)
@@ -354,6 +356,24 @@ SET(CPACK_SOURCE_IGNORE_FILES
 )
 
 SET(CPACK_PACKAGING_INSTALL_PREFIX "/usr/local")
+
+## Debian specific configurations
+SET(DEPENDENCY_LIST
+	"libboost-date-time-dev (>= ${MIN_BOOST})"
+	"libboost-filesystem-dev (>= ${MIN_BOOST})"
+	"libboost-math-dev (>= ${MIN_BOOST})"
+	"libboost-program-options-dev (>= ${MIN_BOOST})"
+	"libboost-regex-dev (>= ${MIN_BOOST})"
+	"libboost-serialization-dev (>= ${MIN_BOOST})"
+	"libboost-thread-dev (>= ${MIN_BOOST})"
+	"libboost-system-dev (>= ${MIN_BOOST})"
+	"libboost-random-dev (>= ${MIN_BOOST})"
+	"libstdc++6 (>= 4.7)"
+	"binutils-dev"
+	"libiberty-dev"
+)
+STRING(REPLACE ";" ", " MAIN_DEPENDENCIES "${DEPENDENCY_LIST}")
+SET(CPACK_DEBIAN_PACKAGE_DEPENDS "${MAIN_DEPENDENCIES}")
 INCLUDE(CPack)
 
 # documentation
