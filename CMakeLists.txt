@@ -295,7 +295,7 @@ ADD_CUSTOM_TARGET(cscope
 # packaging
 SET(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/packages")
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "The OpenCog Basic C++ Utilities")
-SET(CPACK_PACKAGE_NAME "cogutils")
+SET(CPACK_PACKAGE_NAME "libcogutils-dev")
 SET(CPACK_PACKAGE_VENDOR "opencog.org")
 SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
@@ -312,10 +312,33 @@ STRING(REGEX MATCH
 	"#define COGUTIL_MICRO_VERSION ([0-9]+)"
 	_ "${_CU_H_CONTENTS}")
 SET(CPACK_PACKAGE_VERSION_PATCH ${CMAKE_MATCH_1})
-SET(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
+SET(SEMANTIC_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
+
+# NOTE: `git describe` returns an output with count of commits after the last
+# annotated-tags. This makes relasing multiple daily builds easy as the
+# installed packgaes can easily be sorted. If that doesn't work then for
+# debian packages Breaks and Replaces fields might have to be used.
+# TODO: Add a reminder to maintainers so they won't forget to sync the git-tag
+# with the semanint version. RV is for that purpose.
+EXECUTE_PROCESS(COMMAND  git describe --long "--match=*${SEMANTIC_VERSION}*"
+	OUTPUT_VARIABLE COGUTIL_GIT_VERSION
+	RESULT_VARIABLE RV
+	OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+# For what architecture the package is for
+# TODO: Will give error on non debian distros.
+EXECUTE_PROCESS(COMMAND  dpkg --print-architecture
+	OUTPUT_VARIABLE PACKAGE_ARCHITECTURE
+	OUTPUT_STRIP_TRAILING_WHITESPACE)
+# Cleanup becuase debain version require that it starts with a number.
+STRING(REGEX MATCH "([0-9.]+-[a-zA-Z0-9-]+)$"
+	_ "${COGUTIL_GIT_VERSION}")
+SET(CPACK_PACKAGE_VERSION "${CMAKE_MATCH_0}")
+
 SET(CPACK_PACKAGE_CONTACT "opencog@googlegroups.com")
 SET(CPACK_GENERATOR "DEB")
-SET(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}")
+SET(CPACK_PACKAGE_FILE_NAME
+	"${CPACK_PACKAGE_NAME}_${CPACK_PACKAGE_VERSION}_${PACKAGE_ARCHITECTURE}")
 SET(CPACK_SOURCE_IGNORE_FILES
 	"~$"
 	".a$"
@@ -365,6 +388,7 @@ SET(DEPENDENCY_LIST
 STRING(REPLACE ";" ", " MAIN_DEPENDENCIES "${DEPENDENCY_LIST}")
 SET(CPACK_DEBIAN_PACKAGE_DEPENDS "${MAIN_DEPENDENCIES}")
 SET(CPACK_DEBIAN_PACKAGE_SECTION "libdevel")
+SET(CPACK_DEBIAN_PACKAGE_HOMEPAGE "http://opencog.org")
 INCLUDE(CPack)
 
 # documentation
