@@ -292,7 +292,7 @@ ADD_CUSTOM_TARGET(cscope
 	COMMENT "Generating CScope database"
 )
 
-# packaging
+# Packaging
 SET(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/packages")
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "The OpenCog Basic C++ Utilities")
 SET(CPACK_PACKAGE_NAME "libcogutil-dev")
@@ -312,26 +312,30 @@ STRING(REGEX MATCH
 	"#define COGUTIL_MICRO_VERSION ([0-9]+)"
 	_ "${_CU_H_CONTENTS}")
 SET(CPACK_PACKAGE_VERSION_PATCH ${CMAKE_MATCH_1})
+# NOTE: This is the official semantic-version, as it is derived from a
+# version-control independent means of declaring versioning.
 SET(SEMANTIC_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 
 # NOTE: `git describe` returns an output with count of commits after the last
 # annotated-tags. This makes relasing multiple daily builds easy as the
 # installed packgaes can easily be sorted. If that doesn't work then for
-# debian packages Breaks and Replaces fields might have to be used.
-# TODO: Add a reminder to maintainers so they won't forget to sync the git-tag
-# with the semanint version. RV is for that purpose.
+# debian packages 'Breaks' and 'Replaces' fields might have to be used.
 EXECUTE_PROCESS(COMMAND  git describe --long "--match=*${SEMANTIC_VERSION}*"
 	OUTPUT_VARIABLE COGUTIL_GIT_VERSION
 	RESULT_VARIABLE RV
 	OUTPUT_STRIP_TRAILING_WHITESPACE)
+IF(${RV})
+	MESSAGE(WARNING "\nThere is no git annotated-tag with semantic-version = "
+	${SEMANTIC_VERSION})
+ENDIF()
 
 # For what architecture the package is for
 # TODO: Will give error on non debian distros.
 EXECUTE_PROCESS(COMMAND  dpkg --print-architecture
 	OUTPUT_VARIABLE PACKAGE_ARCHITECTURE
 	OUTPUT_STRIP_TRAILING_WHITESPACE)
-# Cleanup becuase debain version require that it starts with a number.
-STRING(REGEX MATCH "([0-9]+[0-9.]+-[a-zA-Z0-9-]+)$"
+# Cleanup because debain version require that it starts with a number.
+STRING(REGEX MATCH "([0-9]+[0-9.]+)-([a-zA-Z0-9-]+)$"
 	_ "${COGUTIL_GIT_VERSION}")
 SET(CPACK_PACKAGE_VERSION "${CMAKE_MATCH_0}")
 
