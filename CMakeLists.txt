@@ -147,13 +147,15 @@ ENDIF (BFD_FOUND)
 # Check for boost. We need dynamic-linked, threaded libs by default.
 SET(Boost_USE_STATIC_LIBS OFF)
 SET(Boost_USE_MULTITHREADED ON)
+# The minimum boost version required for building.
+SET(MIN_BOOST 1.46)
 
 # Required boost packages
 # hypertable requires boost iostreams
 # boost-1.49 no longer has a libboost_iostreams
 # 1.46 is minimum for required filesystem support
 # program_options needed by some combo utilities
-FIND_PACKAGE(Boost 1.46 COMPONENTS date_time filesystem program_options regex serialization system thread REQUIRED)
+FIND_PACKAGE(Boost ${MIN_BOOST} COMPONENTS date_time filesystem program_options regex serialization system thread REQUIRED)
 
 IF (Boost_FOUND)
 	SET(Boost_FOUND_SAVE 1)
@@ -162,7 +164,7 @@ IF (Boost_FOUND)
 	SET(BOOST_PARAMETER_MAX_ARITY 7)
 	ADD_DEFINITIONS(-DBOOST_PARAMETER_MAX_ARITY=${BOOST_PARAMETER_MAX_ARITY})
 ELSE(Boost_FOUND)
-	MESSAGE(FATAL_ERROR "Boost 1.46 or newer (package libboost-all-dev if using Ubuntu) is needed to build OpenCog!")
+	MESSAGE(FATAL_ERROR "Boost ${MIN_BOOST} or newer (package libboost-all-dev if using Ubuntu) is needed to build OpenCog!")
 ENDIF (Boost_FOUND)
 
 # Opencog won't compile with Boost 1.51, some kind of conflict with
@@ -173,8 +175,8 @@ ENDIF (105100 EQUAL ${Boost_VERSION})
 MESSAGE(STATUS "Boost version ${Boost_VERSION} found.")
 
 # Optional boost packages; can build without these.
-FIND_PACKAGE(Boost 1.46 COMPONENTS python program_options QUIET)
-FIND_PACKAGE(Boost 1.46 COMPONENTS math_c99 QUIET)
+FIND_PACKAGE(Boost ${MIN_BOOST} COMPONENTS python program_options QUIET)
+FIND_PACKAGE(Boost ${MIN_BOOST} COMPONENTS math_c99 QUIET)
 
 # Arghhh. Except cmake is treating above as required, not optional. #$%**&
 IF (Boost_FOUND_SAVE)
@@ -290,9 +292,10 @@ ADD_CUSTOM_TARGET(cscope
 	COMMENT "Generating CScope database"
 )
 
-# packaging
+# Packaging
+SET(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/packages")
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "The OpenCog Basic C++ Utilities")
-SET(CPACK_PACKAGE_NAME "cogutils")
+SET(CPACK_PACKAGE_NAME "libcogutil-dev")
 SET(CPACK_PACKAGE_VENDOR "opencog.org")
 SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
@@ -309,20 +312,37 @@ STRING(REGEX MATCH
 	"#define COGUTIL_MICRO_VERSION ([0-9]+)"
 	_ "${_CU_H_CONTENTS}")
 SET(CPACK_PACKAGE_VERSION_PATCH ${CMAKE_MATCH_1})
-SET(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
-SET(CPACK_BINARY_STGZ "OFF")
-SET(CPACK_BINARY_TBZ2 "OFF")
-SET(CPACK_BINARY_TGZ "OFF")
-SET(CPACK_BINARY_TZ "OFF")
-SET(CPACK_SOURCE_STGZ "OFF")
-SET(CPACK_SOURCE_TBZ2 "ON")
-SET(CPACK_SOURCE_TGZ "OFF")
-SET(CPACK_SOURCE_TZ "OFF")
+# NOTE: This is the official semantic-version, as it is derived from a
+# version-control independent means of declaring versioning.
+SET(SEMANTIC_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
+
+# NOTE: `git describe` returns an output with count of commits after the last
+# annotated-tags. This makes relasing multiple daily builds easy as the
+# installed packgaes can easily be sorted. If that doesn't work then for
+# debian packages 'Breaks' and 'Replaces' fields might have to be used.
+EXECUTE_PROCESS(COMMAND  git describe --long "--match=*${SEMANTIC_VERSION}*"
+	OUTPUT_VARIABLE COGUTIL_GIT_VERSION
+	RESULT_VARIABLE RV
+	OUTPUT_STRIP_TRAILING_WHITESPACE)
+IF(${RV})
+	MESSAGE(WARNING "\nThere is no git annotated-tag with semantic-version = "
+	${SEMANTIC_VERSION})
+ENDIF()
+
+# For what architecture the package is for
+# TODO: Will give error on non debian distros.
+EXECUTE_PROCESS(COMMAND  dpkg --print-architecture
+	OUTPUT_VARIABLE PACKAGE_ARCHITECTURE
+	OUTPUT_STRIP_TRAILING_WHITESPACE)
+# Cleanup because debain version require that it starts with a number.
+STRING(REGEX MATCH "([0-9]+[0-9.]+)-([a-zA-Z0-9-]+)$"
+	_ "${COGUTIL_GIT_VERSION}")
+SET(CPACK_PACKAGE_VERSION "${CMAKE_MATCH_0}")
+
 SET(CPACK_PACKAGE_CONTACT "opencog@googlegroups.com")
-SET(CPACK_GENERATOR "TBZ2;DEB")
-SET(CPACK_SOURCE_GENERATOR "TBZ2")
-SET(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}")
-SET(CPACK_SOURCE_PACKAGE_FILE_NAME "${CPACK_PACKAGE_FILE_NAME}")
+SET(CPACK_GENERATOR "DEB")
+SET(CPACK_PACKAGE_FILE_NAME
+	"${CPACK_PACKAGE_NAME}_${CPACK_PACKAGE_VERSION}_${PACKAGE_ARCHITECTURE}")
 SET(CPACK_SOURCE_IGNORE_FILES
 	"~$"
 	".a$"
@@ -333,32 +353,46 @@ SET(CPACK_SOURCE_IGNORE_FILES
 	".tar.bz2$"
 	"/Makefile$"
 	"/CMakeFiles/"
+	"/CMakeFiles/"
 	"/CMakeCache.txt$"
 	"/DartTestfile.txt$"
 	"/cmake_install.cmake$"
-	"/Testfile.cmake$"
-	"/CTestTestfile.cmake$"
-	"/CTestTestfile.cmake$"
+	"/*.cmake$"
+	"/*.make$"
 	"UTest$"
 	"UTest.cpp$"
 	"/_CPack_Packages/"
-	"/CPackConfig.cmake$"
-	"/CPackSourceConfig.cmake$"
 	"/sniff$"
 	"/install_manifest.txt$"
 	"${CPACK_PACKAGE_FILE_NAME}"
+	"${CPACK_PACKAGE_DIRECTORY}"
 	"^${PROJECT_SOURCE_DIR}/debian/"
 	"^${PROJECT_SOURCE_DIR}/.*spec$"
 	"^${PROJECT_SOURCE_DIR}/vendor/"
-	"^${PROJECT_SOURCE_DIR}/.bzr/"
-	"^${PROJECT_SOURCE_DIR}/.bzrignore$"
 	"^${PROJECT_SOURCE_DIR}/.git/"
-	"^${PROJECT_BINARY_DIR}/opencog/server/cogserver$"
-	"^${PROJECT_BINARY_DIR}/examples/server/derivedserver$"
-	"^${PROJECT_BINARY_DIR}/examples/hopfield/hopfield$"
 )
 
 SET(CPACK_PACKAGING_INSTALL_PREFIX "/usr/local")
+
+## Debian specific configurations
+SET(DEPENDENCY_LIST
+	"libboost-date-time-dev (>= ${MIN_BOOST})"
+	"libboost-filesystem-dev (>= ${MIN_BOOST})"
+	"libboost-math-dev (>= ${MIN_BOOST})"
+	"libboost-program-options-dev (>= ${MIN_BOOST})"
+	"libboost-regex-dev (>= ${MIN_BOOST})"
+	"libboost-serialization-dev (>= ${MIN_BOOST})"
+	"libboost-thread-dev (>= ${MIN_BOOST})"
+	"libboost-system-dev (>= ${MIN_BOOST})"
+	"libboost-random-dev (>= ${MIN_BOOST})"
+	"libstdc++6 (>= 4.7)"
+	"binutils-dev"
+	"libiberty-dev"
+)
+STRING(REPLACE ";" ", " MAIN_DEPENDENCIES "${DEPENDENCY_LIST}")
+SET(CPACK_DEBIAN_PACKAGE_DEPENDS "${MAIN_DEPENDENCIES}")
+SET(CPACK_DEBIAN_PACKAGE_SECTION "libdevel")
+SET(CPACK_DEBIAN_PACKAGE_HOMEPAGE "http://opencog.org")
 INCLUDE(CPack)
 
 # documentation
