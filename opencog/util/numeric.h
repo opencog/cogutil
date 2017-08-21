@@ -300,16 +300,14 @@ template<typename FloatT> bool is_approx_eq(FloatT x, FloatT y)
 }
 
 /**
- * Return x bounded by [l, u], that is it returns max(l, min(u, x))
- *
- * I'm not sure the name 'bound' is right...
+ * Return x clamped to [l, u], that is it returns max(l, min(u, x))
  */
 template<typename Float>
-Float bound(Float x, Float l, Float u)
+Float clamp(Float x, Float l, Float u)
 {
     return std::max(l, std::min(u, x));
 }
-    
+
 //! useful for entropy
 template<typename FloatT> FloatT weighted_information(FloatT p)
 {
@@ -519,7 +517,7 @@ Float angular_distance(const Vec& a, const Vec& b, bool pos_n_neg = true)
     
     if (numerator >= Float(SMALL_EPSILON)) {
         // in case of rounding error
-        Float r = bound(ab / numerator, Float(-1), Float(1));
+        Float r = clamp(ab / numerator, Float(-1), Float(1));
         return (pos_n_neg ? 1 : 2) * acos(r) / PI;
     }
     else
