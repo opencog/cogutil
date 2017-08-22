@@ -216,17 +216,17 @@ Set make_singleton_set(const typename Set::value_type& v) {
 template<typename Set>
 Set set_union(const Set& s1, const Set& s2) {
     Set res(s1);
-    return set_union(res, s2);
+    set_union(res, s2);
+    return res;
 }
 
 /**
- * Modify s1 to that it contains s1 union s2 and return s1, s1 and s2
- * being std::set or similar concept
+ * Modify s1 to that it contains s1 union s2, s1 and s2 being std::set
+ * or similar concept.
  */
 template<typename Set>
-Set& set_union(Set& s1, const Set& s2) {
+void set_union(Set& s1, const Set& s2) {
     s1.insert(s2.begin(), s2.end());
-    return s1;
 }
 
 /**
