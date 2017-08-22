@@ -67,9 +67,9 @@ static const const_bool default_filter(true);
 
     
 //! vector comprehension (STL functor version)
-template<typename Container, typename Function, typename Filter = const_bool>
+template<typename Container, typename Function, typename Filter=const_bool>
 auto vector_comp(const Container& c, const Function& func,
-                 const Filter& filter = default_filter)
+                 const Filter& filter=default_filter)
     -> std::vector<typename Function::result_type>
 {
     std::vector<typename Function::result_type> v;
@@ -79,9 +79,9 @@ auto vector_comp(const Container& c, const Function& func,
 }
 
 //! vector comprehension (lambda version)
-template<typename Container, typename Function, typename Filter = const_bool>
+template<typename Container, typename Function, typename Filter=const_bool>
 auto vector_comp(const Container& c, const Function& func,
-                 const Filter& filter = default_filter)
+                 const Filter& filter=default_filter)
     -> std::vector<decltype(func(std::declval<typename Container::value_type>()))>
 {
     std::vector<decltype(func(std::declval<typename Container::value_type>()))> v;
@@ -91,9 +91,9 @@ auto vector_comp(const Container& c, const Function& func,
 }
 
 //! list comprehension (STL functor version)
-template<typename Container, typename Function, typename Filter = const_bool>
+template<typename Container, typename Function, typename Filter=const_bool>
 auto list_comp(const Container& c, const Function& func,
-               const Filter& filter = default_filter)
+               const Filter& filter=default_filter)
     -> std::list<typename Function::result_type>
 {
     std::list<typename Function::result_type> l;
@@ -103,9 +103,9 @@ auto list_comp(const Container& c, const Function& func,
 }
 
 //! list comprehension (lambda version)
-template<typename Container, typename Function, typename Filter = const_bool>
+template<typename Container, typename Function, typename Filter=const_bool>
 auto list_comp(const Container& c, const Function& func,
-               const Filter& filter = default_filter)
+               const Filter& filter=default_filter)
     -> std::list<decltype(func(std::declval<typename Container::value_type>()))>
 {
     std::list<decltype(func(std::declval<typename Container::value_type>()))> l;

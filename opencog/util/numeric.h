@@ -299,6 +299,7 @@ template<typename FloatT> bool is_approx_eq(FloatT x, FloatT y)
     return is_approx_eq(x, y, static_cast<FloatT>(EPSILON));
 }
 
+// TODO: replace the following by C++17 std::clamp
 /**
  * Return x clamped to [l, u], that is it returns max(l, min(u, x))
  */
