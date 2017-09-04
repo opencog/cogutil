@@ -73,31 +73,6 @@
 #include <bfd.h>
 #include <dlfcn.h>
 #include <link.h>
-#if 0
-
-void (*dbfd_init)(void);
-bfd_vma (*dbfd_scan_vma)(const char *string, const char **end, int base);
-bfd* (*dbfd_openr)(const char *filename, const char *target);
-bfd_boolean (*dbfd_check_format)(bfd *abfd, bfd_format format);
-bfd_boolean (*dbfd_check_format_matches)(bfd *abfd, bfd_format format, char ***matching);
-bfd_boolean (*dbfd_close)(bfd *abfd);
-bfd_boolean (*dbfd_map_over_sections)(bfd *abfd, void (*func)(bfd *abfd, asection *sect, void *obj),
-            void *obj);
-#define bfd_init dbfd_init
-
-static void load_funcs(void)
-{
-      void * handle = dlopen("libbfd.so", RTLD_NOW);
-      dbfd_init = dlsym(handle, "bfd_init");
-      dbfd_scan_vma = dlsym(handle, "bfd_scan_vma");
-      dbfd_openr = dlsym(handle, "bfd_openr");
-      dbfd_check_format = dlsym(handle, "bfd_check_format");
-      dbfd_check_format_matches = dlsym(handle, "bfd_check_format_matches");
-      dbfd_close = dlsym(handle, "bfd_close");
-      dbfd_map_over_sections = dlsym(handle, "bfd_map_over_sections");
-}
-
-#endif
 
 /* 150 isn't special; it's just an arbitrary non-ASCII char value.  */
 #define OPTION_DEMANGLER      (150)
@@ -159,50 +134,6 @@ static void find_address_in_section(bfd *abfd, asection *section, void *data)
       spot->found = bfd_find_nearest_line(abfd, section, spot->syms, spot->pc - vma,
                               &(spot->filename), &(spot->functionname), &(spot->line));
 }
-
-/* Read hexadecimal addresses from stdin, translate into
-   file_name:line_number and optionally function name.  */
-#if 0
-static void translate_addresses(bfd * abfd, char (*addr)[PTRSTR_LEN], int naddr)
-{
-      while (naddr) {
-            pc = bfd_scan_vma(addr[naddr-1], NULL, 16);
-
-            found = false;
-            bfd_map_over_sections(abfd, find_address_in_section, (PTR) NULL);
-
-            if (!found) {
-                  printf("[%s] \?\?() \?\?:0\n",addr[naddr-1]);
-            } else {
-                  const char *name;
-
-                  name = functionname;
-                  if (name == NULL || *name == '\0')
-                        name = "??";
-                  if (filename != NULL) {
-                        char *h;
-
-                        h = strrchr(filename, '/');
-                        if (h != NULL)
-                              filename = h + 1;
-                  }
-
-                  printf("\t%s:%u\t", filename ? filename : "??",
-                         line);
-
-                  printf("%s()\n", name);
-
-            }
-
-            /* fflush() is essential for using this command as a server
-               child process that reads addresses from a pipe and responds
-               with line number information, processing one address at a
-               time.  */
-            fflush(stdout);
-            naddr--;
-      }
-}
-#endif
 
 static char** translate_addresses_buf(bfd * abfd, bfd_vma *addr, int naddr, asymbol** syms)
 {
