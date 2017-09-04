@@ -3,6 +3,7 @@
   Notes:
   Downloaded from:
   http://cairo.sourcearchive.com/documentation/1.9.4/backtrace-symbols_8c-source.html
+  https://raw.githubusercontent.com/servo/cairo/master/util/backtrace-symbols.c
   Compiling requires the 'binutils-dev' package installed, so that bfd.h is
   available.
 */
@@ -74,11 +75,9 @@ void (*dbfd_init)(void);
 bfd_vma (*dbfd_scan_vma)(const char *string, const char **end, int base);
 bfd* (*dbfd_openr)(const char *filename, const char *target);
 bfd_boolean (*dbfd_check_format)(bfd *abfd, bfd_format format);
-bfd_boolean (*dbfd_check_format_matches)(bfd *abfd, bfd_format format, char
-***matching);
+bfd_boolean (*dbfd_check_format_matches)(bfd *abfd, bfd_format format, char ***matching);
 bfd_boolean (*dbfd_close)(bfd *abfd);
-bfd_boolean (*dbfd_map_over_sections)(bfd *abfd, void (*func)(bfd *abfd, asection
-*sect, void *obj),
+bfd_boolean (*dbfd_map_over_sections)(bfd *abfd, void (*func)(bfd *abfd, asection *sect, void *obj),
             void *obj);
 #define bfd_init dbfd_init
 
@@ -136,8 +135,7 @@ static int found;
 /* Look for an address in a section.  This is called via
    bfd_map_over_sections.  */
 
-static void find_address_in_section(bfd *abfd, asection *section, void *data
-__attribute__ ((__unused__)) )
+static void find_address_in_section(bfd *abfd, asection *section, void *data __attribute__ ((__unused__)) )
 {
       bfd_vma vma;
       bfd_size_type size;
@@ -233,8 +231,7 @@ static char** translate_addresses_buf(bfd * abfd, bfd_vma *addr, int naddr)
             (PTR) NULL);
 
             if (!found) {
-                  total += snprintf(buf, len, "[0x%llx] \?\?() \?\?:0",(long long
-unsigned int) addr[naddr-1]) + 1;
+                  total += snprintf(buf, len, "[0x%llx] \?\?() \?\?:0",(long long unsigned int) addr[naddr-1]) + 1;
             } else {
                   const char *name;
 
@@ -248,8 +245,7 @@ unsigned int) addr[naddr-1]) + 1;
                         if (h != NULL)
                               filename = h + 1;
                   }
-                  total += snprintf(buf, len, "%s:%u\t%s()", filename ? filename :
-"??",
+                  total += snprintf(buf, len, "%s:%u\t%s()", filename ? filename : "??",
                          line, name) + 1;
 
             }
@@ -315,8 +311,7 @@ static int find_matching_file(struct dl_phdr_info *info,
             size_t size, void *data)
 {
       struct file_match *match = data;
-      /* This code is modeled from Gfind_proc_info-lsb.c:callback() from libunwind
- * */
+      /* This code is modeled from Gfind_proc_info-lsb.c:callback() from libunwind */
       long n;
       const ElfW(Phdr) *phdr;
       ElfW(Addr) load_base = info->dlpi_addr;
@@ -385,19 +380,19 @@ char **oc_backtrace_symbols(void *const *buffer, int size)
 void
 oc_backtrace_symbols_fd(void *const *buffer, int size, int fd)
 {
-        int j;
-        char **strings;
+      int j;
+      char **strings;
 
-        strings = backtrace_symbols(buffer, size);
-        if (strings == NULL) {
+      strings = backtrace_symbols(buffer, size);
+      if (strings == NULL) {
             perror("backtrace_symbols");
             exit(EXIT_FAILURE);
-        }
+      }
 
-        for (j = 0; j < size; j++)
+      for (j = 0; j < size; j++)
             printf("%s\n", strings[j]);
 
-        free(strings);
+      free(strings);
 }
 
 #endif // defined(HAVE_BFD) && defined(HAVE_IBERTY)
