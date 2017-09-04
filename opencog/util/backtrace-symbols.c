@@ -326,7 +326,7 @@ oc_backtrace_symbols_fd(void *const *buffer, int size, int fd)
       }
 
       for (j = 0; j < size; j++)
-            printf("%s\n", strings[j]);
+            dprintf(fd, "%s\n", strings[j]);
 
       free(strings);
 }
