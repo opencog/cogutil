@@ -41,7 +41,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   Foundation, 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.  */
 
 #if defined(HAVE_BFD) && defined(HAVE_IBERTY)
 
@@ -344,7 +344,7 @@ char **oc_backtrace_symbols(void *const *buffer, int size)
       locations = malloc(sizeof(char**) * (stack_depth+1));
 
       bfd_init();
-      for (x=stack_depth, y=0; x>=0; x--, y++){
+      for (x=stack_depth, y=0; x>=0; x--, y++) {
             struct file_match match = { .address = buffer[x] };
             char **ret_buf;
             bfd_vma addr;
@@ -365,7 +365,7 @@ char **oc_backtrace_symbols(void *const *buffer, int size)
       f_strings = (char*)(final + stack_depth + 1);
 
       /* fill in all of strings and pointers */
-      for (x=stack_depth; x>=0; x--){
+      for (x=stack_depth; x>=0; x--) {
             strcpy(f_strings, locations[x][0]);
             free(locations[x]);
             final[x] = f_strings;
