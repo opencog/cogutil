@@ -34,6 +34,11 @@ namespace opencog
 
 //! apply lazy_selector but the select method returns always the same
 //! number, created for testing
+//
+// XXX FIXME this makes no sense; the normal distribution is not a
+// single number, the normal selector should return a normal
+// distribution with the given mean and deviation, right?
+///
 struct lazy_normal_selector : public lazy_selector {
     lazy_normal_selector(unsigned int n, unsigned int s = 0) :
         lazy_selector(n), _s(s) {

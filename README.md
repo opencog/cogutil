@@ -5,6 +5,15 @@ OpenCog Utilities
 
 The OpenCog utilities is a miscellaneous collection of C++ utilities
 use for typical programming tasks in multiple OpenCog projects.
+These include:
+* thread-safe queues, stacks and sets
+* asynchronous method caller
+* thread-safe resource pool
+* thread-safe backtrace printing
+* high-performance signal-slot
+* random tournament selection
+* OS portability layers.
+
 
 The main project site is at http://opencog.org
 
