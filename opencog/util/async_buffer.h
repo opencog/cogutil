@@ -54,7 +54,7 @@ namespace opencog
  * data item.
  *
  * This de-duplication can be very handy if the method is writing data,
- * can the caller is repeatedly asking for the same data to be written.
+ * and the caller is repeatedly asking for the same data to be written.
  * By bufferring up and de-duplicating the write requests, this class
  * can reduce load on the system, especially if a delay is introduced,
  * so that the requests buffer up before being serviced.
@@ -63,8 +63,8 @@ namespace opencog
  * are queued up. However, if the stall() flag is set, then no writing
  * will be done, until at least the low_watermark amount of work
  * accumulates. This can be useful to force the de-duplication mechanism
- * to do it's work: there need to be a minimum number of  unique
- * elements queued up before processing starts.
+ * to do it's work: if forces a minimum number of unique elements to be
+ * queued up before processing starts.
  *
  * In other respects, it provides the same advantages that the
  * async_caller calss does: The buffering helps, if each call
