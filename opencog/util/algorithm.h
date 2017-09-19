@@ -225,8 +225,9 @@ Set set_union(const Set& s1, const Set& s2) {
  * or similar concept.
  */
 template<typename Set>
-void set_union(Set& s1, const Set& s2) {
+Set set_union(Set& s1, const Set& s2) {
     s1.insert(s2.begin(), s2.end());
+    return s1;
 }
 
 /**
