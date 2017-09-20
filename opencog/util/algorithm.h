@@ -210,6 +210,15 @@ Set make_singleton_set(const typename Set::value_type& v) {
 }
 
 /**
+ * Modify s1 to that it contains s1 union s2, s1 and s2 being std::set
+ * or similar concept.
+ */
+template<typename Set>
+void set_insertion(Set& s1, const Set& s2) {
+    s1.insert(s2.begin(), s2.end());
+}
+
+/**
  * \return s1 union s2
  * s1 and s2 being std::set or similar concept
  */
@@ -218,15 +227,6 @@ Set set_union(const Set& s1, const Set& s2) {
     Set res(s1);
     set_insertion(res, s2);
     return res;
-}
-
-/**
- * Modify s1 to that it contains s1 union s2, s1 and s2 being std::set
- * or similar concept.
- */
-template<typename Set>
-void set_insertion(Set& s1, const Set& s2) {
-    s1.insert(s2.begin(), s2.end());
 }
 
 /**
