@@ -1,7 +1,7 @@
 OpenCog Utilities
 =================
 
-[![Build Status](http://61.92.69.39:8080/buildStatus/icon?job=ci-cogutils-master)](http://61.92.69.39:8080/job/ci-cogutils-master)
+[![Build Status](http://61.92.69.39:8080/buildStatus/icon?job=ci-cogutil-master)](http://61.92.69.39:8080/job/ci-cogutil-master)
 
 The OpenCog utilities is a miscellaneous collection of C++ utilities
 use for typical programming tasks in multiple OpenCog projects.
@@ -59,7 +59,7 @@ a regular OpenCog developer.
 > http://www.stack.nl/~dimitri/doxygen/ | doxygen
 > Generates code documentation
 
-Building CogUtils
+Building Cogutil
 -----------------
 Perform the following steps at the shell prompt:
 ```

@@ -28,7 +28,7 @@ ENDIF (CMAKE_VERSION VERSION_GREATER 3.0.2)
 # Only list install files that have actually changed
 SET(CMAKE_INSTALL_MESSAGE "LAZY")
 
-PROJECT(cogutils)
+PROJECT(cogutil)
 
 IF (WIN32) # Windows host but not cygwin
 	MESSAGE(FATAL_ERROR "You must use Cygwin if compiling under Windows.")
