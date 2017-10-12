@@ -339,7 +339,18 @@ bool is_in(const typename Container::value_type& el, const Container& c)
 {
 	return std::find(c.begin(), c.end(), el) != c.end();
 }
-    
+
+/**
+ * Clear by swap. STL container clear method doesn't necessary
+ * deallocate the memory. This method does.
+ */
+template<typename C>
+void clear_by_swap(C& c)
+{
+	C empty;
+	c.swap(empty);
+}
+
 /** @}*/
 } //~namespace opencog
 
