@@ -184,7 +184,7 @@ bool is_disjoint(const Set1 &set1, const Set2 &set2)
         from2 = set2.begin(), 
         to2 = set2.end();
 
-    if (*from1 > *set2.rbegin() || *from2 > *set1.rbegin()) return true;
+    if (*set2.rbegin() < *from1 || *set1.rbegin() < *from2) return true;
 
     while (from1 != to1 && from2 != to2)
     {
