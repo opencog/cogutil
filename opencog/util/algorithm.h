@@ -214,7 +214,7 @@ Set make_singleton_set(const typename Set::value_type& v) {
  * or similar concept.
  */
 template<typename Set>
-void set_insertion(Set& s1, const Set& s2) {
+void set_union_modify(Set& s1, const Set& s2) {
     s1.insert(s2.begin(), s2.end());
 }
 
@@ -225,7 +225,7 @@ void set_insertion(Set& s1, const Set& s2) {
 template<typename Set>
 Set set_union(const Set& s1, const Set& s2) {
     Set res(s1);
-    set_insertion(res, s2);
+    set_union_modify(res, s2);
     return res;
 }
 
