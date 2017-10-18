@@ -351,6 +351,26 @@ void clear_by_swap(C& c)
 	c.swap(empty);
 }
 
+// Crappy range versions of std::any_of, std::all_of and std::none_of,
+// till it makes into the boost library
+template<typename C, typename P>
+bool any_of(const C& c, const P& p)
+{
+	return std::any_of(c.begin(), c.end(), p);
+}
+
+template<typename C, typename P>
+bool all_of(const C& c, const P& p)
+{
+	return std::all_of(c.begin(), c.end(), p);
+}
+
+template<typename C, typename P>
+bool none_of(const C& c, const P& p)
+{
+	return std::none_of(c.begin(), c.end(), p);
+}
+
 /** @}*/
 } //~namespace opencog
 
