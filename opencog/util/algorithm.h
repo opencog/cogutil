@@ -184,7 +184,7 @@ bool is_disjoint(const Set1 &set1, const Set2 &set2)
         from2 = set2.begin(), 
         to2 = set2.end();
 
-    if (*from1 > *set2.rbegin() || *from2 > *set1.rbegin()) return true;
+    if (*set2.rbegin() < *from1 || *set1.rbegin() < *from2) return true;
 
     while (from1 != to1 && from2 != to2)
     {
@@ -214,7 +214,7 @@ Set make_singleton_set(const typename Set::value_type& v) {
  * or similar concept.
  */
 template<typename Set>
-void set_insertion(Set& s1, const Set& s2) {
+void set_union_modify(Set& s1, const Set& s2) {
     s1.insert(s2.begin(), s2.end());
 }
 
@@ -225,7 +225,7 @@ void set_insertion(Set& s1, const Set& s2) {
 template<typename Set>
 Set set_union(const Set& s1, const Set& s2) {
     Set res(s1);
-    set_insertion(res, s2);
+    set_union_modify(res, s2);
     return res;
 }
 
