@@ -1,15 +1,15 @@
 #!/bin/bash
 #
-# Given a log file and a component, filter the log so that only the
+# Given a component and a log file, filter the log so that only the
 # messages from the component are output.
 
 if [[ $# == 0 || $# > 2 ]]; then
     echo "Error: Wrong number of arguments"
-    echo "Description: Given a log file and a component,"
-    echo "             filter the log so that only the"
-    echo "             messages from the component are output."
+    echo "Description: Given a component and log file,"
+    echo "             filter the log so that only messages"
+    echo "             from the component are output."
     echo "Usage: $0 COMPONENT [LOG_FILE]"
-    echo "If no log file is provided as second argument, then use the stdin"
+    echo "If no log file is provided as second argument, then use stdin"
     exit 1
 fi
 
@@ -24,22 +24,20 @@ readonly component_re="\[$COMPONENT\]"
 readonly logline_re="$timestamp_re $loglevel_re .*"
 readonly component_logline_re="$timestamp_re $loglevel_re $component_re .*"
 
+keep_printing=n                 # for printing multiline messages
 grep_component_lines()
 {
     local line="$1"
     if [[ "$line" =~ $component_logline_re ]]; then
-        echo_please="$line"
+        keep_printing=y
     elif [[ "$line" =~ $logline_re ]]; then
-        echo_please=
-    else
-        echo_please="$line"
+        keep_printing=n
     fi
-    if [[ $echo_please ]]; then
-        echo "$echo_please"
+    if [[ $keep_printing == y ]]; then
+        echo "$line"
     fi
 }
 
-echo_please=
 if [[ "$LOGFILE" > 0 ]]; then
     while read; do
         grep_component_lines "$REPLY"
