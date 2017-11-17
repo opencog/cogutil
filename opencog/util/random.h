@@ -1,4 +1,4 @@
-/* random.h --- 
+/* random.h ---
  *
  * Copyright (C) 2010 Novamente LLC
  *
@@ -96,7 +96,7 @@ typename C::value_type rand_element_erase(C& c, RandGen& rng=randGen())
 //! If the number falls out of the range of T then it is automatically
 //! truncated.
 template<typename T>
-T gaussian_rand(T mean, T std_dev, RandGen& rng = randGen())
+T gaussian_rand(T mean, T std_dev, RandGen& rng=randGen())
 {
     double val = mean + std_dev *
         std::sqrt(-2 * std::log(rng.randdouble_one_excluded())) * 
@@ -114,7 +114,7 @@ T gaussian_rand(T mean, T std_dev, RandGen& rng = randGen())
 
 //! linear biased random bool, b in [0,1] when b tends to 1 the result
 //! tends to be true
-static inline bool biased_randbool(float b, RandGen& rng = randGen())
+static inline bool biased_randbool(float b, RandGen& rng=randGen())
 {
     return b > rng.randfloat();
 }
