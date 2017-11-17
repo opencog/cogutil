@@ -120,13 +120,14 @@ static inline bool biased_randbool(float b, RandGen& rng=randGen())
     return b > rng.randfloat();
 }
 
-//! Generate a random string of hexadecimal characters based on n ints
-//! with the given prefix.
+//! Generate a random string of characters in the given base, using n
+//! random ints, and appending it to a given prefix.
 static inline std::string randstr(const std::string& prefix=std::string(),
-                                  unsigned n=1, RandGen& rng=randGen())
+                                  unsigned n=1, int base=16,
+                                  RandGen& rng=randGen())
 {
 	std::stringstream ss;
-	ss << prefix << std::hex;
+	ss << prefix << std::setbase(base);
 	dorepeat(n)
 		ss << rng.randint();
 	return ss.str();
