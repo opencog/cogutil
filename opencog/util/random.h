@@ -24,6 +24,8 @@
 #ifndef _OPENCOG_RANDOM_H
 #define _OPENCOG_RANDOM_H
 
+#include <iomanip>
+
 #include <boost/numeric/conversion/cast.hpp>
 
 #include <opencog/util/dorepeat.h>
