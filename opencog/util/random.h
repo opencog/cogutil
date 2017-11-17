@@ -26,6 +26,7 @@
 
 #include <boost/numeric/conversion/cast.hpp>
 
+#include <opencog/util/dorepeat.h>
 #include <opencog/util/RandGen.h>
 #include <opencog/util/mt19937ar.h>
 #include <opencog/util/numeric.h>
@@ -117,6 +118,18 @@ T gaussian_rand(T mean, T std_dev, RandGen& rng=randGen())
 static inline bool biased_randbool(float b, RandGen& rng=randGen())
 {
     return b > rng.randfloat();
+}
+
+//! Generate a random string of hexadecimal characters based on n ints
+//! with the given prefix.
+static inline std::string randstr(const std::string& prefix=std::string(),
+                                  unsigned n=1, RandGen& rng=randGen())
+{
+	std::stringstream ss;
+	ss << prefix << std::hex;
+	dorepeat(n)
+		ss << rng.randint();
+	return ss.str();
 }
 
 /** @}*/
