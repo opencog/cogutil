@@ -117,7 +117,6 @@ public:
         return key;
     }
 
-    
     //! add 2 counters,
     /**
      * for example
