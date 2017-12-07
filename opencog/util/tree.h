@@ -135,8 +135,17 @@ public:
     class upwards_iterator;
 
     tree();
-    explicit tree(const T&);
+    /// Construct a root
+    tree(const T&);
+    /// Copy a tree from the bottom up iterator of another subtree
     explicit tree(const iterator_base&);
+    /// Construct a forest of roots
+    explicit tree(const std::initializer_list<T>&);
+    /// Construct a tree from a root and a list of subtrees
+    explicit tree(const T&, const std::initializer_list<tree<T, tree_node_allocator>>&);
+    /// Construct a forest from a list of trees
+    explicit tree(const std::initializer_list<tree<T, tree_node_allocator>>&);
+    /// Copy a tree
     tree(const tree<T, tree_node_allocator>&);
     ~tree();
     tree<T, tree_node_allocator>& operator=(const tree<T, tree_node_allocator>&);
@@ -398,6 +407,9 @@ public:
     /// Insert n copies of node as last/first children of node pointed to by position.
     template<typename iter> iter append_children(iter position, const T& x,int n);
     template<typename iter> iter prepend_children(iter position, const T& x,int n);
+    /// Insert a list of children of node pointed to by position.
+    template<typename iter> iter append_children(iter position, const std::initializer_list<T>& il);
+    template<typename iter> iter prepend_children(iter position, const std::initializer_list<T>& il);
     /// Append the node (plus its children) at other_position as last/first child of position.
     template<typename iter> iter append_child(iter position, iter other_position);
     template<typename iter> iter prepend_child(iter position, iter other_position);
@@ -629,6 +641,49 @@ tree<T, tree_node_allocator>::tree(const iterator_base& other)
     head_initialise_();
     set_head((*other));
     replace(begin(), other);
+}
+
+template <class T, class tree_node_allocator>
+tree<T, tree_node_allocator>::tree(const std::initializer_list<T>& roots)
+{
+    head_initialise_();
+    if (roots.size() == 0)
+        return;
+
+    auto it = roots.begin();
+    auto sib = set_head(*it);
+    ++it;
+    for (; it != roots.end(); ++it)
+        sib = insert_after(sib, *it);
+}
+
+template <class T, class tree_node_allocator>
+tree<T, tree_node_allocator>::tree(const T& root, const std::initializer_list<tree<T, tree_node_allocator>>& subtrees)
+{
+    head_initialise_();
+    iterator root_it = set_head(root);
+    for (const auto& subtree : subtrees) {
+        iterator it = subtree.begin();
+        while (subtree.is_valid(it)) {
+            append_child(root_it, it);
+            it = subtree.next_sibling(it);
+        }
+    }
+}
+
+template <class T, class tree_node_allocator>
+tree<T, tree_node_allocator>::tree(const std::initializer_list<tree<T, tree_node_allocator>>& trees)
+{
+    head_initialise_();
+    if (trees.size() == 0)
+        return;
+
+    auto tree_it = trees.begin();
+    copy_(*tree_it);
+    ++tree_it;
+    auto root_it = begin();
+    for (; tree_it != trees.end(); ++tree_it)
+        root_it = insert_subtree_after(root_it, tree_it->begin());
 }
 
 template <class T, class tree_node_allocator>
@@ -1066,6 +1121,23 @@ template <class iter>
 iter tree<T, tree_node_allocator>::prepend_children(iter position, const T& x,int n) {
     iter res=position;
     while ((n--)>0)
+        res=prepend_child(position,x);
+    return res;
+}
+
+template <class T, class tree_node_allocator>
+template <class iter>
+iter tree<T, tree_node_allocator>::append_children(iter position, const std::initializer_list<T>& il) {
+    for (const T& x : il)
+        append_child(position,x);
+    return iter(position.node->last_child);
+}
+
+template <class T, class tree_node_allocator>
+template <class iter>
+iter tree<T, tree_node_allocator>::prepend_children(iter position,  const std::initializer_list<T>& il) {
+    iter res=position;
+    for (const T& x : il)
         res=prepend_child(position,x);
     return res;
 }
