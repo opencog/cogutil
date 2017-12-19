@@ -331,6 +331,13 @@ Seq seq_filtered(const Seq& seq, const Indices& indices)
     return res;
 }
 
+template<typename T>
+bool is_in(const typename std::set<T>::value_type& el,
+           const typename std::set<T>& set)
+{
+	return set.find(el) != set.end();
+}
+
 /**
  * Return true if el is in s.
  */
