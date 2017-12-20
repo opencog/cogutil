@@ -151,7 +151,7 @@ public:
      * If set, log messages are printed immediately.
      * (Normally, they are buffered in a different thread, and
      * only get printed when that thread runs. Async logging
-     * minimizes the interference to your runing program;
+     * minimizes the interference to your running program;
      * synchronous logging might slow down your program).
      */
     void set_sync_flag(bool);
