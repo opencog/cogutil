@@ -235,8 +235,8 @@ void async_caller<Writer, Element>::stop_writer_threads()
 	// Spin a while, until the writeer threads are (mostly) done.
 	while (not _store_queue.is_empty())
 	{
-		// std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		usleep(1000);
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		// usleep(1000);
 	}
 
 	// Now tell all the threads that they are done.
@@ -279,8 +279,8 @@ void async_caller<Writer, Element>::stop_writer_threads()
 template<typename Writer, typename Element>
 void async_caller<Writer, Element>::flush_queue()
 {
-	// std::this_thread::sleep_for(std::chrono::microseconds(10));
-	usleep(10);
+	std::this_thread::sleep_for(std::chrono::microseconds(10));
+	// usleep(10);
 	_flush_count++;
 	while (0 < _store_queue.size() or 0 < _busy_writers);
 	{
