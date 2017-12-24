@@ -44,6 +44,9 @@
 template <typename... ARGS>
 class SigSlot
 {
+	public:
+		typedef std::function<void(ARGS...)> slot_type;
+
 	private:
 		mutable std::mutex _mtx;
 		// HACK ALERT -- use std::map, not std::set here, for only
