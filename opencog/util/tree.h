@@ -679,11 +679,18 @@ tree<T, tree_node_allocator>::tree(const std::initializer_list<tree<T, tree_node
         return;
 
     auto tree_it = trees.begin();
-    copy_(*tree_it);
-    ++tree_it;
+
+    // Loop until we met a non empty tree and copy it to *this
+    for (; tree_it != trees.end() and empty(); ++tree_it)
+        if (not tree_it->empty())
+            copy_(*tree_it);
+
+    // Insert the remaining non empty trees
     auto root_it = begin();
-    for (; tree_it != trees.end(); ++tree_it)
-        root_it = insert_subtree_after(root_it, tree_it->begin());
+    for (; tree_it != trees.end(); ++tree_it) {
+        if (!tree_it->empty())
+            root_it = insert_subtree_after(root_it, tree_it->begin());
+    }
 }
 
 template <class T, class tree_node_allocator>
