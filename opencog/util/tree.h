@@ -688,8 +688,13 @@ tree<T, tree_node_allocator>::tree(const std::initializer_list<tree<T, tree_node
     // Insert the remaining non empty trees
     auto root_it = begin();
     for (; tree_it != trees.end(); ++tree_it) {
-        if (!tree_it->empty())
-            root_it = insert_subtree_after(root_it, tree_it->begin());
+        if (!tree_it->empty()) {
+            iterator it = tree_it->begin();
+            while (tree_it->is_valid(it)) {
+                root_it = insert_subtree_after(root_it, it);
+                it = tree_it->next_sibling(it);
+            }
+        }
     }
 }
 
