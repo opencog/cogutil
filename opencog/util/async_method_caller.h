@@ -282,7 +282,7 @@ void async_caller<Writer, Element>::flush_queue()
 	std::this_thread::sleep_for(std::chrono::microseconds(10));
 	// usleep(10);
 	_flush_count++;
-	while (0 < _store_queue.size() or 0 < _busy_writers);
+	while (0 < _store_queue.size() or 0 < _busy_writers)
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		// usleep(1000);
@@ -306,7 +306,7 @@ void async_caller<Writer, Element>::barrier()
 {
 	std::unique_lock<std::mutex> lock(_enqueue_mutex);
 	_flush_count++;
-	while (0 < _store_queue.size() or 0 < _busy_writers);
+	while (0 < _store_queue.size() or 0 < _busy_writers)
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		// usleep(1000);
