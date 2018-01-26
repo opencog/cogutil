@@ -419,7 +419,7 @@ void Logger::log(Logger::Level level, const std::string &txt)
         gmtime_r(&t, &stm);
         strftime(timestamp, sizeof(timestamp), "%F %T", &stm);
         snprintf(timestampStr, sizeof(timestampStr),
-                "[%s:%03ld] ",timestamp, stv.tv_usec / 1000);
+                "[%s:%03ld] ",timestamp, (long)stv.tv_usec / 1000);
         oss << timestampStr;
     }
 
