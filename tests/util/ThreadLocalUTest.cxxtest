@@ -1,0 +1,126 @@
+/*
+ * tests/util/ThreadLocal.cxxtest
+ *
+ * Copyright (C) 2018 OpenCog Foundation
+ * All Rights Reserved
+ *
+ * Author: Vitaly Bogdanov
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License v3 as
+ * published by the Free Software Foundation and including the exceptions
+ * at http://opencog.org/wiki/Licenses
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program; if not, write to:
+ * Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#include <atomic>
+
+#include <opencog/util/ThreadLocal.h>
+#include <opencog/util/Logger.h>
+#include <cxxtest/TestSuite.h>
+
+using namespace opencog;
+
+class ThreadLocalUTest: public CxxTest::TestSuite
+{
+public:
+    std::atomic<int> constructor_counter;
+    std::atomic<int> destructor_counter;
+
+    ThreadLocalUTest()
+    {
+        logger().set_level(Logger::DEBUG);
+        logger().set_print_to_stdout_flag(true);
+        logger().set_timestamp_flag(false);
+    }
+
+    void setUp()
+    {
+        constructor_counter.store(0);
+        destructor_counter.store(0);
+    }
+
+    void tearDown()
+    {
+    }
+
+    class External
+    {
+
+        ThreadLocalUTest& test;
+
+    public:
+
+        External() = delete;
+        External(const External& other) = delete;
+        External(External&& other) = default;
+        External& operator=(const External& other) = delete;
+        External& operator=(External&& other) = delete;
+
+        External(ThreadLocalUTest& test) :
+                test(test)
+        {
+            ++test.constructor_counter;
+        }
+
+        ~External()
+        {
+            ++test.destructor_counter;
+        }
+    };
+
+    void test_sigle_thread()
+    {
+        logger().debug("BEGIN TEST: %s", __FUNCTION__);
+
+        {
+            ThreadLocal<External> local([&] {return new External(*this);});
+
+            External* externalA = &local.get();
+            External* externalB = &local.get();
+
+            TS_ASSERT_EQUALS(externalA, externalB);
+        }
+
+        TS_ASSERT_EQUALS(constructor_counter.load(), 1);
+        TS_ASSERT_EQUALS(destructor_counter.load(), 1);
+        logger().debug("END TEST: %s", __FUNCTION__);
+    }
+
+    static void get_local_value(ThreadLocal<External>* storage, External** value)
+    {
+        *value = &storage->get();
+    }
+
+    void test_two_threads()
+    {
+        logger().debug("BEGIN TEST: %s", __FUNCTION__);
+
+        {
+            ThreadLocal<External> local([&] {return new External(*this);});
+
+            External* externalA;
+            External* externalB;
+            std::thread thread1(get_local_value, &local, &externalA);
+            std::thread thread2(get_local_value, &local, &externalB);
+            thread1.join();
+            thread2.join();
+
+            TS_ASSERT_DIFFERS(externalA, externalB);
+        }
+
+        TS_ASSERT_EQUALS(constructor_counter.load(), 2);
+        TS_ASSERT_EQUALS(destructor_counter.load(), 2);
+        logger().debug("END TEST: %s", __FUNCTION__);
+    }
+
+};

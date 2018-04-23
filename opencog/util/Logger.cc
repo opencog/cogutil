@@ -249,7 +249,8 @@ void Logger::write_msg(const std::string &msg)
 }
 
 Logger::Logger(const std::string &fname, Logger::Level level, bool tsEnabled)
-    : error(*this), warn(*this), info(*this), debug(*this), fine(*this)
+    : error(*this), warn(*this), info(*this), debug(*this), fine(*this),
+      threadIdEnabled(false)
 {
     this->fileName.assign(fname);
     this->currentLevel = level;
@@ -273,7 +274,8 @@ Logger::Logger(const std::string &fname, Logger::Level level, bool tsEnabled)
 }
 
 Logger::Logger(const Logger& log)
-    : error(*this), warn(*this), info(*this), debug(*this), fine(*this)
+    : error(*this), warn(*this), info(*this), debug(*this), fine(*this),
+      threadIdEnabled(false)
 {
     set(log);
 }
@@ -367,6 +369,11 @@ void Logger::set_timestamp_flag(bool flag)
     timestampEnabled = flag;
 }
 
+void Logger::set_thread_id_flag(bool flag)
+{
+    threadIdEnabled = flag;
+}
+
 void Logger::set_print_to_stdout_flag(bool flag)
 {
     printToStdout = flag;
@@ -428,6 +435,11 @@ void Logger::log(Logger::Level level, const std::string &txt)
 
     if (!component.empty())
         oss << "[" << component << "] ";
+
+    if (threadIdEnabled)
+    {
+        oss << "[thread-" << std::this_thread::get_id() << "] ";
+    }
 
     oss << txt << std::endl;
 

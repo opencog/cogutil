@@ -48,6 +48,7 @@ ADD_LIBRARY(cogutil SHARED
 	ranking
 	StringTokenizer
 	tree
+	ThreadLocal
 	${WIN32_GETOPT_FILES}
 	${APPLE_STRNDUP_FILES}
 )
@@ -119,6 +120,7 @@ INSTALL(FILES
 	StringTokenizer.h
 	tbb.h
 	tree.h
+	ThreadLocal.h	
 	DESTINATION "include/opencog/util"
 )
 
