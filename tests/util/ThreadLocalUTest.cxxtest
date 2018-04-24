@@ -86,10 +86,10 @@ public:
             ThreadLocal<NoCopyNoMoveClass> local(
                     [&] {return new NoCopyNoMoveClass(*this);});
 
-            NoCopyNoMoveClass* externalA = &local.get();
-            NoCopyNoMoveClass* externalB = &local.get();
+            NoCopyNoMoveClass* localA = &local.get();
+            NoCopyNoMoveClass* localB = &local.get();
 
-            TS_ASSERT_EQUALS(externalA, externalB);
+            TS_ASSERT_EQUALS(localA, localB);
         }
 
         TS_ASSERT_EQUALS(constructor_counter.load(), 1);
@@ -111,14 +111,14 @@ public:
             ThreadLocal<NoCopyNoMoveClass> local(
                     [&] {return new NoCopyNoMoveClass(*this);});
 
-            NoCopyNoMoveClass* externalA;
-            NoCopyNoMoveClass* externalB;
-            std::thread thread1(get_local_value, &local, &externalA);
-            std::thread thread2(get_local_value, &local, &externalB);
+            NoCopyNoMoveClass* localA;
+            NoCopyNoMoveClass* localB;
+            std::thread thread1(get_local_value, &local, &localA);
+            std::thread thread2(get_local_value, &local, &localB);
             thread1.join();
             thread2.join();
 
-            TS_ASSERT_DIFFERS(externalA, externalB);
+            TS_ASSERT_DIFFERS(localA, localB);
         }
 
         TS_ASSERT_EQUALS(constructor_counter.load(), 2);
