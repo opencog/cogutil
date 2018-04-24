@@ -61,9 +61,6 @@ public:
         value_constructor(value_constructor)
     {}
 
-    ThreadLocal(const ThreadLocal<T>& other) = delete;
-    ThreadLocal(ThreadLocal<T>&& other) = delete;
-
     /**
      * Return value if it was already created for calling thread.
      * In other case create new instance and return it.

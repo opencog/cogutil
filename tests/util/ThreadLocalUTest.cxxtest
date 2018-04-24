@@ -53,40 +53,41 @@ public:
     {
     }
 
-    class External
+    class NoCopyNoMoveClass
     {
 
         ThreadLocalUTest& test;
 
     public:
 
-        External() = delete;
-        External(const External& other) = delete;
-        External(External&& other) = default;
-        External& operator=(const External& other) = delete;
-        External& operator=(External&& other) = delete;
+        NoCopyNoMoveClass() = delete;
+        NoCopyNoMoveClass(const NoCopyNoMoveClass& other) = delete;
+        NoCopyNoMoveClass(NoCopyNoMoveClass&& other) = delete;
+        NoCopyNoMoveClass& operator=(const NoCopyNoMoveClass& other) = delete;
+        NoCopyNoMoveClass& operator=(NoCopyNoMoveClass&& other) = delete;
 
-        External(ThreadLocalUTest& test) :
+        NoCopyNoMoveClass(ThreadLocalUTest& test) :
                 test(test)
         {
             ++test.constructor_counter;
         }
 
-        ~External()
+        ~NoCopyNoMoveClass()
         {
             ++test.destructor_counter;
         }
     };
 
-    void test_sigle_thread()
+    void test_single_thread()
     {
         logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
         {
-            ThreadLocal<External> local([&] {return new External(*this);});
+            ThreadLocal<NoCopyNoMoveClass> local(
+                    [&] {return new NoCopyNoMoveClass(*this);});
 
-            External* externalA = &local.get();
-            External* externalB = &local.get();
+            NoCopyNoMoveClass* externalA = &local.get();
+            NoCopyNoMoveClass* externalB = &local.get();
 
             TS_ASSERT_EQUALS(externalA, externalB);
         }
@@ -96,7 +97,8 @@ public:
         logger().debug("END TEST: %s", __FUNCTION__);
     }
 
-    static void get_local_value(ThreadLocal<External>* storage, External** value)
+    static void get_local_value(ThreadLocal<NoCopyNoMoveClass>* storage,
+            NoCopyNoMoveClass** value)
     {
         *value = &storage->get();
     }
@@ -106,10 +108,11 @@ public:
         logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
         {
-            ThreadLocal<External> local([&] {return new External(*this);});
+            ThreadLocal<NoCopyNoMoveClass> local(
+                    [&] {return new NoCopyNoMoveClass(*this);});
 
-            External* externalA;
-            External* externalB;
+            NoCopyNoMoveClass* externalA;
+            NoCopyNoMoveClass* externalB;
             std::thread thread1(get_local_value, &local, &externalA);
             std::thread thread2(get_local_value, &local, &externalB);
             thread1.join();
