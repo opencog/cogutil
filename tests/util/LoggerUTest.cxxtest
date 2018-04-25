@@ -49,6 +49,26 @@ public:
 
     void tearDown() {}
 
+    static std::string getLastLineFromFile(const std::string& filename) {
+        std::ifstream logfile(filename);
+        std::string line, resline;
+        if (logfile.is_open())
+        {
+            while (logfile.good())
+            {
+                getline(logfile, line);
+                if (!line.empty())
+                    resline = line;
+            }
+            logfile.close();
+        }
+        return resline;
+    }
+
+    static std::string remove_timestamp(const std::string str) {
+        return str.substr(26);
+    }
+
     void testLog()
     {
         char baselineFile[256];
@@ -68,7 +88,7 @@ public:
         _logger.info("msg3");
         baseline.info("msg3");
 
-        // Must flush, as otherwise there is a race against the 
+        // Must flush, as otherwise there is a race against the
         // fopen()'s below.
         _logger.flush();
         baseline.flush();
@@ -165,8 +185,7 @@ public:
         std::string resline = getLastLineFromFile(logger().get_filename());
         std::cout << "resline = " << resline << std::endl;
 
-        // Ignore the timestamp (26 first chars)
-        TS_ASSERT_EQUALS(resline.substr(26), "[DEBUG] [LoggerUTest] message");
+        TS_ASSERT_EQUALS(remove_timestamp(resline), "[DEBUG] [LoggerUTest] message");
 
         // Unset the component
         logger().set_component("");
@@ -192,26 +211,9 @@ public:
         std::string resline = getLastLineFromFile(my_logger.get_filename());
         std::cout << "resline = " << resline << std::endl;
 
-        // Ignore the timestamp (26 first chars)
-        TS_ASSERT_EQUALS(resline.substr(26), "[DEBUG] [LoggerUTest] message");
+        TS_ASSERT_EQUALS(remove_timestamp(resline), "[DEBUG] [LoggerUTest] message");
 
         remove(my_logger.get_filename().c_str());
-    }
-
-    std::string getLastLineFromFile(const std::string& filename) {
-        std::ifstream logfile(filename);
-        std::string line, resline;
-        if (logfile.is_open())
-        {
-            while (logfile.good())
-            {
-                getline(logfile, line);
-                if (!line.empty())
-                    resline = line;
-            }
-            logfile.close();
-        }
-        return resline;
     }
 
     void testThreadIdLogging() {
@@ -224,20 +226,15 @@ public:
             logger().debug("message");
         });
         thread.join();
-
         logger().flush();
 
-        // Grep the last line
-        std::string result = getLastLineFromFile(logger().get_filename());
-        std::cout << "resline = " << result << std::endl;
+        std::string resline = getLastLineFromFile(logger().get_filename());
+        std::cout << "resline = " << resline << std::endl;
 
         std::ostringstream oss;
-        oss << "[DEBUG] [thread-"  << thread_id.load() << "] message";
-        // Ignore the timestamp (26 first chars)
-        TS_ASSERT_EQUALS(result.substr(26), oss.str());
+        oss << "[DEBUG] [thread-" << thread_id.load() << "] message";
+        TS_ASSERT_EQUALS(remove_timestamp(resline), oss.str());
 
-        // Unset the component
-        logger().set_component("");
         logger().set_thread_id_flag(false);
     }
 
