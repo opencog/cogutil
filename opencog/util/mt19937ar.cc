@@ -87,9 +87,6 @@ int MT19937RandGen::rand_discrete(const std::vector<double>& weights)
     return distribution(*this);
 }
 
-
-// Create and return the single instance. The initial seed is zero but
-// can be changed with the public method RandGen::seed(unsigned long)
 RandGen& opencog::randGen()
 {
     static thread_local MT19937RandGen instance(0);
