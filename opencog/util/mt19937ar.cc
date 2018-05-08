@@ -8,12 +8,12 @@
  * it under the terms of the GNU Affero General Public License v3 as
  * published by the Free Software Foundation and including the exceptions
  * at http://opencog.org/wiki/Licenses
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program; if not, write to:
  * Free Software Foundation, Inc.,
@@ -33,7 +33,7 @@
 using namespace opencog;
 
 
-// PUBLIC METHODS: 
+// PUBLIC METHODS:
 
 MT19937RandGen::MT19937RandGen(result_type s) {
     seed(s);
@@ -55,7 +55,7 @@ float MT19937RandGen::randfloat() {
 double MT19937RandGen::randdouble() {
 	return operator()() / (double)max();
 }
-  
+
 //random double in [0,1)
 double MT19937RandGen::randdouble_one_excluded() {
     std::uniform_real_distribution<double> dis;
@@ -87,11 +87,8 @@ int MT19937RandGen::rand_discrete(const std::vector<double>& weights)
     return distribution(*this);
 }
 
-
-// Create and return the single instance. The initial seed is zero but
-// can be changed with the public method RandGen::seed(unsigned long)
 RandGen& opencog::randGen()
 {
-    static MT19937RandGen instance(0);
+    static thread_local MT19937RandGen instance(0);
     return instance;
 }
