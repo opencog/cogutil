@@ -256,6 +256,7 @@ Logger::Logger(const std::string &fname, Logger::Level level, bool tsEnabled)
     this->backTraceLevel = ERROR;
 
     this->timestampEnabled = tsEnabled;
+    this->threadIdEnabled = false;
     this->printToStdout = false;
     this->printLevel = true;
     this->syncEnabled = false;
@@ -295,6 +296,7 @@ void Logger::set(const Logger& log)
     this->printLevel = log.printLevel;
     this->backTraceLevel = log.backTraceLevel;
     this->timestampEnabled = log.timestampEnabled;
+    this->threadIdEnabled = log.threadIdEnabled;
     this->printToStdout = log.printToStdout;
     this->syncEnabled = log.syncEnabled;
     this->logEnabled = log.logEnabled;
@@ -367,6 +369,11 @@ void Logger::set_timestamp_flag(bool flag)
     timestampEnabled = flag;
 }
 
+void Logger::set_thread_id_flag(bool flag)
+{
+    threadIdEnabled = flag;
+}
+
 void Logger::set_print_to_stdout_flag(bool flag)
 {
     printToStdout = flag;
@@ -428,6 +435,9 @@ void Logger::log(Logger::Level level, const std::string &txt)
 
     if (!component.empty())
         oss << "[" << component << "] ";
+
+    if (threadIdEnabled)
+        oss << "[thread-" << std::this_thread::get_id() << "] ";
 
     oss << txt << std::endl;
 
