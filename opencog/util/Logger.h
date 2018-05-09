@@ -137,6 +137,11 @@ public:
     void set_timestamp_flag(bool);
 
     /**
+     * If set, log messages are prefixed with a thread id.
+     */
+    void set_thread_id_flag(bool);
+
+    /**
      * If set, log messages are printed to the stdout.
      */
     void set_print_to_stdout_flag(bool);
@@ -303,6 +308,7 @@ private:
     Level currentLevel;
     Level backTraceLevel;
     bool timestampEnabled;
+    bool threadIdEnabled;
     bool logEnabled;
     bool printToStdout;
     bool printLevel;

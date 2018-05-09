@@ -1,0 +1,129 @@
+/*
+ * tests/util/ThreadLocal.cxxtest
+ *
+ * Copyright (C) 2018 OpenCog Foundation
+ * All Rights Reserved
+ *
+ * Author: Vitaly Bogdanov
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License v3 as
+ * published by the Free Software Foundation and including the exceptions
+ * at http://opencog.org/wiki/Licenses
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program; if not, write to:
+ * Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#include <atomic>
+
+#include <opencog/util/ThreadLocal.h>
+#include <opencog/util/Logger.h>
+#include <cxxtest/TestSuite.h>
+
+using namespace opencog;
+
+class ThreadLocalUTest: public CxxTest::TestSuite
+{
+public:
+    std::atomic<int> constructor_counter;
+    std::atomic<int> destructor_counter;
+
+    ThreadLocalUTest()
+    {
+        logger().set_level(Logger::DEBUG);
+        logger().set_print_to_stdout_flag(true);
+        logger().set_timestamp_flag(false);
+    }
+
+    void setUp()
+    {
+        constructor_counter.store(0);
+        destructor_counter.store(0);
+    }
+
+    void tearDown()
+    {
+    }
+
+    class NoCopyNoMoveClass
+    {
+
+        ThreadLocalUTest& test;
+
+    public:
+
+        NoCopyNoMoveClass() = delete;
+        NoCopyNoMoveClass(const NoCopyNoMoveClass& other) = delete;
+        NoCopyNoMoveClass(NoCopyNoMoveClass&& other) = delete;
+        NoCopyNoMoveClass& operator=(const NoCopyNoMoveClass& other) = delete;
+        NoCopyNoMoveClass& operator=(NoCopyNoMoveClass&& other) = delete;
+
+        NoCopyNoMoveClass(ThreadLocalUTest& test) :
+                test(test)
+        {
+            ++test.constructor_counter;
+        }
+
+        ~NoCopyNoMoveClass()
+        {
+            ++test.destructor_counter;
+        }
+    };
+
+    void test_single_thread()
+    {
+        logger().debug("BEGIN TEST: %s", __FUNCTION__);
+
+        {
+            ThreadLocal<NoCopyNoMoveClass> local(
+                    [&] {return new NoCopyNoMoveClass(*this);});
+
+            NoCopyNoMoveClass* localA = &local.get();
+            NoCopyNoMoveClass* localB = &local.get();
+
+            TS_ASSERT_EQUALS(localA, localB);
+        }
+
+        TS_ASSERT_EQUALS(constructor_counter.load(), 1);
+        TS_ASSERT_EQUALS(destructor_counter.load(), 1);
+        logger().debug("END TEST: %s", __FUNCTION__);
+    }
+
+    static void get_local_value(ThreadLocal<NoCopyNoMoveClass>* storage,
+            NoCopyNoMoveClass** value)
+    {
+        *value = &storage->get();
+    }
+
+    void test_two_threads()
+    {
+        logger().debug("BEGIN TEST: %s", __FUNCTION__);
+
+        {
+            ThreadLocal<NoCopyNoMoveClass> local(
+                    [&] {return new NoCopyNoMoveClass(*this);});
+
+            NoCopyNoMoveClass* localA;
+            NoCopyNoMoveClass* localB;
+            std::thread thread1(get_local_value, &local, &localA);
+            std::thread thread2(get_local_value, &local, &localB);
+            thread1.join();
+            thread2.join();
+
+            TS_ASSERT_DIFFERS(localA, localB);
+        }
+
+        TS_ASSERT_EQUALS(constructor_counter.load(), 2);
+        TS_ASSERT_EQUALS(destructor_counter.load(), 2);
+        logger().debug("END TEST: %s", __FUNCTION__);
+    }
+
+};
