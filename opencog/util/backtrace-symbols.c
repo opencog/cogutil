@@ -198,10 +198,10 @@ static char** translate_addresses_buf(bfd * abfd, bfd_vma *addr, int naddr, asym
 
 static char **process_file(const char *file_name, bfd_vma *addr, int naddr)
 {
-      bfd *abfd;
-      char **matching;
-      char **ret_buf;
-      asymbol **syms;      /* Symbol table */
+      bfd *abfd = NULL;
+      char **matching = NULL;
+      char **ret_buf = NULL;
+      asymbol **syms = NULL;      /* Symbol table */
 
       abfd = bfd_openr(file_name, NULL);
 
