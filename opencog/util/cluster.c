@@ -2922,10 +2922,7 @@ If a memory error occurs, pclcluster returns NULL.
   }
 
   /* Free temporarily allocated space */
-  free(data[0]);
-  free(mask[0]);
-  free(data);
-  free(mask);
+  freedatamask(nelements, data, mask);
   free(distid);
  
   return result;
@@ -3039,6 +3036,8 @@ If a memory error occurs, pslcluster returns NULL.
   double* temp;
   int* index;
   Node* result;
+  Node* result_realloc;
+
   temp = malloc(nnodes*sizeof(double));
   if(!temp) return NULL;
   index = malloc(nelements*sizeof(int));
@@ -3121,9 +3120,11 @@ If a memory error occurs, pslcluster returns NULL.
   free(vector);
   free(index);
 
-  result = realloc(result, nnodes*sizeof(Node));
+  result_realloc = realloc(result, nnodes*sizeof(Node));
+  if (result_realloc == NULL)
+    free(result);
 
-  return result;
+  return result_realloc;
 }
 /* ******************************************************************** */
 

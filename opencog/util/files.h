@@ -90,7 +90,7 @@ bool create_directory(const char* filename);
 bool append_file_content(const char* filename, std::string &s);
 
 /** Load the contents of a textfile \param fname to \param dest. */
-bool load_text_file(const std::string fname, std::string& dest);
+bool load_text_file(const std::string &fname, std::string& dest);
 
 /**
  * Get the file name (including absolute path) of current executing file 
