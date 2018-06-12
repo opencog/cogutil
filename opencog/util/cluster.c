@@ -2922,10 +2922,7 @@ If a memory error occurs, pclcluster returns NULL.
   }
 
   /* Free temporarily allocated space */
-  free(data[0]);
-  free(mask[0]);
-  free(data);
-  free(mask);
+  freedatamask(nelements, data, mask);
   free(distid);
  
   return result;
