@@ -81,16 +81,15 @@ void StandardException::parse_error_message(const char *trace, const char * msg,
     delete [] concatMsg;
 }
 
-StandardException::StandardException()
-{
-    message = NULL;
-}
+StandardException::StandardException() :
+    message(nullptr)
+{}
 
 // Exceptions must have a copy constructor, as otherwise the
 // catcher will not be able to see the message! Ouch!
-StandardException::StandardException(const StandardException& ex)
+StandardException::StandardException(const StandardException& ex) :
+    message(nullptr)
 {
-    message = NULL;
     if (ex.message)
     {
         message = new char[strlen(ex.message) + 1];
