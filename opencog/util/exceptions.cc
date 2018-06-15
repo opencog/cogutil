@@ -92,8 +92,7 @@ StandardException::StandardException(const StandardException& ex) :
 {
     if (ex.message)
     {
-        message = new char[strlen(ex.message) + 1];
-        strcpy(message, ex.message);
+        set_message(ex.message);
     }
 }
 
