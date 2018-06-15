@@ -108,9 +108,7 @@ StandardException& StandardException::operator=(const StandardException& ex)
 StandardException::~StandardException() _GLIBCXX_USE_NOEXCEPT
 {
     // clear memory
-    if (message != NULL) {
-        delete [] message;
-    }
+    delete [] message;
 }
 
 const char * StandardException::get_message() const
@@ -124,9 +122,7 @@ const char * StandardException::get_message() const
 void StandardException::set_message(const char * msg)
 {
     // clear msg
-    if (message != NULL) {
-        delete [] message;
-    }
+    delete [] message;
 
     message = new char[strlen(msg) + 1];
     strcpy(message, msg);
