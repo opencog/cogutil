@@ -166,7 +166,7 @@ bool opencog::append_file_content(const char* filename, std::string &s)
     return true;
 }
 
-bool opencog::load_text_file(const std::string fname, std::string& dest)
+bool opencog::load_text_file(const std::string &fname, std::string& dest)
 {
     FILE *f = fopen(fname.c_str(), "rt");
     if (f == NULL) {
