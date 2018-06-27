@@ -1,4 +1,4 @@
-/** Counter.h --- 
+/** Counter.h ---
  *
  * Copyright (C) 2011 OpenCog Foundation
  *
@@ -8,12 +8,12 @@
  * it under the terms of the GNU Affero General Public License v3 as
  * published by the Free Software Foundation and including the exceptions
  * at http://opencog.org/wiki/Licenses
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program; if not, write to:
  * Free Software Foundation, Inc.,
@@ -39,7 +39,7 @@ using boost::adaptors::map_values;
 
 //! Class that mimics python Counter container
 /**
- * This is basically a dictionary of key:count values. 
+ * This is basically a dictionary of key:count values.
  * Given following pseudocode:
  * @code
  * for word in ['red', 'blue', 'red', 'green', 'blue', 'blue']:
@@ -52,7 +52,7 @@ class Counter : public std::map<T, CT>,
     boost::addable<Counter<T, CT>>
 {
 protected:
-    /** @todo this will be replaced by C++11 constructor 
+    /** @todo this will be replaced by C++11 constructor
      * delegation instead of init
      */
     template<typename IT>
@@ -98,7 +98,7 @@ public:
         typename super::const_iterator it = this->find(key);
         return it == this->cend()? c : it->second;
     }
-    
+
     //! Return the total of all counted elements
     CT total_count() const
     {
@@ -132,7 +132,18 @@ public:
             this->operator[](v.first) += v.second;
         return *this;
     }
-    
+
+    Counter& operator-=(const Counter& other) {
+        for (const auto& v : other)
+            this->operator[](v.first) -= v.second;
+        return *this;
+    }
+
+    Counter& operator*(const CT& num) {
+        for (const auto& v : *this)
+            this->operator[](v.first) = v.second * num;
+        return *this;
+    }
     /// @todo add method to subtract, multiply, etc Counters, or
     /// scalar and Counter, etc...
 };
