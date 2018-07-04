@@ -216,7 +216,8 @@ public:
         remove(my_logger.get_filename().c_str());
     }
 
-    void testThreadIdLogging() {
+    void testThreadIdLogging()
+    {
         logger().set_level(Logger::DEBUG);
         logger().set_thread_id_flag(true);
 
