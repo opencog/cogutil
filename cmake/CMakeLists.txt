@@ -30,6 +30,7 @@ INSTALL(FILES
         OpenCogFunctions.cmake
         OpenCogAtomTypes.cmake
         OpenCogMacros.cmake
+        COPYING-CMAKE-SCRIPTS
         DESTINATION
         ${DATADIR}/cmake/)
 
