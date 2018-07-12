@@ -13,7 +13,7 @@
 # CMake will not update these settings internally until both the ./CMakeFiles
 # folder and ./CMakeCache.txt are deleted.
 
-include(lib/Summary.cmake)
+include(cmake/Summary.cmake)
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12.2)
 IF (COMMAND CMAKE_POLICY)
@@ -73,8 +73,46 @@ MESSAGE(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 ADD_DEFINITIONS(-DPROJECT_SOURCE_DIR=\\"${CMAKE_SOURCE_DIR}\\"
 	            -DPROJECT_BINARY_DIR=\\"${CMAKE_BINARY_DIR}\\")
 
-# add the 'lib' dir to cmake's module search path
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/lib/")
+# add the 'cmake' dir to cmake's module search path
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/")
+
+# determine version
+SET(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/packages")
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "The OpenCog Basic C++ Utilities")
+SET(CPACK_PACKAGE_NAME "libcogutil-dev")
+SET(CPACK_PACKAGE_VENDOR "opencog.org")
+SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+FILE(READ "${CMAKE_SOURCE_DIR}/opencog/util/cogutil.h" _CU_H_CONTENTS)
+STRING(REGEX MATCH
+	"#define COGUTIL_MAJOR_VERSION ([0-9]+)"
+	_ "${_CU_H_CONTENTS}")
+SET(CPACK_PACKAGE_VERSION_MAJOR ${CMAKE_MATCH_1})
+STRING(REGEX MATCH
+	"#define COGUTIL_MINOR_VERSION ([0-9]+)"
+	_ "${_CU_H_CONTENTS}")
+SET(CPACK_PACKAGE_VERSION_MINOR ${CMAKE_MATCH_1})
+STRING(REGEX MATCH
+	"#define COGUTIL_MICRO_VERSION ([0-9]+)"
+	_ "${_CU_H_CONTENTS}")
+SET(CPACK_PACKAGE_VERSION_PATCH ${CMAKE_MATCH_1})
+# NOTE: This is the official semantic-version, as it is derived from a
+# version-control independent means of declaring versioning.
+SET(SEMANTIC_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
+
+# NOTE: `git describe` returns an output with count of commits after the last
+# annotated-tags. This makes relasing multiple daily builds easy as the
+# installed packgaes can easily be sorted. If that doesn't work then for
+# debian packages 'Breaks' and 'Replaces' fields might have to be used.
+EXECUTE_PROCESS(COMMAND  git describe --long "--match=*${SEMANTIC_VERSION}*"
+	OUTPUT_VARIABLE COGUTIL_GIT_VERSION
+	RESULT_VARIABLE RV
+	OUTPUT_STRIP_TRAILING_WHITESPACE)
+IF(${RV})
+	MESSAGE(WARNING "\nThere is no git annotated-tag with semantic-version = "
+	${SEMANTIC_VERSION})
+ENDIF()
+
 
 # ===============================================================
 # Detect different compilers and OS'es, tweak flags as necessary.
@@ -223,7 +261,7 @@ ADD_DEFINITIONS(-DDATADIR=\\"${DATADIR}\\")
 SET (MAN_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/share/man")
 
 # include custom opencog cmake macros
-INCLUDE("${CMAKE_SOURCE_DIR}/lib/OpenCogMacros.cmake")
+INCLUDE("${CMAKE_SOURCE_DIR}/cmake/OpenCogMacros.cmake")
 
 # small hack to handle unixes that use "/usr/lib64" instead of "/usr/lib" as the
 # default lib path on 64 bit archs
@@ -248,7 +286,7 @@ SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib/opencog")
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-ADD_SUBDIRECTORY(lib)
+ADD_SUBDIRECTORY(cmake)
 ADD_SUBDIRECTORY(opencog)
 
 IF (CXXTEST_FOUND)
@@ -289,42 +327,6 @@ ADD_CUSTOM_TARGET(cscope
 )
 
 # Packaging
-SET(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/packages")
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "The OpenCog Basic C++ Utilities")
-SET(CPACK_PACKAGE_NAME "libcogutil-dev")
-SET(CPACK_PACKAGE_VENDOR "opencog.org")
-SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
-FILE(READ "${CMAKE_SOURCE_DIR}/opencog/util/cogutil.h" _CU_H_CONTENTS)
-STRING(REGEX MATCH
-	"#define COGUTIL_MAJOR_VERSION ([0-9]+)"
-	_ "${_CU_H_CONTENTS}")
-SET(CPACK_PACKAGE_VERSION_MAJOR ${CMAKE_MATCH_1})
-STRING(REGEX MATCH
-	"#define COGUTIL_MINOR_VERSION ([0-9]+)"
-	_ "${_CU_H_CONTENTS}")
-SET(CPACK_PACKAGE_VERSION_MINOR ${CMAKE_MATCH_1})
-STRING(REGEX MATCH
-	"#define COGUTIL_MICRO_VERSION ([0-9]+)"
-	_ "${_CU_H_CONTENTS}")
-SET(CPACK_PACKAGE_VERSION_PATCH ${CMAKE_MATCH_1})
-# NOTE: This is the official semantic-version, as it is derived from a
-# version-control independent means of declaring versioning.
-SET(SEMANTIC_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
-
-# NOTE: `git describe` returns an output with count of commits after the last
-# annotated-tags. This makes relasing multiple daily builds easy as the
-# installed packgaes can easily be sorted. If that doesn't work then for
-# debian packages 'Breaks' and 'Replaces' fields might have to be used.
-EXECUTE_PROCESS(COMMAND  git describe --long "--match=*${SEMANTIC_VERSION}*"
-	OUTPUT_VARIABLE COGUTIL_GIT_VERSION
-	RESULT_VARIABLE RV
-	OUTPUT_STRIP_TRAILING_WHITESPACE)
-IF(${RV})
-	MESSAGE(WARNING "\nThere is no git annotated-tag with semantic-version = "
-	${SEMANTIC_VERSION})
-ENDIF()
-
 # For what architecture the package is for
 # TODO: Will give error on non debian distros.
 EXECUTE_PROCESS(COMMAND  dpkg --print-architecture
