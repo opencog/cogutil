@@ -52,5 +52,5 @@ INSTALL(FILES
        ${CMAKE_CURRENT_BINARY_DIR}/CogUtilConfigVersion.cmake
        ${CMAKE_CURRENT_BINARY_DIR}/CogUtilConfig.cmake
        DESTINATION
-       ${CMAKE_INSTALL_PREFIX})
+       ${LIB_INSTALL_DIR}/CogUtil/cmake)
 
