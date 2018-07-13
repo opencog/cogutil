@@ -144,6 +144,12 @@ public:
             this->operator[](v.first) = v.second * num;
         return *this;
     }
+
+    Counter& operator/(const CT& num) {
+        for (const auto& v : *this)
+            this->operator[](v.first) = v.second / num;
+        return *this;
+    }
     /// @todo add method to subtract, multiply, etc Counters, or
     /// scalar and Counter, etc...
 };
