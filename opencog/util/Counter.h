@@ -48,8 +48,12 @@ using boost::adaptors::map_values;
  * the counter will hold 'blue': 3, 'red': 2, 'green': 1
  */
 template<typename T, typename CT>
-class Counter : public std::map<T, CT>,
-    boost::addable<Counter<T, CT>>
+class Counter : public std::map<T, CT>
+    , boost::addable<Counter<T, CT>>
+    , boost::subtractable<Counter<T, CT>>
+    , boost::multipliable2<Counter<T, CT>,CT>
+    , boost::dividable2<Counter<T, CT>,CT>
+
 {
 protected:
     /** @todo this will be replaced by C++11 constructor
@@ -139,15 +143,15 @@ public:
         return *this;
     }
 
-    Counter& operator*(const CT& num) {
-        for (const auto& v : *this)
-            this->operator[](v.first) = v.second * num;
+    Counter& operator*=(const CT& num) {
+        for (auto& v : *this)
+            v.second *= num;
         return *this;
     }
 
-    Counter& operator/(const CT& num) {
-        for (const auto& v : *this)
-            this->operator[](v.first) = v.second / num;
+    Counter& operator/=(const CT& num) {
+        for (auto& v : *this)
+            v.second /= num;
         return *this;
     }
     /// @todo add method to subtract, multiply, etc Counters, or
