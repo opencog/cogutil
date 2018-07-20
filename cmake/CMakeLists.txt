@@ -26,6 +26,16 @@ INSTALL(FILES
         FindPGSQL.cmake
         FindTBB.cmake
         FindBFD.cmake
+        FindGHC.cmake
+        FindGSL.cmake
+        FindIODBC.cmake
+        FindLibMemCached.cmake
+        FindLinkGrammar.cmake
+        FindMOSES.cmake
+        FindOctomap.cmake
+        FindSDL_gfx.cmake
+        FindUUID.cmake
+        Findcpprest.cmake
         Summary.cmake
         OpenCogFunctions.cmake
         OpenCogAtomTypes.cmake
