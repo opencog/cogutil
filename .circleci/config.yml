@@ -1,17 +1,15 @@
-machine:
-    services:
-        - docker
+version: 2.0
 
-dependencies:
-    override:
-        - docker info
-        - docker pull opencog/opencog-deps
-        - docker images opencog/opencog-deps
+jobs
+  build
+    docker:
+      - image: opencog/opencog-deps
+    working_directory: ~/cogutil
+    steps:
+      - checkout
+      - run: /tmp/octool -bti
 
-test:
-    override:
-        - docker run -v $PWD:/cogutil -it opencog/opencog-deps /bin/sh -c "cd /cogutil && /tmp/octool -bti"
 
-general:
-  artifacts:
-    - "~/cogutil/build/tests/Testing/Temporary" # Test logs
+#general:
+#  artifacts:
+#    - "~/cogutil/build/tests/Testing/Temporary" # Test logs
