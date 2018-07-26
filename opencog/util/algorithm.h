@@ -184,7 +184,7 @@ bool is_disjoint(const Set1 &set1, const Set2 &set2)
         from2 = set2.begin(), 
         to2 = set2.end();
 
-    if (*from1 > *set2.rbegin() || *from2 > *set1.rbegin()) return true;
+    if (*set2.rbegin() < *from1 || *set1.rbegin() < *from2) return true;
 
     while (from1 != to1 && from2 != to2)
     {
@@ -210,13 +210,22 @@ Set make_singleton_set(const typename Set::value_type& v) {
 }
 
 /**
+ * Modify s1 to that it contains s1 union s2, s1 and s2 being std::set
+ * or similar concept.
+ */
+template<typename Set>
+void set_union_modify(Set& s1, const Set& s2) {
+    s1.insert(s2.begin(), s2.end());
+}
+
+/**
  * \return s1 union s2
  * s1 and s2 being std::set or similar concept
  */
 template<typename Set>
 Set set_union(const Set& s1, const Set& s2) {
     Set res(s1);
-    res.insert(s2.begin(), s2.end());
+    set_union_modify(res, s2);
     return res;
 }
 
@@ -241,6 +250,18 @@ Set set_difference(const Set& s1, const Set& s2) {
     Set res;
     std::set_difference(s1.begin(), s1.end(), s2.begin(), s2.end(),
                         std::inserter(res, res.end()));
+    return res;
+}
+
+/**
+ * \return (s1 - s2) union (s2 - s1)
+ * s1 and s2 must be sorted
+ */
+template<typename Set>
+Set set_symmetric_difference(const Set& s1, const Set& s2) {
+    Set res;
+    std::set_symmetric_difference(s1.begin(), s1.end(), s2.begin(), s2.end(),
+                                  std::inserter(res, res.end()));
     return res;
 }
 
@@ -302,14 +323,61 @@ template<typename Set> std::set<Set> powerset(const Set& s)
  * Maybe boost offers something like that already but I can't find it.
  */
 template<typename Indices, typename Seq>
-Seq seq_filtered(const Seq& seq, const Indices& indices) {
+Seq seq_filtered(const Seq& seq, const Indices& indices)
+{
     Seq res;
     for (const auto& idx : indices)
         res.push_back(seq[idx]);
     return res;
 }
 
-    
+template<typename T>
+bool is_in(const typename std::set<T>::value_type& el,
+           const typename std::set<T>& set)
+{
+	return set.find(el) != set.end();
+}
+
+/**
+ * Return true if el is in s.
+ */
+template<typename Container>
+bool is_in(const typename Container::value_type& el, const Container& c)
+{
+	return std::find(c.begin(), c.end(), el) != c.end();
+}
+
+/**
+ * Clear by swap. STL container clear method doesn't necessary
+ * deallocate the memory. This method does.
+ */
+template<typename C>
+void clear_by_swap(C& c)
+{
+	C empty;
+	c.swap(empty);
+}
+
+// Crappy range versions of std::any_of, std::all_of and std::none_of,
+// till it makes into the boost library
+template<typename C, typename P>
+bool any_of(const C& c, const P& p)
+{
+	return std::any_of(c.begin(), c.end(), p);
+}
+
+template<typename C, typename P>
+bool all_of(const C& c, const P& p)
+{
+	return std::all_of(c.begin(), c.end(), p);
+}
+
+template<typename C, typename P>
+bool none_of(const C& c, const P& p)
+{
+	return std::none_of(c.begin(), c.end(), p);
+}
+
 /** @}*/
 } //~namespace opencog
 

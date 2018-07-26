@@ -81,30 +81,26 @@ void StandardException::parse_error_message(const char *trace, const char * msg,
     delete [] concatMsg;
 }
 
-StandardException::StandardException()
-{
-    message = NULL;
-}
+StandardException::StandardException() :
+    message(nullptr)
+{}
 
 // Exceptions must have a copy constructor, as otherwise the
 // catcher will not be able to see the message! Ouch!
-StandardException::StandardException(const StandardException& ex)
+StandardException::StandardException(const StandardException& ex) :
+    message(nullptr)
 {
-    message = NULL;
     if (ex.message)
     {
-        message = new char[strlen(ex.message) + 1];
-        strcpy(message, ex.message);
+        set_message(ex.message);
     }
 }
 
 StandardException& StandardException::operator=(const StandardException& ex)
 {
-    message = NULL;
     if (ex.message)
     {
-        message = new char[strlen(ex.message) + 1];
-        strcpy(message, ex.message);
+        set_message(ex.message);
     }
     return *this;
 }
@@ -112,9 +108,7 @@ StandardException& StandardException::operator=(const StandardException& ex)
 StandardException::~StandardException() _GLIBCXX_USE_NOEXCEPT
 {
     // clear memory
-    if (message != NULL) {
-        delete [] message;
-    }
+    delete [] message;
 }
 
 const char * StandardException::get_message() const
@@ -128,9 +122,7 @@ const char * StandardException::get_message() const
 void StandardException::set_message(const char * msg)
 {
     // clear msg
-    if (message != NULL) {
-        delete [] message;
-    }
+    delete [] message;
 
     message = new char[strlen(msg) + 1];
     strcpy(message, msg);
@@ -308,19 +300,3 @@ AssertionException::AssertionException(const char* fmt, va_list ap)
     set_message(buf);
     opencog::logger().error("%s", buf);
 }
-
-/*
- * ----------------------------------------------------------------------
- * DeleteException class
- * ----------------------------------------------------------------------
- */
-DeleteException::DeleteException(void)
-{}
-
-/*
- * ----------------------------------------------------------------------
- * NotEvaluatableException class
- * ----------------------------------------------------------------------
- */
-NotEvaluatableException::NotEvaluatableException(void)
-{}

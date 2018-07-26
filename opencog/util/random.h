@@ -1,4 +1,4 @@
-/* random.h --- 
+/* random.h ---
  *
  * Copyright (C) 2010 Novamente LLC
  *
@@ -24,8 +24,11 @@
 #ifndef _OPENCOG_RANDOM_H
 #define _OPENCOG_RANDOM_H
 
+#include <iomanip>
+
 #include <boost/numeric/conversion/cast.hpp>
 
+#include <opencog/util/dorepeat.h>
 #include <opencog/util/RandGen.h>
 #include <opencog/util/mt19937ar.h>
 #include <opencog/util/numeric.h>
@@ -44,7 +47,7 @@ namespace opencog {
 //! Pick an element of container c randomly, with uniform
 //! distribution.  \warning it is assumed that c is non-empty
 template<typename C>
-const typename C::value_type& rand_element(const C& c, RandGen& rng = randGen())
+const typename C::value_type& rand_element(const C& c, RandGen& rng=randGen())
 {
     OC_ASSERT(!c.empty());
     return *std::next(c.begin(), rng.randint(c.size()));
@@ -54,17 +57,36 @@ const typename C::value_type& rand_element(const C& c, RandGen& rng = randGen())
 //! randomly, with uniform distribution.  \warning it is assumed that
 //! c is non-empty
 template<typename C>
-typename C::value_type& rand_element(C& c, RandGen& rng = randGen())
+typename C::value_type& rand_element(C& c, RandGen& rng=randGen())
 {
     OC_ASSERT(!c.empty());
     return *std::next(c.begin(), rng.randint(c.size()));
+}
+
+//! Pick an element of container c randomly, with distribution d.
+//! \warning it is assumed that c is non-empty
+template<typename C, typename D>
+const typename C::value_type& rand_element(const C& c, D& d, RandGen& rng=randGen())
+{
+    OC_ASSERT(!c.empty());
+    return *std::next(c.begin(), d(rng));
+}
+
+//! Non-const version of above. Pick an element of container c
+//! randomly, with uniform distribution.  \warning it is assumed that
+//! c is non-empty
+template<typename C, typename D>
+typename C::value_type& rand_element(C& c, D& d, RandGen& rng=randGen())
+{
+    OC_ASSERT(!c.empty());
+    return *std::next(c.begin(), d(rng));
 }
 
 //! Pick an element of container c randomly, with uniform
 //! distribution, and remove it.  \warning it is assumed that c is
 //! non-empty
 template<typename C>
-typename C::value_type rand_element_erase(C& c, RandGen& rng = randGen())
+typename C::value_type rand_element_erase(C& c, RandGen& rng=randGen())
 {
     OC_ASSERT(!c.empty());
     auto it = std::next(c.begin(), rng.randint(c.size()));
@@ -77,7 +99,7 @@ typename C::value_type rand_element_erase(C& c, RandGen& rng = randGen())
 //! If the number falls out of the range of T then it is automatically
 //! truncated.
 template<typename T>
-T gaussian_rand(T mean, T std_dev, RandGen& rng = randGen())
+T gaussian_rand(T mean, T std_dev, RandGen& rng=randGen())
 {
     double val = mean + std_dev *
         std::sqrt(-2 * std::log(rng.randdouble_one_excluded())) * 
@@ -95,9 +117,22 @@ T gaussian_rand(T mean, T std_dev, RandGen& rng = randGen())
 
 //! linear biased random bool, b in [0,1] when b tends to 1 the result
 //! tends to be true
-static inline bool biased_randbool(float b, RandGen& rng = randGen())
+static inline bool biased_randbool(float b, RandGen& rng=randGen())
 {
     return b > rng.randfloat();
+}
+
+//! Generate a random string of characters in the given base, using n
+//! random ints, and appending it to a given prefix.
+static inline std::string randstr(const std::string& prefix=std::string(),
+                                  unsigned n=1, int base=16,
+                                  RandGen& rng=randGen())
+{
+	std::stringstream ss;
+	ss << prefix << std::setbase(base);
+	dorepeat(n)
+		ss << rng.randint();
+	return ss.str();
 }
 
 /** @}*/

@@ -46,7 +46,6 @@ ADD_LIBRARY(cogutil SHARED
 	platform
 	random
 	ranking
-	StringManipulator
 	StringTokenizer
 	tree
 	${WIN32_GETOPT_FILES}
@@ -80,6 +79,7 @@ ADD_SUBDIRECTORY(boost_ext)
 INSTALL(FILES
 	ansi.h
 	algorithm.h
+	async_buffer.h
 	async_method_caller.h
 	backtrace-symbols.h
 	based_variant.h
@@ -90,6 +90,7 @@ INSTALL(FILES
 	Counter.h
 	Cover_Tree.h
 	concurrent_queue.h
+	concurrent_set.h
 	concurrent_stack.h
 	digraph.h
 	dorepeat.h
@@ -121,10 +122,11 @@ INSTALL(FILES
 	ranking.h
 	recent_val.h
 	selection.h
-	StringManipulator.h
+	sigslot.h
 	StringTokenizer.h
 	tbb.h
 	tree.h
+        empty_string.h
 	DESTINATION "include/opencog/util"
 )
 

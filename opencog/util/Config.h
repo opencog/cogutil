@@ -25,8 +25,10 @@
 #ifndef _OPENCOG_CONFIG_H
 #define _OPENCOG_CONFIG_H
 
-#include <string>
+#include <fstream>
 #include <map>
+#include <string>
+#include <vector>
 
 namespace opencog
 {
@@ -34,21 +36,19 @@ namespace opencog
  *  @{
  */
 
-class Config;
-
-typedef Config* ConfigFactory(void);
-
 //! library-wide configuration; keys and values are strings
 class Config
 {
-
 protected:
-
-    const std::string* DEFAULT();
-
-    std::string emptyString;
-    std::map<std::string, std::string> table;
+    std::map<std::string, std::string> _table;
+    bool _no_config_loaded;
+    bool _had_to_search;
     std::string _path_where_found;
+    std::string _abs_path;
+    std::string _cfg_filename;
+
+    void check_for_file(std::ifstream&, const char *, const char *);
+    void setup_logger();
 
 public:
     //! constructor
@@ -56,42 +56,48 @@ public:
     //! destructor
     Config();
 
-    //! Returns a new Config instance
+    //! Returns a new Config instance.
     static Config* createInstance(void);
 
-    //! reset configuration to default
+    //! Reset configuration to default.
     virtual void reset();
 
-    //! Load passed file and redefines values for parameters.
+    //! Parse the indicated file for parameter values.
     void load(const char* config_file, bool resetFirst = true);
 
-    //! location of the file
-    const std::string& path_where_found() { return _path_where_found; }
+    //! Location at which the config file was found.
+    const std::string& path_where_found() const { return _path_where_found; }
 
-    //! Checks whether a parameter exists
+    //! List of paths that were searched, in looking for the config file.
+    const std::vector<std::string> search_paths() const;
+
+    //! Name of the file that was actually searched for.
+    const std::string& search_file() const { return _cfg_filename; }
+
+    //! Return true if a parameter exists.
     const bool has(const std::string &parameter_name) const;
 
     //! Set the value of a given parameter.
     void set(const std::string &parameter_name, const std::string &parameter_value);
 
     //! Return current value of a given parameter.
-    const std::string& get(const std::string &parameter_name) const;
+    const std::string& get(const std::string &, const std::string& = "") const;
     //! Return current value of a given parameter.
-    const std::string& operator[](const std::string &name) const;
+    const std::string& operator[](const std::string &) const;
 
-    //! Return current value of a given parameter as an integer
-    int get_int(const std::string &parameter_name) const;
+    //! Return current value of a given parameter as an integer.
+    int get_int(const std::string &, int = 0) const;
 
-    //! Return current value of a given parameter as an long
-    long get_long(const std::string &parameter_name) const;
+    //! Return current value of a given parameter as an long.
+    long get_long(const std::string &, long = 0) const;
 
-    //! Return current value of a given parameter as a double
-    double get_double(const std::string &parameter_name) const;
+    //! Return current value of a given parameter as a double.
+    double get_double(const std::string &, double = 0.0) const;
 
-    //! Return current value of a given parameter as a boolean
-    bool get_bool(const std::string &parameter_name) const;
+    //! Return current value of a given parameter as a boolean.
+    bool get_bool(const std::string &, bool = false) const;
 
-    //! Dump all configuration parameters to a string
+    //! Dump all configuration parameters to a string.
     std::string to_string() const;
 };
 
@@ -101,6 +107,7 @@ public:
  *      is changed with the createInstance provided@n
  *      it is a temporary dirty hack@n
  */
+typedef Config* ConfigFactory(void);
 Config& config(ConfigFactory* = Config::createInstance,
                bool overwrite = false);
 

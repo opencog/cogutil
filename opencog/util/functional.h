@@ -12,6 +12,8 @@
 #include <boost/utility/result_of.hpp>
 #include <boost/utility/addressof.hpp>
 
+#include <vector>
+
 #include <ext/functional>
 
 namespace opencog

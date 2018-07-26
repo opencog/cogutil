@@ -162,7 +162,7 @@ int opencog::__dup2(int fd1, int fd2)
 unsigned long long opencog::atoll(const char *str)
 {
     unsigned long long la = 0;
-    sscanf(str, "%uL", &la);
+    sscanf(str, "%Lu", &la);
     return la;
 }
 

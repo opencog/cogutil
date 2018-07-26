@@ -272,13 +272,83 @@ public:
     AssertionException(const char* fmt, va_list ap);
 };
 
+/* ---------------------------------------------------------------- */
+/**
+ * Base class for exceptions that don't write to the error log.
+ *
+ * These exceptions will not log an error when thrown, because the
+ * exception is thrown during normal processing, and is not an error.
+ */
+class SilentException : public RuntimeException
+{
+public:
+    /**
+     * Constructor
+     * Nothing to be logged; this simply breaks us out of inner loops.
+     */
+    SilentException(void) {}
+
+}; // SilentException
+
+/**
+ * Exception thrown when the DeleteLink executes.
+ *
+ * This exception will not log an error when thrown, because the
+ * exception is thrown during normal processing, and is not an error.
+ */
+class DeleteException : public SilentException
+{
+public:
+    /**
+     * Constructor
+     * Nothing to be logged; this simply breaks us out of inner loops.
+     */
+    DeleteException(void) {}
+
+}; // DeleteException
+
+/**
+ * Exception thrown when an expression is badly nested.
+ * Typical usage is when QuoteLink contexts seem to be confused.
+ *
+ * This exception will not log an error when thrown, because the
+ * exception is thrown during normal processing, and is not an error.
+ */
+class NestingException : public SilentException
+{
+public:
+    /**
+     * Constructor
+     * Nothing to be logged; this simply breaks us out of inner loops.
+     */
+    NestingException(void) {}
+
+}; // NestingException
+
+/**
+ * Exception thrown when an expression is not evaluatable.
+ *
+ * This exception will not log an error when thrown, because the
+ * exception is thrown during normal processing, and is not an error.
+ */
+class NotEvaluatableException : public SilentException
+{
+public:
+    /**
+     * Constructor
+     * Nothing to be logged; this simply breaks us out of inner loops.
+     */
+    NotEvaluatableException(void) {}
+
+}; // NotEvaluatableException
+
 /**
  * Exception to be called when the searched item was not found
  *
  * This exception will not log an error when thrown, because the
  * error must be handled inside the code.
  */
-class NotFoundException : public StandardException
+class NotFoundException : public SilentException
 {
 public:
     /**
@@ -288,43 +358,27 @@ public:
      * macro.
      * @param Exception message in printf standard format.
      */
+    NotFoundException(void) {}
     NotFoundException(const char*, const char*, ...);
 
 }; // NotFoundException
 
 /**
- * Exception thrown when an expression is not evaluatable.
+ * Exception thrown when an expression is of the wrong type.
  *
  * This exception will not log an error when thrown, because the
  * exception is thrown during normal processing, and is not an error.
  */
-class NotEvaluatableException : public RuntimeException
+class TypeCheckException : public SilentException
 {
 public:
     /**
      * Constructor
-     * Nothing to be logged; tis simply breaks us out of inner loops.
+     * Nothing to be logged; this simply breaks us out of inner loops.
      */
-    NotEvaluatableException(void);
+    TypeCheckException(void) {}
 
-}; // NotEvaluatableException
-
-/**
- * Exception thrown when the DeleteLink executes.
- *
- * This exception will not log an error when thrown, because the
- * exception is thrown during normal processing, and is not an error.
- */
-class DeleteException : public RuntimeException
-{
-public:
-    /**
-     * Constructor
-     * Nothing to be logged; tis simply breaks us out of inner loops.
-     */
-    DeleteException(void);
-
-}; // DeleteException
+}; // TypeCheckException
 
 inline std::ostream& operator<<(std::ostream& out,
                                 const StandardException& ex)

@@ -57,7 +57,6 @@
 #include <opencog/util/platform.h>
 
 #include "Logger.h"
-#include "Config.h"
 
 #ifdef __APPLE__
 #define fdatasync fsync
@@ -187,6 +186,7 @@ void Logger::writing_loop()
     }
     catch (concurrent_queue< std::string* >::Canceled &e)
     {
+        pending_write = false;
         return;
     }
 }
@@ -228,30 +228,6 @@ void Logger::write_msg(const std::string &msg)
         }
 
         enable();
-
-        // Log the config file location. We do that here, because
-        // we can't do it any earlier, because the config file
-        // specifies the log location.
-        if (INFO <= currentLevel)
-        {
-            const char * cpath = config().path_where_found().c_str();
-            if (strcmp("", cpath))
-            {
-                fprintf(logfile, "[INFO] Using config file found at: %s\n",
-                   cpath);
-
-                if (printToStdout)
-                    printf("[INFO] Using config file found at: %s\n",
-                           cpath);
-            }
-            else
-            {
-                fprintf(logfile, "[INFO] No config file found\n");
-
-                if (printToStdout)
-                    printf("[INFO] No config file found\n");
-            }
-        }
     }
 
     // Write to file.
@@ -277,9 +253,10 @@ Logger::Logger(const std::string &fname, Logger::Level level, bool tsEnabled)
 {
     this->fileName.assign(fname);
     this->currentLevel = level;
-    this->backTraceLevel = get_level_from_string(opencog::config()["BACK_TRACE_LOG_LEVEL"]);
+    this->backTraceLevel = ERROR;
 
     this->timestampEnabled = tsEnabled;
+    this->threadIdEnabled = false;
     this->printToStdout = false;
     this->printLevel = true;
     this->syncEnabled = false;
@@ -319,6 +296,7 @@ void Logger::set(const Logger& log)
     this->printLevel = log.printLevel;
     this->backTraceLevel = log.backTraceLevel;
     this->timestampEnabled = log.timestampEnabled;
+    this->threadIdEnabled = log.threadIdEnabled;
     this->printToStdout = log.printToStdout;
     this->syncEnabled = log.syncEnabled;
     this->logEnabled = log.logEnabled;
@@ -371,7 +349,7 @@ void Logger::set_filename(const std::string& s)
     enable();
 }
 
-const std::string& Logger::get_filename()
+const std::string& Logger::get_filename() const
 {
     return fileName;
 }
@@ -389,6 +367,11 @@ const std::string& Logger::get_component() const
 void Logger::set_timestamp_flag(bool flag)
 {
     timestampEnabled = flag;
+}
+
+void Logger::set_thread_id_flag(bool flag)
+{
+    threadIdEnabled = flag;
 }
 
 void Logger::set_print_to_stdout_flag(bool flag)
@@ -443,7 +426,7 @@ void Logger::log(Logger::Level level, const std::string &txt)
         gmtime_r(&t, &stm);
         strftime(timestamp, sizeof(timestamp), "%F %T", &stm);
         snprintf(timestampStr, sizeof(timestampStr),
-                "[%s:%03ld] ",timestamp, stv.tv_usec / 1000);
+                "[%s:%03ld] ",timestamp, (long)stv.tv_usec / 1000);
         oss << timestampStr;
     }
 
@@ -452,6 +435,9 @@ void Logger::log(Logger::Level level, const std::string &txt)
 
     if (!component.empty())
         oss << "[" << component << "] ";
+
+    if (threadIdEnabled)
+        oss << "[thread-" << std::this_thread::get_id() << "] ";
 
     oss << txt << std::endl;
 
@@ -481,11 +467,11 @@ void Logger::backtrace()
 {
     static const unsigned int max_queue_size_allowed = 1024;
     std::ostringstream oss;
-    
+
     #ifndef CYGWIN
     prt_backtrace(oss);
     #endif
-    
+
     msg_queue.push(new std::string(oss.str()));
 
     // If the queue gets too full, block until it's flushed to file or

@@ -28,7 +28,7 @@
 #define _OC_CONCURRENT_QUEUE_H
 
 #include <condition_variable>
-#include <deque>
+#include <queue>
 #include <exception>
 #include <mutex>
 
@@ -37,11 +37,28 @@
  */
 
 //! Represents a thread-safe first in-first out list.
+///
+/// Implements a thread-safe queue: any thread can push stuff onto the
+/// queue, and any other thread can remove stuff from it.  If the queue
+/// is empty, the thread attempting to remove stuff will block.  If the
+/// queue is empty, and something is added to the queue, and there is
+/// some thread blocked on the queue, then that thread will be woken up.
+///
+/// The function provided here is almost identical to that provided by
+/// the pool class (also in this directory), but with a fancier API that
+/// allows cancellation, and other minor utilities. This API is also
+/// most easily understood as a producer-consumer API, with producer
+/// threads adding stuff to the queue, and consumer threads removing
+/// them.  By contrast, the pool API is a borrow-and-return API, which
+/// is really more-or-less the same thing, but just uses a different
+/// mindset.  This API also matches the proposed C++ standard for this
+/// basic idea.
+
 template<typename Element>
 class concurrent_queue
 {
 private:
-    std::deque<Element> the_queue;
+    std::queue<Element> the_queue;
     mutable std::mutex the_mutex;
     std::condition_variable the_cond;
     bool is_canceled;
@@ -63,7 +80,7 @@ public:
     {
         std::unique_lock<std::mutex> lock(the_mutex);
         if (is_canceled) throw Canceled();
-        the_queue.push_back(item);
+        the_queue.push(item);
         lock.unlock();
         the_cond.notify_one();
     }
@@ -73,7 +90,7 @@ public:
     {
         std::unique_lock<std::mutex> lock(the_mutex);
         if (is_canceled) throw Canceled();
-        the_queue.push_back(std::move(item));
+        the_queue.push(std::move(item));
         lock.unlock();
         the_cond.notify_one();
     }
@@ -95,6 +112,8 @@ public:
         return the_queue.size();
     }
 
+    /// Try to get an element off the front of the queue. Return true
+    /// if success, else return false.
     bool try_get(Element& value)
     {
         std::lock_guard<std::mutex> lock(the_mutex);
@@ -105,6 +124,7 @@ public:
         }
 
         value = the_queue.front();
+        the_queue.pop();
         return true;
     }
 
@@ -127,7 +147,7 @@ public:
         while (the_queue.empty());
 
         value = the_queue.front();
-        the_queue.pop_front();
+        the_queue.pop();
     }
 
     Element pop()
@@ -158,14 +178,18 @@ public:
         return retval;
     }
 
-    /// A weak barrier. Its racy and thus unreliable across multiple
-    /// threads, but should work just fine to serialize a single
-    /// thread.
+    /// A weak barrier.  This will block as long as the queue is empty,
+    /// returning only when the queue isn't. It's "weak", because while
+    /// it waits, other threads may push and then pop something from
+    /// the queue, while this thread slept the entire time. However,
+    /// if this call does return, then the queue is almost surely not
+    /// empty.  "Almost surely" means that none of the other threads
+    /// that are currently waiting to pop from the queue will be woken.
     void barrier()
     {
         std::unique_lock<std::mutex> lock(the_mutex);
 
-        while (the_queue.empty() && !is_canceled)
+        while (the_queue.empty() and not is_canceled)
         {
             the_cond.wait(lock);
         }

@@ -1,9 +1,19 @@
 OpenCog Utilities
 =================
-[![Build Status](http://61.92.69.39:8080/buildStatus/icon?job=ci-cogutils)](http://61.92.69.39:8080/job/ci-cogutils/)
+
+[![Build Status](http://61.92.69.39:8080/buildStatus/icon?job=ci-cogutil-master)](http://61.92.69.39:8080/job/ci-cogutil-master)
 
 The OpenCog utilities is a miscellaneous collection of C++ utilities
 use for typical programming tasks in multiple OpenCog projects.
+These include:
+* thread-safe queues, stacks and sets
+* asynchronous method caller
+* thread-safe resource pool
+* thread-safe backtrace printing
+* high-performance signal-slot
+* random tournament selection
+* OS portability layers.
+
 
 The main project site is at http://opencog.org
 
@@ -49,7 +59,7 @@ a regular OpenCog developer.
 > http://www.stack.nl/~dimitri/doxygen/ | doxygen
 > Generates code documentation
 
-Building CogUtils
+Building Cogutil
 -----------------
 Perform the following steps at the shell prompt:
 ```

@@ -30,8 +30,11 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <atomic>
+#include <thread>
 
 #include <opencog/util/Logger.h>
+#include <opencog/util/random.h>
 
 #include <cxxtest/TestSuite.h>
 
@@ -46,6 +49,26 @@ public:
     void setUp() {}
 
     void tearDown() {}
+
+    static std::string getLastLineFromFile(const std::string& filename) {
+        std::ifstream logfile(filename);
+        std::string line, resline;
+        if (logfile.is_open())
+        {
+            while (logfile.good())
+            {
+                getline(logfile, line);
+                if (!line.empty())
+                    resline = line;
+            }
+            logfile.close();
+        }
+        return resline;
+    }
+
+    static std::string remove_timestamp(const std::string str) {
+        return str.substr(26);
+    }
 
     void testLog()
     {
@@ -66,7 +89,7 @@ public:
         _logger.info("msg3");
         baseline.info("msg3");
 
-        // Must flush, as otherwise there is a race against the 
+        // Must flush, as otherwise there is a race against the
         // fopen()'s below.
         _logger.flush();
         baseline.flush();
@@ -160,24 +183,10 @@ public:
         logger().debug("message");
         logger().flush();
 
-        // Grep the last line
-        std::ifstream logfile(logger().get_filename());
-        std::string line, resline;
-        if (logfile.is_open())
-        {
-            while (logfile.good())
-            {
-                getline(logfile, line);
-                if (!line.empty())
-                    resline = line;
-            }
-            logfile.close();
-        }
-
+        std::string resline = getLastLineFromFile(logger().get_filename());
         std::cout << "resline = " << resline << std::endl;
 
-        // Ignore the timestamp (26 first chars)
-        TS_ASSERT_EQUALS(resline.substr(26), "[DEBUG] [LoggerUTest] message");
+        TS_ASSERT_EQUALS(remove_timestamp(resline), "[DEBUG] [LoggerUTest] message");
 
         // Unset the component
         logger().set_component("");
@@ -200,25 +209,67 @@ public:
         logger().info("factory message");
         logger().flush();
 
-        std::ifstream logfile(my_logger.get_filename());
-        std::string line, resline;
-        if (logfile.is_open())
-        {
-            while (logfile.good())
-            {
-                getline(logfile, line);
-                if (!line.empty())
-                    resline = line;
-            }
-            logfile.close();
-        }
-
+        std::string resline = getLastLineFromFile(my_logger.get_filename());
         std::cout << "resline = " << resline << std::endl;
 
-        // Ignore the timestamp (26 first chars)
-        TS_ASSERT_EQUALS(resline.substr(26), "[DEBUG] [LoggerUTest] message");
+        TS_ASSERT_EQUALS(remove_timestamp(resline), "[DEBUG] [LoggerUTest] message");
 
         remove(my_logger.get_filename().c_str());
+    }
+
+    void testThreadIdLogging()
+    {
+        logger().set_level(Logger::DEBUG);
+        logger().set_thread_id_flag(true);
+
+        std::atomic<std::thread::id> thread_id;
+        std::thread thread([&thread_id]() {
+            thread_id.store(std::this_thread::get_id());
+            logger().debug("message");
+        });
+        thread.join();
+        logger().flush();
+
+        std::string resline = getLastLineFromFile(logger().get_filename());
+        std::cout << "resline = " << resline << std::endl;
+
+        std::ostringstream oss;
+        oss << "[DEBUG] [thread-" << thread_id.load() << "] message";
+        TS_ASSERT_EQUALS(remove_timestamp(resline), oss.str());
+
+        logger().set_thread_id_flag(false);
+    }
+
+    // Define a second logger, write some massive message on the first
+    // one, a small message on the second, and see if the message of
+    // the second scrumbles the first message or appears after it.
+    void testLoggerInteraction() {
+        logger().set_level(Logger::DEBUG);
+        logger().set_timestamp_flag(false);
+        Logger my_logger;
+        my_logger.set_level(Logger::DEBUG);
+        my_logger.set_component("LoggerUTest");
+        my_logger.set_timestamp_flag(false);
+
+        // Make sure both loggers point to the same file (not really
+        // part of the test but better be safe than sorry)
+        TS_ASSERT_EQUALS(logger().get_filename(), my_logger.get_filename());
+
+        std::string gibberish(randstr("", 10000));
+        std::string message("message");
+        std::string prefix("[DEBUG] [LoggerUTest] ");
+
+        logger().debug(gibberish);
+        logger().flush();       // Remove to trigger the bug
+        my_logger.debug(message);
+
+        logger().flush();
+        my_logger.flush();
+
+        std::string resline = getLastLineFromFile(my_logger.get_filename());
+        std::cout << "resline = " << resline << std::endl;
+
+        TS_ASSERT(resline == prefix + message or resline == prefix + gibberish);
     }
 
 }; // class

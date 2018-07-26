@@ -33,6 +33,9 @@
 #include "files.h"
 #include "platform.h"
 
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
+
 #ifdef WIN32_NOT_UNIX
 #include <direct.h>
 #define  mkdir _mkdir
@@ -43,6 +46,7 @@
 #define PATH_MAX 1024
 #endif
 
+
 #define USER_FLAG "$USER"
 
 /**
@@ -51,6 +55,9 @@
  *
  * The basic search algo is that anything in the user's directory is
  * explored first, before anything in the system directories.
+ *
+ * The user can set the environmental OPENCOG_MODULE_PATHS to add more
+ * module paths after compile time.
  */
 static const std::vector<std::string> paths =
 {
@@ -70,8 +77,10 @@ static const std::vector<std::string> paths =
     CMAKE_INSTALL_PREFIX "/share",
     DATADIR,         // this too is an install dir
 #ifndef WIN32
+    "/usr/local/lib64/",  // lib64 is used on CentOS systems.
     "/usr/local/lib/",    // search local first, then system.
     "/usr/local/share/",  // search local first, then system.
+    "/usr/lib64/",
     "/usr/lib/",
     "/usr/share/",
     "/opt/",
@@ -79,6 +88,19 @@ static const std::vector<std::string> paths =
 #endif // !WIN32
 };
 const std::vector<std::string> opencog::DEFAULT_MODULE_PATHS = paths;
+
+std::vector<std::string> opencog::get_module_paths()
+{
+	std::vector<std::string> results = opencog::DEFAULT_MODULE_PATHS;
+	if (const char* env_p = std::getenv("OPENCOG_MODULE_PATHS"))
+	{
+		std::vector<std::string> split_paths;
+		std::string paths(env_p);
+		boost::split(split_paths, paths, boost::is_any_of(":"));
+		results.insert(results.end(), split_paths.begin(), split_paths.end());
+	}
+	return results;
+}
 
 bool opencog::file_exists(const char* filename)
 {
@@ -144,7 +166,7 @@ bool opencog::append_file_content(const char* filename, std::string &s)
     return true;
 }
 
-bool opencog::load_text_file(const std::string fname, std::string& dest)
+bool opencog::load_text_file(const std::string &fname, std::string& dest)
 {
     FILE *f = fopen(fname.c_str(), "rt");
     if (f == NULL) {

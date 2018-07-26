@@ -1,10 +1,15 @@
 /*
-  A hacky replacement for backtrace_symbols in glibc
-  Notes:
-  Downloaded from:
+  A thread-safe replacement for backtrace_symbols in glibc.
+
+  Derived from original source code at:
   http://cairo.sourcearchive.com/documentation/1.9.4/backtrace-symbols_8c-source.html
-  Compiling requires the 'binutils-dev' package installed, so that bfd.h is
-  available.
+  https://raw.githubusercontent.com/servo/cairo/master/util/backtrace-symbols.c
+
+  Altered to pass arguments in a thread-safe fashion; the original code would
+  crash when called from multiple threads.
+
+  Compiling requires the 'binutils-dev' package installed, so that bfd.h
+  is available.
 */
 /*
   A hacky replacement for backtrace_symbols in glibc
@@ -40,7 +45,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   Foundation, 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.  */
 
 #if defined(HAVE_BFD) && defined(HAVE_IBERTY)
 
@@ -68,46 +73,13 @@
 #include <bfd.h>
 #include <dlfcn.h>
 #include <link.h>
-#if 0
-
-void (*dbfd_init)(void);
-bfd_vma (*dbfd_scan_vma)(const char *string, const char **end, int base);
-bfd* (*dbfd_openr)(const char *filename, const char *target);
-bfd_boolean (*dbfd_check_format)(bfd *abfd, bfd_format format);
-bfd_boolean (*dbfd_check_format_matches)(bfd *abfd, bfd_format format, char
-***matching);
-bfd_boolean (*dbfd_close)(bfd *abfd);
-bfd_boolean (*dbfd_map_over_sections)(bfd *abfd, void (*func)(bfd *abfd, asection
-*sect, void *obj),
-            void *obj);
-#define bfd_init dbfd_init
-
-static void load_funcs(void)
-{
-      void * handle = dlopen("libbfd.so", RTLD_NOW);
-      dbfd_init = dlsym(handle, "bfd_init");
-      dbfd_scan_vma = dlsym(handle, "bfd_scan_vma");
-      dbfd_openr = dlsym(handle, "bfd_openr");
-      dbfd_check_format = dlsym(handle, "bfd_check_format");
-      dbfd_check_format_matches = dlsym(handle, "bfd_check_format_matches");
-      dbfd_close = dlsym(handle, "bfd_close");
-      dbfd_map_over_sections = dlsym(handle, "bfd_map_over_sections");
-}
-
-#endif
-
-
-static asymbol **syms;        /* Symbol table.  */
 
 /* 150 isn't special; it's just an arbitrary non-ASCII char value.  */
 #define OPTION_DEMANGLER      (150)
 
-static void slurp_symtab(bfd * abfd);
-static void find_address_in_section(bfd *abfd, asection *section, void *data);
-
 /* Read in the symbol table.  */
 
-static void slurp_symtab(bfd * abfd)
+static void slurp_symtab(bfd * abfd, asymbol **syms)
 {
       long symcount;
       unsigned int size;
@@ -124,88 +96,46 @@ static void slurp_symtab(bfd * abfd)
             bfd_fatal(bfd_get_filename(abfd));
 }
 
-/* These global variables are used to pass information between
+/* These variables are used to pass information between
    translate_addresses and find_address_in_section.  */
-
-static bfd_vma pc;
-static const char *filename;
-static const char *functionname;
-static unsigned int line;
-static int found;
+struct spotty
+{
+      asymbol **syms;
+      bfd_vma pc;
+      const char *filename;
+      const char *functionname;
+      unsigned int line;
+      int found;
+};
 
 /* Look for an address in a section.  This is called via
    bfd_map_over_sections.  */
 
-static void find_address_in_section(bfd *abfd, asection *section, void *data
-__attribute__ ((__unused__)) )
+static void find_address_in_section(bfd *abfd, asection *section, void *data)
 {
+      struct spotty *spot = (struct spotty *) data;
       bfd_vma vma;
       bfd_size_type size;
 
-      if (found)
+      if (spot->found)
             return;
 
       if ((bfd_get_section_flags(abfd, section) & SEC_ALLOC) == 0)
             return;
 
       vma = bfd_get_section_vma(abfd, section);
-      if (pc < vma)
+      if (spot->pc < vma)
             return;
 
       size = bfd_section_size(abfd, section);
-      if (pc >= vma + size)
+      if (spot->pc >= vma + size)
             return;
 
-      found = bfd_find_nearest_line(abfd, section, syms, pc - vma,
-                              &filename, &functionname, &line);
+      spot->found = bfd_find_nearest_line(abfd, section, spot->syms, spot->pc - vma,
+                              &(spot->filename), &(spot->functionname), &(spot->line));
 }
 
-/* Read hexadecimal addresses from stdin, translate into
-   file_name:line_number and optionally function name.  */
-#if 0
-static void translate_addresses(bfd * abfd, char (*addr)[PTRSTR_LEN], int naddr)
-{
-      while (naddr) {
-            pc = bfd_scan_vma(addr[naddr-1], NULL, 16);
-
-            found = false;
-            bfd_map_over_sections(abfd, find_address_in_section,
-            (PTR) NULL);
-
-            if (!found) {
-                  printf("[%s] \?\?() \?\?:0\n",addr[naddr-1]);
-            } else {
-                  const char *name;
-
-                  name = functionname;
-                  if (name == NULL || *name == '\0')
-                        name = "??";
-                  if (filename != NULL) {
-                        char *h;
-
-                        h = strrchr(filename, '/');
-                        if (h != NULL)
-                              filename = h + 1;
-                  }
-
-                  printf("\t%s:%u\t", filename ? filename : "??",
-                         line);
-
-                  printf("%s()\n", name);
-
-            }
-
-            /* fflush() is essential for using this command as a server
-               child process that reads addresses from a pipe and responds
-               with line number information, processing one address at a
-               time.  */
-            fflush(stdout);
-            naddr--;
-      }
-}
-#endif
-
-static char** translate_addresses_buf(bfd * abfd, bfd_vma *addr, int naddr)
+static char** translate_addresses_buf(bfd * abfd, bfd_vma *addr, int naddr, asymbol** syms)
 {
       int naddr_orig = naddr;
       char b;
@@ -214,43 +144,44 @@ static char** translate_addresses_buf(bfd * abfd, bfd_vma *addr, int naddr)
       char *buf = &b;
       int len = 0;
       char **ret_buf = NULL;
+
+      struct spotty spot;
+      spot.syms = syms;
+
       /* iterate over the formating twice.
        * the first time we count how much space we need
        * the second time we do the actual printing */
       for (state=Count; state<=Print; state++) {
       if (state == Print) {
-            ret_buf = malloc(total + sizeof(char*)*naddr);
+            ret_buf = malloc(total + sizeof(char*) * naddr);
             buf = (char*)(ret_buf + naddr);
             len = total;
       }
       while (naddr) {
             if (state == Print)
                   ret_buf[naddr-1] = buf;
-            pc = addr[naddr-1];
+            spot.pc = addr[naddr-1];
 
-            found = false;
-            bfd_map_over_sections(abfd, find_address_in_section,
-            (PTR) NULL);
+            spot.found = false;
+            bfd_map_over_sections(abfd, find_address_in_section, (PTR) &spot);
 
-            if (!found) {
-                  total += snprintf(buf, len, "[0x%llx] \?\?() \?\?:0",(long long
-unsigned int) addr[naddr-1]) + 1;
+            if (!spot.found) {
+                  total += snprintf(buf, len, "[0x%llx] \?\?() \?\?:0", (long long unsigned int) addr[naddr-1]) + 1;
             } else {
                   const char *name;
 
-                  name = functionname;
+                  name = spot.functionname;
                   if (name == NULL || *name == '\0')
                         name = "??";
-                  if (filename != NULL) {
+                  if (spot.filename != NULL) {
                         char *h;
 
-                        h = strrchr(filename, '/');
+                        h = strrchr(spot.filename, '/');
                         if (h != NULL)
-                              filename = h + 1;
+                              spot.filename = h + 1;
                   }
-                  total += snprintf(buf, len, "%s:%u\t%s()", filename ? filename :
-"??",
-                         line, name) + 1;
+                  total += snprintf(buf, len, "%s:%u\t%s()", spot.filename ? spot.filename : "??",
+                         spot.line, name) + 1;
 
             }
             if (state == Print) {
@@ -267,9 +198,10 @@ unsigned int) addr[naddr-1]) + 1;
 
 static char **process_file(const char *file_name, bfd_vma *addr, int naddr)
 {
-      bfd *abfd;
-      char **matching;
-      char **ret_buf;
+      bfd *abfd = NULL;
+      char **matching = NULL;
+      char **ret_buf = NULL;
+      asymbol **syms = NULL;      /* Symbol table */
 
       abfd = bfd_openr(file_name, NULL);
 
@@ -289,9 +221,9 @@ static char **process_file(const char *file_name, bfd_vma *addr, int naddr)
             xexit(1);
       }
 
-      slurp_symtab(abfd);
+      slurp_symtab(abfd, syms);
 
-      ret_buf = translate_addresses_buf(abfd, addr, naddr);
+      ret_buf = translate_addresses_buf(abfd, addr, naddr, syms);
 
       if (syms != NULL) {
             free(syms);
@@ -315,8 +247,7 @@ static int find_matching_file(struct dl_phdr_info *info,
             size_t size, void *data)
 {
       struct file_match *match = data;
-      /* This code is modeled from Gfind_proc_info-lsb.c:callback() from libunwind
- * */
+      /* This code is modeled from Gfind_proc_info-lsb.c:callback() from libunwind */
       long n;
       const ElfW(Phdr) *phdr;
       ElfW(Addr) load_base = info->dlpi_addr;
@@ -349,7 +280,7 @@ char **oc_backtrace_symbols(void *const *buffer, int size)
       locations = malloc(sizeof(char**) * (stack_depth+1));
 
       bfd_init();
-      for (x=stack_depth, y=0; x>=0; x--, y++){
+      for (x=stack_depth, y=0; x>=0; x--, y++) {
             struct file_match match = { .address = buffer[x] };
             char **ret_buf;
             bfd_vma addr;
@@ -370,7 +301,7 @@ char **oc_backtrace_symbols(void *const *buffer, int size)
       f_strings = (char*)(final + stack_depth + 1);
 
       /* fill in all of strings and pointers */
-      for (x=stack_depth; x>=0; x--){
+      for (x=stack_depth; x>=0; x--) {
             strcpy(f_strings, locations[x][0]);
             free(locations[x]);
             final[x] = f_strings;
@@ -385,19 +316,19 @@ char **oc_backtrace_symbols(void *const *buffer, int size)
 void
 oc_backtrace_symbols_fd(void *const *buffer, int size, int fd)
 {
-        int j;
-        char **strings;
+      int j;
+      char **strings;
 
-        strings = backtrace_symbols(buffer, size);
-        if (strings == NULL) {
+      strings = backtrace_symbols(buffer, size);
+      if (strings == NULL) {
             perror("backtrace_symbols");
             exit(EXIT_FAILURE);
-        }
+      }
 
-        for (j = 0; j < size; j++)
-            printf("%s\n", strings[j]);
+      for (j = 0; j < size; j++)
+            dprintf(fd, "%s\n", strings[j]);
 
-        free(strings);
+      free(strings);
 }
 
 #endif // defined(HAVE_BFD) && defined(HAVE_IBERTY)

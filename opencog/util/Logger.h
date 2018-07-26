@@ -44,7 +44,6 @@ namespace opencog
 //! logging evens
 class Logger
 {
-
     void set(const Logger&);
     bool writingLoopActive;
 public:
@@ -87,6 +86,9 @@ public:
      * log-level lower than or equals to newLevel will be logged.
      */
     void set_level(Level);
+    void set_level(const std::string& str) {
+        set_level(get_level_from_string(str));
+    }
 
     /**
      * Get the current log level that determines which messages will be
@@ -101,6 +103,9 @@ public:
      * will have back trace.
      */
     void set_backtrace_level(Level);
+    void set_backtrace_level(const std::string& str) {
+        set_backtrace_level(get_level_from_string(str));
+    }
 
     /**
      * Get the current back trace log level that determines which messages
@@ -110,7 +115,7 @@ public:
 
     /* filename property */
     void set_filename(const std::string&);
-    const std::string& get_filename();
+    const std::string& get_filename() const;
 
     /**
      * Set an optional component string. That string will be inserted
@@ -132,6 +137,11 @@ public:
     void set_timestamp_flag(bool);
 
     /**
+     * If set, log messages are prefixed with a thread id.
+     */
+    void set_thread_id_flag(bool);
+
+    /**
      * If set, log messages are printed to the stdout.
      */
     void set_print_to_stdout_flag(bool);
@@ -146,7 +156,7 @@ public:
      * If set, log messages are printed immediately.
      * (Normally, they are buffered in a different thread, and
      * only get printed when that thread runs. Async logging
-     * minimizes the interference to your runing program;
+     * minimizes the interference to your running program;
      * synchronous logging might slow down your program).
      */
     void set_sync_flag(bool);
@@ -163,7 +173,7 @@ public:
      * if passed level is lower than or equal to the current log level
      * of this Logger instance.
      */
-    void log (Level level, const std::string &txt);
+    void log(Level level, const std::string &);
     // void error(const std::string &txt);
     // void warn (const std::string &txt);
     // void info (const std::string &txt);
@@ -298,6 +308,7 @@ private:
     Level currentLevel;
     Level backTraceLevel;
     bool timestampEnabled;
+    bool threadIdEnabled;
     bool logEnabled;
     bool printToStdout;
     bool printLevel;

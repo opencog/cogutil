@@ -1,4 +1,5 @@
 *.a
+*.so
 opencog.log
 opencog-python.log
 .vagrant
@@ -9,14 +10,7 @@ bin
 bin-debug
 build
 build-debug
-opencog/server/cogserver
-opencog/atomspace/type-definer
-opencog/persist/sniff
-examples/extending/derivedserver
-examples/hopfield/hopfield
-examples/server/derivedserver
-opencog/embodiment/DestinCudaAlt/bin/destin
-opencog/embodiment/DestinCudaAlt/bin/kerneltest
+
 
 # cmake
 CMakeCache.txt
@@ -31,6 +25,7 @@ DartTestfile.txt
 *UTest
 
 # cpack
+packages
 install_manifest.txt
 CPackConfig.cmake
 CPackSourceConfig.cmake

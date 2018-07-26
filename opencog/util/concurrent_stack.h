@@ -37,6 +37,23 @@
  */
 
 //! Represents a thread-safe first in-first out list.
+///
+/// Implements a thread-safe stack: any thread can push stuff onto the
+/// stack, and any other thread can remove stuff from it.  If the stack
+/// is empty, the thread attempting to remove stuff will block.  If the
+/// stack is empty, and something is added to the stack, and there is
+/// some thread blocked on the stack, then that thread will be woken up.
+///
+/// The function provided here is almost identical to that provided by
+/// the pool class (also in this directory), but with a fancier API that
+/// allows cancellation, and other minor utilities. This API is also
+/// most easily understood as a producer-consumer API, with producer
+/// threads adding stuff to the stack, and consumer threads removing
+/// them.  By contrast, teh pool API is a borrow-and-return API, which
+/// is really more-or-less the same thing, but just uses a different
+/// mindset.  This API also matches the proposed C++ standard for this
+/// basic idea.
+
 template<typename Element>
 class concurrent_stack
 {
@@ -95,8 +112,8 @@ public:
         return the_stack.size();
     }
 
-    /// Try to pop an element off the stack. Return true if success,
-    /// else return false.
+    /// Try to pop an element off the top of the stack. Return true
+    /// if success, else return false.
     bool try_pop(Element& value)
     {
         std::lock_guard<std::mutex> lock(the_mutex);
@@ -133,7 +150,6 @@ public:
         the_stack.pop();
     }
 
-    // XXX DO NOT USE, NOT SAFE IN ANY WAY!
     Element pop()
     {
         Element value;
@@ -162,14 +178,18 @@ public:
         return retval;
     }
 
-    /// A weak barrier. Its racy and thus unreliable across multiple
-    /// threads, but should work just fine to serialize a single
-    /// thread.
+    /// A weak barrier.  This will block as long as the queue is empty,
+    /// returning only when the queue isn't. It's "weak", because while
+    /// it waits, other threads may push and then pop something from
+    /// the queue, while this thread slept the entire time. However,
+    /// if this call does return, then the queue is almost surely not
+    /// empty.  "Almost surely" means that none of the other threads
+    /// that are currently waiting to pop from the queue will be woken.
     void barrier()
     {
         std::unique_lock<std::mutex> lock(the_mutex);
 
-        while (the_stack.empty() && !is_canceled)
+        while (the_stack.empty() and not is_canceled)
         {
             the_cond.wait(lock);
         }
