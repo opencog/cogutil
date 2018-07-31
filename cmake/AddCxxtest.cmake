@@ -3,7 +3,13 @@ FIND_PACKAGE(Cxxtest)
 
 IF (CXXTEST_FOUND)
 
-	MACRO(ADD_CXXTEST NAME)
+	#ADD_CONFIGURABLE_CXXTEST declares a configurable cxxtest. If the executable
+	#is to be compiled then it needs to be added as a dependency to the target
+	#'tests' by declaring 'ADD_DEPENDENCIES(tests NAME)'. To run the executable
+	#by ctest using a configuration script, declare as follows
+	#ADD_TEST(NAME COMMAND configuration_and_run_script.sh)
+
+	MACRO(ADD_CONFIGURABLE_CXXTEST NAME)
 		ADD_CUSTOM_COMMAND(
 			OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cpp
 			COMMAND
@@ -17,6 +23,10 @@ IF (CXXTEST_FOUND)
 		)
 
 		ADD_EXECUTABLE(${NAME} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cpp ${ARGN})
+	ENDMACRO(ADD_CONFIGURABLE_CXXTEST)
+
+	MACRO(ADD_CXXTEST NAME)
+		ADD_CONFIGURABLE_CXXTEST(${NAME} ${ARGN})
 		INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR} ${CXXTEST_INCLUDE_DIRS})
 
         IF (CMAKE_BUILD_TYPE STREQUAL "Coverage")
