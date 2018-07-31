@@ -30,7 +30,9 @@ IF (CXXTEST_FOUND)
 
 	#The above macro generates a single source file for all input test headers.
 	#If by some reason you prefer separate compilation of each part, you may use
-	#the variation:
+	#the variation. This doesn't compile the target one have to call 'make NAME'
+	#before 'make test', or add it as a dependency to 'tests' target by
+	#declaring 'ADD_DEPENDENCIES(tests NAME)'.
 
 	MACRO(ADD_CXXTEST_SEP NAME)
 		# generate the parts
