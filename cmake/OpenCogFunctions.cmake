@@ -15,32 +15,40 @@
 #   links above.
 
 # ----------------------------------------------------------------------------
-# This configures the install and symlink paths for each file, passed to it,
+# This configures the install and binary paths for each file, passed to it,
 # based on the value of the variables MODULE_NAME, MODULE_FILE_DIR_PATH and
 # MODULE_DIR_PATH in the PARENT_SCOPE.
 FUNCTION(PROCESS_MODULE_STRUCTURE FILE_NAME)
-    SET(GUILE_SYMLINK_DIR "${CMAKE_BINARY_DIR}/opencog/scm")
+    SET(GUILE_BIN_DIR "${CMAKE_BINARY_DIR}/opencog/scm")
     SET(GUILE_INSTALL_DIR "${DATADIR}/scm")
 
     # Create symlinks in build directory mirroring the install path structure.
     # Also configure for install.
     IF ("${MODULE_NAME}.scm" STREQUAL "${FILE_NAME}")
         EXECUTE_PROCESS(
-            COMMAND ${CMAKE_COMMAND} -E make_directory ${GUILE_SYMLINK_DIR}/${MODULE_FILE_DIR_PATH}
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${GUILE_BIN_DIR}/${MODULE_FILE_DIR_PATH}
         )
-        EXECUTE_PROCESS(
-            COMMAND ${CMAKE_COMMAND} -E create_symlink "${CMAKE_CURRENT_SOURCE_DIR}/${FILE_NAME}" "${GUILE_SYMLINK_DIR}/${MODULE_FILE_DIR_PATH}/${FILE_NAME}"
+        ADD_CUSTOM_COMMAND(
+            OUTPUT "${GUILE_BIN_DIR}/${MODULE_FILE_DIR_PATH}/${FILE_NAME}"
+            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/${FILE_NAME}" "${GUILE_BIN_DIR}/${MODULE_FILE_DIR_PATH}/${FILE_NAME}"
+            DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${FILE_NAME}" 
         )
+        SET(MODULE_FILE_DEPEND "${GUILE_BIN_DIR}/${MODULE_FILE_DIR_PATH}/${FILE_NAME}"
+            PARENT_SCOPE)
         SET(FILE_INSTALL_PATH "${GUILE_INSTALL_DIR}/${MODULE_FILE_DIR_PATH}"
             PARENT_SCOPE
         )
     ELSE()
         EXECUTE_PROCESS(
-            COMMAND ${CMAKE_COMMAND} -E make_directory ${GUILE_SYMLINK_DIR}/${MODULE_DIR_PATH}
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${GUILE_BIN_DIR}/${MODULE_DIR_PATH}
         )
-        EXECUTE_PROCESS(
-            COMMAND ${CMAKE_COMMAND} -E create_symlink "${CMAKE_CURRENT_SOURCE_DIR}/${FILE_NAME}" "${GUILE_SYMLINK_DIR}/${MODULE_DIR_PATH}/${FILE_NAME}"
+        ADD_CUSTOM_COMMAND(
+            OUTPUT "${GUILE_BIN_DIR}/${MODULE_DIR_PATH}/${FILE_NAME}"
+            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/${FILE_NAME}" "${GUILE_BIN_DIR}/${MODULE_DIR_PATH}/${FILE_NAME}"
+            DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${FILE_NAME}" 
         )
+        SET(MODULE_FILE_DEPEND "${GUILE_BIN_DIR}/${MODULE_DIR_PATH}/${FILE_NAME}"
+            PARENT_SCOPE)
         SET(FILE_INSTALL_PATH "${GUILE_INSTALL_DIR}/${MODULE_DIR_PATH}"
             PARENT_SCOPE
         )
@@ -48,11 +56,11 @@ FUNCTION(PROCESS_MODULE_STRUCTURE FILE_NAME)
 ENDFUNCTION(PROCESS_MODULE_STRUCTURE)
 
 # ----------------------------------------------------------------------------
-# When cmake is run, a symlink is created at '${CMAKE_BINARY_DIR}/opencog/scm'
-# for all the files specified, following the file tree structure created when
-# installing to /usr/local/share/opencog/scm. It has two keyword arguments,
+# When building, all files specifed are are copied to
+# '${CMAKE_BINARY_DIR}/opencog/scm' following the file tree structure created
+# when installing to /usr/local/share/opencog/scm. It has two keyword arguments
 #
-# FILES: List of files to be installed/symlinked
+# FILES: List of files to be installed/copied
 #
 # MODULE_DESTINATION: The absolute path where the files associated
 #   with the module are installed, with the exception of the
@@ -72,6 +80,7 @@ FUNCTION(ADD_GUILE_MODULE)
     # NOTE:  The keyword arguments 'FILES' and 'MODULE_DESTINATION' are
     # required.
     IF((DEFINED SCM_FILES) AND (DEFINED SCM_MODULE_DESTINATION))
+        SET(GUILE_MODULE_DEPENDS "")
         FOREACH(FILE_NAME ${SCM_FILES})
             # Check if the file exists in the current source directory.
             IF(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE_NAME})
@@ -88,7 +97,7 @@ FUNCTION(ADD_GUILE_MODULE)
             # MODULE_FILE_DIR_PATH: the directory path where the MODULE_FILE is
             #   installed.
             # MODULE_DIR_PATH: the directory path where the files associated
-            #   with the module are installed/symlinked at, with the exception
+            #   with the module are installed at and copied to, with the exception
             #   of the MODULE_FILE.
             SET(MODULE_NAME ${CMAKE_MATCH_3})
             SET(MODULE_FILE_DIR_PATH ${CMAKE_MATCH_2})
@@ -97,15 +106,17 @@ FUNCTION(ADD_GUILE_MODULE)
             PROCESS_MODULE_STRUCTURE(${FILE_NAME})
             # NOTE: The install configuration isn't part of
             # PROCESS_MODULE_STRUCTURE function so as to avoid "Command
-            # INSTALL() is not scriptable" error, when using it in symlinking
+            # INSTALL() is not scriptable" error, when using it in copying 
             # scheme files during code-generation by the OPENCOG_ADD_ATOM_TYPES
             # macro.
             INSTALL (FILES
                 ${FILE_NAME}
                 DESTINATION ${FILE_INSTALL_PATH}
             )
-
+            LIST(APPEND GUILE_MODULE_DEPENDS ${MODULE_FILE_DEPEND})
         ENDFOREACH()
+
+        ADD_CUSTOM_TARGET(${MODULE_NAME} ALL DEPENDS "${GUILE_MODULE_DEPENDS}")
     ELSE()
         IF(NOT DEFINED SCM_FILES)
             MESSAGE(FATAL_ERROR "The keyword argument 'FILES' is not set in "
