@@ -14,7 +14,9 @@ jobs:
           name: Start restoring ccache
           command: date +%d-%m-%Y > /tmp/date
       - restore_cache:
-          key:  cogutil-ccache-{{ checksum "/tmp/date" }}
+          keys:
+            - cogutil-ccache-{{ checksum "/tmp/date" }}
+            - cogutil-ccache-
       - run:
           name: CMake Configure
           command: mkdir build && cd build && cmake ..
