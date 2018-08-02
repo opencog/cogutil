@@ -1,0 +1,204 @@
+version: 2.0
+
+jobs:
+  cogutil:
+    docker:
+      - image: opencog/opencog-deps
+        user: root
+        environment:
+          CCACHE_DIR: /ws/ccache
+    working_directory: /ws/cogutil
+    steps:
+      - checkout
+      - run:
+          name: Start restoring ccache
+          command: date +%d-%m-%Y > /tmp/date
+      - restore_cache:
+          keys:
+            - ccache-{{ checksum "/tmp/date" }}
+            - ccache-
+      - run:
+          name: CMake Configure
+          command: mkdir build && cd build && cmake ..
+      - run:
+          name: Build
+          command: cd build && make -j4
+      - run:
+          name: Build tests
+          command: cd build && make -j4 tests
+      - run:
+          name: Run tests
+          command:  cd build && make -j4 test
+      - run:
+          name: Print test log
+          command: cat build/tests/Testing/Temporary/LastTest.log
+          when: always
+      - persist_to_workspace:
+          root: /ws/
+          paths:
+            - cogutil
+            - ccache
+
+  atomspace:
+    docker:
+      - image: opencog/opencog-deps
+        user: root
+        environment:
+          PGHOST: opencog-postgres
+          PGUSER: opencog_test
+          PGPASSWORD: cheese
+          CCACHE_DIR: /ws/ccache
+      - image: opencog/postgres
+        name: opencog-postgres
+    working_directory: /ws/atomspace
+    steps:
+      - attach_workspace:
+          at: /ws
+      - run:
+          name: Install cogutil
+          command: cd /ws/cogutil/build && make -j4 install && ldconfig
+      - run:
+          name: Clone AtomSpace
+          command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/atomspace .
+      - run:
+          name: CMake Configure
+          command: mkdir build && cd build && cmake ..
+      - run:
+          name: Build
+          command: cd build && make -j4
+      - run:
+          name: Install AtomSpace
+          command: cd build && make -j4 install && ldconfig
+      - run:
+          name: Build tests
+          command: cd build && make -j4 tests
+      - run:
+          name: Run tests
+          command: cd build && make -j4 test
+      - run:
+          name: Print test log
+          command: cat build/tests/Testing/Temporary/LastTest.log
+          when: always
+      - persist_to_workspace:
+          root: /ws/
+          paths:
+            - atomspace
+            - ccache
+
+  moses:
+    docker:
+      - image: opencog/opencog-deps
+        user: root
+        environment:
+          CCACHE_DIR: /ws/ccache
+    working_directory: /ws/moses
+    steps:
+      - attach_workspace:
+          at: /ws
+      - run:
+          name: Install cogutil
+          command: cd /ws/cogutil/build && make -j4 install && ldconfig
+      - run:
+          name: Clone MOSES
+          command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/moses .
+      - run:
+          name: CMake Configure
+          command: mkdir build && cd build && cmake ..
+      - run:
+          name: Build
+          command: cd build && make -j4
+      - run:
+          name: Build tests
+          command: cd build && make -j4 tests
+      - run:
+          name: Run tests
+          command: cd build && make -j4 test
+      - run:
+          name: Print test log
+          command: cat build/tests/Testing/Temporary/LastTest.log
+          when: always
+
+  opencog:
+    docker:
+      - image: opencog/opencog-deps
+        user: root
+        environment:
+          CCACHE_DIR: /ws/ccache
+    working_directory: /ws/opencog
+    steps:
+      - attach_workspace:
+          at: /ws
+      - run:
+          name: Install cogutil
+          command: cd /ws/cogutil/build && make -j4 install && ldconfig
+      - run:
+          name: Install AtomSpace
+          command: cd /ws/atomspace/build && make -j4 install && ldconfig
+      - run:
+          name: Clone OpenCog
+          command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/opencog .
+      - run:
+          name: CMake Configure
+          command: mkdir build && cd build && cmake ..
+      - run:
+          name: Build
+          command: cd build && make -j4
+      - run:
+          name: Install OpenCog
+          command: cd build && make -j4 install && ldconfig
+      - run:
+          name: Build tests
+          command: cd build && make -j4 tests
+      - run:
+          name: Run tests
+          command: cd build && make -j4 test
+      - run:
+          name: Print test log
+          command: cat build/tests/Testing/Temporary/LastTest.log
+          when: always
+      - persist_to_workspace:
+          root: /ws/
+          paths:
+            - ccache
+
+  package:
+    docker:
+      - image: opencog/opencog-deps
+        user: root
+    working_directory: /ws/cogutil
+    steps:
+      - attach_workspace:
+          at: /ws/
+      - run:
+          name: Build Debian package
+          command: cd build && make install && make package
+      - store_artifacts:
+          path: build/packages/
+      - run:
+          name: Start storing ccache
+          command: date +%d-%m-%Y > /tmp/date
+      - save_cache:
+          key: ccache-{{ checksum "/tmp/date" }}
+          paths:
+            - /ws/ccache
+
+workflows:
+  version: 2
+  build-test-package:
+    jobs:
+      - cogutil
+      - atomspace:
+          requires:
+            - cogutil
+      - moses:
+          requires:
+            - cogutil
+      - opencog:
+          requires:
+            - atomspace
+      - package:
+          requires:
+            - opencog
+          filters:
+            branches:
+              only: master
