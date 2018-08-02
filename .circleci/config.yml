@@ -15,8 +15,8 @@ jobs:
           command: date +%d-%m-%Y > /tmp/date
       - restore_cache:
           keys:
-            - cogutil-ccache-{{ checksum "/tmp/date" }}
-            - cogutil-ccache-
+            - ccache-{{ checksum "/tmp/date" }}
+            - ccache-
       - run:
           name: CMake Configure
           command: mkdir build && cd build && cmake ..
@@ -170,15 +170,15 @@ jobs:
       - attach_workspace:
           at: /ws/
       - run:
-          name: Build
-          command: cd build && chmod o+w install_manifest.txt && make package
+          name: Build Debian package
+          command: cd build && make install && make package
       - store_artifacts:
           path: build/packages/
       - run:
           name: Start storing ccache
           command: date +%d-%m-%Y > /tmp/date
       - save_cache:
-          key:  ccache-{{ checksum "/tmp/date" }}
+          key: ccache-{{ checksum "/tmp/date" }}
           paths:
             - /ws/ccache
 
