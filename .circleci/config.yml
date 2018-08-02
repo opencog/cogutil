@@ -56,7 +56,7 @@ jobs:
           at: /ws
       - run:
           name: Install cogutil
-          command: cd /ws/cogutil/build && make -j4 install
+          command: cd /ws/cogutil/build && make -j4 install && ldconfig
       - run:
           name: Clone AtomSpace
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/atomspace .
@@ -68,7 +68,7 @@ jobs:
           command: cd build && make -j4
       - run:
           name: Install AtomSpace
-          command: cd build && make -j4 install
+          command: cd build && make -j4 install && ldconfig
       - run:
           name: Build tests
           command: cd build && make -j4 tests
@@ -97,7 +97,7 @@ jobs:
           at: /ws
       - run:
           name: Install cogutil
-          command: cd /ws/cogutil/build && make -j4 install
+          command: cd /ws/cogutil/build && make -j4 install && ldconfig
       - run:
           name: Clone MOSES
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/moses .
@@ -130,10 +130,10 @@ jobs:
           at: /ws
       - run:
           name: Install cogutil
-          command: cd /ws/cogutil/build && make -j4 install
+          command: cd /ws/cogutil/build && make -j4 install && ldconfig
       - run:
           name: Install AtomSpace
-          command: cd /ws/atomspace/build && make -j4 install
+          command: cd /ws/atomspace/build && make -j4 install && ldconfig
       - run:
           name: Clone OpenCog
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/opencog .
@@ -145,7 +145,7 @@ jobs:
           command: cd build && make -j4
       - run:
           name: Install OpenCog
-          command: cd build && make -j4 install
+          command: cd build && make -j4 install && ldconfig
       - run:
           name: Build tests
           command: cd build && make -j4 tests
