@@ -106,7 +106,7 @@ public:
     //! Return the total of all counted elements
     CT total_count() const
     {
-        return boost::accumulate(*this | map_values, 0);
+        return boost::accumulate(*this | map_values, (CT)0);
     }
 
     //! Return the mode, the element that occurs most frequently
