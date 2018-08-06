@@ -65,6 +65,13 @@ IF (HAVE_BFD AND HAVE_IBERTY)
 		${BFD_LIBRARY}
 		iberty
 	)
+
+find_package( ZLIB REQUIRED )
+if ( ZLIB_FOUND )
+            include_directories( ${ZLIB_INCLUDE_DIRS} )
+            target_link_libraries(cogutil ${ZLIB_LIBRARIES} )
+endif( ZLIB_FOUND )
+
 ENDIF (HAVE_BFD AND HAVE_IBERTY)
 
 ADD_SUBDIRECTORY(boost_ext)
