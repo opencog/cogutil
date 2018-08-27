@@ -40,6 +40,7 @@
 #include <strings.h>
 #include <time.h>
 #include <unistd.h>
+#include <errno.h>
 
 #ifdef WIN32_NOT_UNIX
 #include <winsock2.h>
@@ -147,7 +148,9 @@ Logger::~Logger()
     flush();
     stop_write_loop();
 
+    std::unique_lock<std::mutex> lock(the_mutex);
     if (logfile != NULL) fclose(logfile);
+	 lock.unlock();   
 }
 
 void Logger::start_write_loop()
@@ -158,6 +161,8 @@ void Logger::start_write_loop()
         writingLoopActive = true;
         writer_thread = std::thread(&Logger::writing_loop, this);
     }
+    
+    lock.unlock();
 }
 
 void Logger::stop_write_loop()
@@ -167,6 +172,8 @@ void Logger::stop_write_loop()
     // rejoin thread
     writer_thread.join();
     writingLoopActive = false;
+    
+    lock.unlock();
 }
 
 void Logger::writing_loop()
@@ -193,6 +200,8 @@ void Logger::writing_loop()
 
 void Logger::flush()
 {
+	 int rv;
+	
     // There is a timing window between when pending_write is set,
     // and the msg_queue being empty. We could fall through that
     // window. Yes, its stupid, but too low-importance to fix.
@@ -206,13 +215,26 @@ void Logger::flush()
         usleep(100);
     }
 
+	 std::unique_lock<std::mutex> lock(the_mutex);
     // Force a write to the disk. Don't need to update metadata, though.
-    if (logfile) fdatasync(fileno(logfile));
+    if (logfile) {
+    	errno = 0;
+    	rv = fdatasync(fileno(logfile));
+    	if (rv != 0)
+    	{
+    	  fprintf(stderr,
+    	  			 "fdatasync returned error: %s\n",
+    	  			 strerror(errno));
+    	}
+    }
+    lock.unlock();
 }
 
 void Logger::write_msg(const std::string &msg)
 {
     std::unique_lock<std::mutex> lock(the_mutex);
+    int                          rv;
+    
     // Delay opening the file until the first logging statement is issued;
     // this allows us to set the main logger's filename without creating
     // a useless log file with the default filename.
@@ -231,11 +253,26 @@ void Logger::write_msg(const std::string &msg)
     }
 
     // Write to file.
-    fprintf(logfile, "%s", msg.c_str());
+    errno = 0;
+    rv = fprintf(logfile, "%s", msg.c_str());
+    
+    if (rv != (int)(msg.length() + 1))
+    {
+    	  fprintf(stderr,
+    	  			 "fprintf returned error: %s\n",
+    	  			 strerror(errno));    	
+    }
 
     // Flush, because log messages are important, especially if we
     // are about to crash. So we don't want to have these buffered up.
-    fflush(logfile);
+    errno =  0;
+    rv = fflush(logfile);
+    if (rv != 0)
+    {
+    	  fprintf(stderr,
+    	  			 "fflush returned error: %s\n",
+    	  			 strerror(errno));    	
+    }
 
     // Stdout writing must be unlocked.
     lock.unlock();
@@ -290,26 +327,27 @@ Logger& Logger::operator=(const Logger& log)
 void Logger::set(const Logger& log)
 {
     std::unique_lock<std::mutex> lock(the_mutex);
-    this->fileName.assign(log.fileName);
+
     this->component.assign(log.component);
     this->currentLevel = log.currentLevel;
-    this->printLevel = log.printLevel;
     this->backTraceLevel = log.backTraceLevel;
     this->timestampEnabled = log.timestampEnabled;
     this->threadIdEnabled = log.threadIdEnabled;
-    this->printToStdout = log.printToStdout;
-    this->syncEnabled = log.syncEnabled;
     this->logEnabled = log.logEnabled;
-
-    // Set NULL to force the logger to use a new FILE handle. It is
-    // safer that way because closing that file may not close file of
-    // the parent logger.
-    this->logfile = NULL;
-
+    this->printToStdout = log.printToStdout;
+    this->printLevel = log.printLevel;
+    this->syncEnabled = log.syncEnabled;
+   
     this->pending_write = false;
     this->writingLoopActive = false;
 
     lock.unlock();
+
+    // Set logfile to NULL to force the logger to use a new FILE handle. It is
+    // safer that way because closing that file may not close file of
+    // the parent logger.
+    // This action occurs under set_filename() below
+    set_filename(log.fileName);
 
     start_write_loop();
 }
@@ -453,6 +491,7 @@ void Logger::log(Logger::Level level, const std::string &txt)
     // If the queue gets too full, block until it's flushed to file or
     // stdout. This can sometimes happen, if some component is spewing
     // lots of debugging messages in a tight loop.
+    
     if (msg_queue.size() > max_queue_size_allowed) flush();
 
     // Errors are associated with immenent crashes. Make sure that the
@@ -477,9 +516,7 @@ void Logger::backtrace()
     // If the queue gets too full, block until it's flushed to file or
     // stdout. This can sometimes happen, if some component is spewing
     // lots of debugging messages in a tight loop.
-    if (msg_queue.size() > max_queue_size_allowed) {
-        flush();
-    }
+    if (msg_queue.size() > max_queue_size_allowed) flush();
 }
 
 void Logger::logva(Logger::Level level, const char *fmt, va_list args)

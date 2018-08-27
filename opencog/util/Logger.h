@@ -160,7 +160,7 @@ public:
      * synchronous logging might slow down your program).
      */
     void set_sync_flag(bool);
-
+    
     /**
      * Set the main logger to print only
      * error level log on stdout (useful when one is only interested
