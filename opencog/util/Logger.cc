@@ -255,8 +255,7 @@ void Logger::write_msg(const std::string &msg)
     // Write to file.
     errno = 0;
     rv = fprintf(logfile, "%s", msg.c_str());
-    
-    if (rv != (int)(msg.length() + 1))
+    if (rv != (int)msg.length())
     {
     	  fprintf(stderr,
     	  			 "fprintf returned error: %s\n",
