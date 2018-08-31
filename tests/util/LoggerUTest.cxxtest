@@ -265,7 +265,7 @@ public:
         my_logger.flush();
 
         std::string resline = getLastLineFromFile(my_logger.get_filename());
-        std::cout << "Last line length, second logger " <<
+        std::cout << "Length of the last line in second logger " <<
             resline.length() << std::endl;
 
         TS_ASSERT(resline.length() == (prefix.length() + message.length()));

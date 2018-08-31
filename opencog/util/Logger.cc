@@ -148,30 +148,33 @@ Logger::~Logger()
     flush();
     stop_write_loop();
 
-    std::unique_lock<std::mutex> lock(the_mutex);
-    if (logfile != NULL) fclose(logfile);
-    lock.unlock();
+    {
+        std::unique_lock<std::mutex> lock(the_mutex);
+        if (logfile != NULL) fclose(logfile);
+    }
 }
 
 void Logger::start_write_loop()
 {
-    std::unique_lock<std::mutex> lock(the_mutex);
-    if (!writingLoopActive)
     {
-        writingLoopActive = true;
-        writer_thread = std::thread(&Logger::writing_loop, this);
+        std::unique_lock<std::mutex> lock(the_mutex);
+        if (!writingLoopActive)
+        {
+            writingLoopActive = true;
+            writer_thread = std::thread(&Logger::writing_loop, this);
+        }
     }
-    lock.unlock();
 }
 
 void Logger::stop_write_loop()
 {
-    std::unique_lock<std::mutex> lock(the_mutex);
-    msg_queue.cancel();
-    // rejoin thread
-    writer_thread.join();
-    writingLoopActive = false;
-    lock.unlock();
+    {
+        std::unique_lock<std::mutex> lock(the_mutex);
+        msg_queue.cancel();
+        // rejoin thread
+        writer_thread.join();
+        writingLoopActive = false;
+    }
 }
 
 void Logger::writing_loop()
@@ -198,8 +201,6 @@ void Logger::writing_loop()
 
 void Logger::flush()
 {
-    int rv;
-
     // There is a timing window between when pending_write is set,
     // and the msg_queue being empty. We could fall through that
     // window. Yes, its stupid, but too low-importance to fix.
@@ -213,46 +214,57 @@ void Logger::flush()
         usleep(100);
     }
 
-    std::unique_lock<std::mutex> lock(the_mutex);
+    int  rv = 0;
     // Force a write to the disk. Don't need to update metadata, though.
-    if (logfile) {
-        errno = 0;
-        rv = fdatasync(fileno(logfile));
-        if (rv != 0)
-        {
-            fprintf(stderr,
-                    "fdatasync returned error: %s\n",
-                    strerror(errno));
+    {
+        std::unique_lock<std::mutex> lock(the_mutex);
+        if (logfile) {
+            errno = 0;
+            rv = fdatasync(fileno(logfile));
         }
     }
-    lock.unlock();
+    if (rv != 0)
+    {
+        fprintf(stderr,
+                "fdatasync returned error: %s\n",
+                strerror(errno));
+    }
 }
 
 void Logger::write_msg(const std::string &msg)
 {
-    std::unique_lock<std::mutex> lock(the_mutex);
-    int                          rv;
+    int   rv;
+    bool  continue_write = false;
+
+    // Note: stdout, stderr writing must be used with mutex unlocked
 
     // Delay opening the file until the first logging statement is issued;
     // this allows us to set the main logger's filename without creating
     // a useless log file with the default filename.
-    if (logfile == NULL)
     {
-        if ((logfile = fopen(fileName.c_str(), "a")) == NULL)
+        std::unique_lock<std::mutex> lock(the_mutex);
+        if (logfile == NULL)
         {
-            fprintf(stderr, "[ERROR] Unable to open log file \"%s\"\n",
-                    fileName.c_str());
-            lock.unlock();
-            disable();
-            return;
+            logfile = fopen(fileName.c_str(), "a");
         }
-
-        enable();
+        if (logfile != NULL) continue_write = true;
+    }
+    if (false == continue_write)
+    {
+        fprintf(stderr, "[ERROR] Unable to open log file \"%s\"\n",
+                fileName.c_str());
+        disable();
+        return;
     }
 
+    enable();
+
     // Write to file.
-    errno = 0;
-    rv = fprintf(logfile, "%s", msg.c_str());
+    {
+        std::unique_lock<std::mutex> lock(the_mutex);
+        errno = 0;
+        rv = fprintf(logfile, "%s", msg.c_str());
+    }
     if (rv != (int)msg.length())
     {
         fprintf(stderr,
@@ -266,17 +278,17 @@ void Logger::write_msg(const std::string &msg)
 
     // Flush, because log messages are important, especially if we
     // are about to crash. So we don't want to have these buffered up.
-    errno =  0;
-    rv = fflush(logfile);
+    {
+        std::unique_lock<std::mutex> lock(the_mutex);
+        errno =  0;
+        rv = fflush(logfile);
+    }
     if (rv != 0)
     {
         fprintf(stderr,
                 "fflush returned error: %s\n",
                 strerror(errno));
     }
-
-    // Stdout writing must be unlocked.
-    lock.unlock();
 
     // Write to stdout.
     if (printToStdout)
@@ -327,22 +339,21 @@ Logger& Logger::operator=(const Logger& log)
 
 void Logger::set(const Logger& log)
 {
-    std::unique_lock<std::mutex> lock(the_mutex);
+    {
+        std::unique_lock<std::mutex> lock(the_mutex);
+        this->component.assign(log.component);
+        this->currentLevel = log.currentLevel;
+        this->backTraceLevel = log.backTraceLevel;
+        this->timestampEnabled = log.timestampEnabled;
+        this->threadIdEnabled = log.threadIdEnabled;
+        this->logEnabled = log.logEnabled;
+        this->printToStdout = log.printToStdout;
+        this->printLevel = log.printLevel;
+        this->syncEnabled = log.syncEnabled;
 
-    this->component.assign(log.component);
-    this->currentLevel = log.currentLevel;
-    this->backTraceLevel = log.backTraceLevel;
-    this->timestampEnabled = log.timestampEnabled;
-    this->threadIdEnabled = log.threadIdEnabled;
-    this->logEnabled = log.logEnabled;
-    this->printToStdout = log.printToStdout;
-    this->printLevel = log.printLevel;
-    this->syncEnabled = log.syncEnabled;
-
-    this->pending_write = false;
-    this->writingLoopActive = false;
-
-    lock.unlock();
+        this->pending_write = false;
+        this->writingLoopActive = false;
+    }
 
     // Set logfile to NULL to force the logger to use a new FILE handle. It is
     // safer that way because closing that file may not close file of
@@ -380,10 +391,11 @@ void Logger::set_filename(const std::string& s)
 {
     fileName.assign(s);
 
-    std::unique_lock<std::mutex> lock(the_mutex);
-    if (logfile != NULL) fclose(logfile);
-    logfile = NULL;
-    lock.unlock();
+    {
+        std::unique_lock<std::mutex> lock(the_mutex);
+        if (logfile != NULL) fclose(logfile);
+        logfile = NULL;
+    }
 
     enable();
 }
