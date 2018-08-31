@@ -147,7 +147,7 @@ public:
     void set_print_to_stdout_flag(bool);
 
     /**
-     * If set, the logging level is preinted as a part
+     * If set, the logging level is printed as a part
      * of the message,
      */
     void set_print_level_flag(bool);
@@ -160,7 +160,7 @@ public:
      * synchronous logging might slow down your program).
      */
     void set_sync_flag(bool);
-    
+
     /**
      * Set the main logger to print only
      * error level log on stdout (useful when one is only interested
