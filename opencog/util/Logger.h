@@ -315,6 +315,9 @@ private:
     bool syncEnabled;
     FILE *logfile;
 
+    std::mutex sync_threads_mutex;
+    unsigned int logger_message_count = 0;
+
     /** One single thread does all writing of log messages */
     std::thread writer_thread;
     std::mutex the_mutex;

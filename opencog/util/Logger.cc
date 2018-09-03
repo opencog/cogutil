@@ -169,8 +169,8 @@ void Logger::start_write_loop()
 void Logger::stop_write_loop()
 {
     {
-        std::unique_lock<std::mutex> lock(the_mutex);
         msg_queue.cancel();
+        std::unique_lock<std::mutex> lock(the_mutex);
         // rejoin thread
         writer_thread.join();
         writingLoopActive = false;
@@ -233,8 +233,9 @@ void Logger::flush()
 
 void Logger::write_msg(const std::string &msg)
 {
-    int   rv;
-    bool  continue_write = false;
+    int                 rv;
+    bool                error_detected = false;
+    std::ostringstream  error_description;
 
     // Note: stdout, stderr writing must be used with mutex unlocked
 
@@ -247,10 +248,14 @@ void Logger::write_msg(const std::string &msg)
         {
             logfile = fopen(fileName.c_str(), "a");
         }
-        if (logfile != NULL) continue_write = true;
     }
-    if (false == continue_write)
+    if (logfile == NULL)
     {
+        {
+            std::unique_lock<std::mutex> lock(sync_threads_mutex);
+            if (logger_message_count) logger_message_count--;
+        }
+
         fprintf(stderr, "[ERROR] Unable to open log file \"%s\"\n",
                 fileName.c_str());
         disable();
@@ -259,35 +264,46 @@ void Logger::write_msg(const std::string &msg)
 
     enable();
 
-    // Write to file.
+    /* Write to file is now protected by the mutex for entire fprintf and
+     * fflush operations, excluding the stderr operations
+     */
     {
         std::unique_lock<std::mutex> lock(the_mutex);
         errno = 0;
         rv = fprintf(logfile, "%s", msg.c_str());
-    }
-    if (rv != (int)msg.length())
-    {
-        fprintf(stderr,
-                "fprintf to %s file returned error: %s, "
-                "Detected %d bytes written, expected %d\n",
-                fileName.c_str(),
-                strerror(errno),
-                rv,
-                (int)msg.length());
-    }
+        if (rv != (int)msg.length())
+        {
+            error_detected = true;
+            error_description <<
+                "[ERROR] fprintf to " << fileName.c_str() <<
+                " file returned error: " << strerror(errno) <<
+                ", Detected " << rv <<
+                " bytes written, expected " << (int)msg.length() << std::endl;
+        }
 
-    // Flush, because log messages are important, especially if we
-    // are about to crash. So we don't want to have these buffered up.
-    {
-        std::unique_lock<std::mutex> lock(the_mutex);
+        // Flush, because log messages are important, especially if we
+        // are about to crash. So we don't want to have these buffered up.
         errno =  0;
         rv = fflush(logfile);
+        if (rv != 0)
+        {
+            error_detected = true;
+            error_description <<
+                "[ERROR] fflush returned error: " << strerror(errno) <<
+                std::endl;
+        }
     }
-    if (rv != 0)
+
+    /*  Synchronize the producer/consumer threads */
     {
-        fprintf(stderr,
-                "fflush returned error: %s\n",
-                strerror(errno));
+        std::unique_lock<std::mutex> lock(sync_threads_mutex);
+        if (logger_message_count) logger_message_count--;
+    }
+
+    if (error_detected)
+    {
+        std::cerr << error_description.str();
+        std::cerr.flush();
     }
 
     // Write to stdout.
@@ -393,7 +409,6 @@ void Logger::set_filename(const std::string& s)
 
     {
         std::unique_lock<std::mutex> lock(the_mutex);
-        if (logfile != NULL) fclose(logfile);
         logfile = NULL;
     }
 
@@ -499,6 +514,11 @@ void Logger::log(Logger::Level level, const std::string &txt)
 #endif
     }
 
+    {
+        std::unique_lock<std::mutex> lock(sync_threads_mutex);
+        logger_message_count++;
+    }
+
     msg_queue.push(new std::string(oss.str()));
 
     // If the queue gets too full, block until it's flushed to file or
@@ -512,6 +532,11 @@ void Logger::log(Logger::Level level, const std::string &txt)
     if (level <= backTraceLevel) flush();
 
     if (syncEnabled) flush();
+
+    while (logger_message_count != 0)
+    {
+        std::this_thread::yield();
+    }
 }
 
 void Logger::backtrace()
