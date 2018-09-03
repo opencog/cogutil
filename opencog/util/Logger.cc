@@ -156,13 +156,11 @@ Logger::~Logger()
 
 void Logger::start_write_loop()
 {
+    std::unique_lock<std::mutex> lock(the_mutex);
+    if (!writingLoopActive)
     {
-        std::unique_lock<std::mutex> lock(the_mutex);
-        if (!writingLoopActive)
-        {
-            writingLoopActive = true;
-            writer_thread = std::thread(&Logger::writing_loop, this);
-        }
+        writingLoopActive = true;
+        writer_thread = std::thread(&Logger::writing_loop, this);
     }
 }
 
