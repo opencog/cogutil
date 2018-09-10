@@ -144,23 +144,41 @@ static void prt_backtrace(std::ostringstream& oss)
 Logger::~Logger()
 {
     // Wait for queue to empty
+    _log_writer.flush();
+}
+
+// Logger::LogWriter _log_writer;
+
+Logger::LogWriter::LogWriter(void)
+{
+    writingLoopActive = false;
+#ifdef HAVE_VALGRIND
+    DRD_IGNORE_VAR(this->msg_queue);
+#endif
+    logfile = NULL;
+    pending_write = false;
+}
+
+Logger::LogWriter::~LogWriter()
+{
+    // Wait for queue to empty
     flush();
     stop_write_loop();
 
     if (logfile != NULL) fclose(logfile);
 }
 
-void Logger::start_write_loop()
+void Logger::LogWriter::start_write_loop()
 {
     std::unique_lock<std::mutex> lock(the_mutex);
     if (!writingLoopActive)
     {
         writingLoopActive = true;
-        writer_thread = std::thread(&Logger::writing_loop, this);
+        writer_thread = std::thread(&Logger::LogWriter::writing_loop, this);
     }
 }
 
-void Logger::stop_write_loop()
+void Logger::LogWriter::stop_write_loop()
 {
     std::unique_lock<std::mutex> lock(the_mutex);
     msg_queue.cancel();
@@ -169,7 +187,7 @@ void Logger::stop_write_loop()
     writingLoopActive = false;
 }
 
-void Logger::writing_loop()
+void Logger::LogWriter::writing_loop()
 {
     try
     {
@@ -193,6 +211,11 @@ void Logger::writing_loop()
 
 void Logger::flush()
 {
+    _log_writer.flush();
+}
+
+void Logger::LogWriter::flush()
+{
     // There is a timing window between when pending_write is set,
     // and the msg_queue being empty. We could fall through that
     // window. Yes, its stupid, but too low-importance to fix.
@@ -210,7 +233,7 @@ void Logger::flush()
     if (logfile) fdatasync(fileno(logfile));
 }
 
-void Logger::write_msg(const std::string &msg)
+void Logger::LogWriter::write_msg(const std::string &msg)
 {
     std::unique_lock<std::mutex> lock(the_mutex);
     // Delay opening the file until the first logging statement is issued;
@@ -223,11 +246,11 @@ void Logger::write_msg(const std::string &msg)
             fprintf(stderr, "[ERROR] Unable to open log file \"%s\"\n",
                     fileName.c_str());
             lock.unlock();
-            disable();
+            // disable();
             return;
         }
 
-        enable();
+        // enable();
     }
 
     // Write to file.
@@ -251,26 +274,21 @@ void Logger::write_msg(const std::string &msg)
 Logger::Logger(const std::string &fname, Logger::Level level, bool tsEnabled)
     : error(*this), warn(*this), info(*this), debug(*this), fine(*this)
 {
-    this->fileName.assign(fname);
+    _log_writer.setFileName(fname);
+    _log_writer.printToStdout = false;
+
     this->currentLevel = level;
     this->backTraceLevel = ERROR;
 
     this->timestampEnabled = tsEnabled;
     this->threadIdEnabled = false;
-    this->printToStdout = false;
     this->printLevel = true;
     this->syncEnabled = false;
 
     this->logEnabled = true;
 #ifdef HAVE_VALGRIND
     DRD_IGNORE_VAR(this->logEnabled);
-    DRD_IGNORE_VAR(this->msg_queue);
 #endif
-    this->logfile = NULL;
-    this->pending_write = false;
-    this->writingLoopActive = false;
-
-    start_write_loop();
 }
 
 Logger::Logger(const Logger& log)
@@ -281,37 +299,20 @@ Logger::Logger(const Logger& log)
 
 Logger& Logger::operator=(const Logger& log)
 {
-    this->stop_write_loop();
-    msg_queue.cancel_reset();
     this->set(log);
     return *this;
 }
 
 void Logger::set(const Logger& log)
 {
-    std::unique_lock<std::mutex> lock(the_mutex);
-    this->fileName.assign(log.fileName);
     this->component.assign(log.component);
     this->currentLevel = log.currentLevel;
     this->printLevel = log.printLevel;
     this->backTraceLevel = log.backTraceLevel;
     this->timestampEnabled = log.timestampEnabled;
     this->threadIdEnabled = log.threadIdEnabled;
-    this->printToStdout = log.printToStdout;
     this->syncEnabled = log.syncEnabled;
     this->logEnabled = log.logEnabled;
-
-    // Set NULL to force the logger to use a new FILE handle. It is
-    // safer that way because closing that file may not close file of
-    // the parent logger.
-    this->logfile = NULL;
-
-    this->pending_write = false;
-    this->writingLoopActive = false;
-
-    lock.unlock();
-
-    start_write_loop();
 }
 
 // ***********************************************/
@@ -337,21 +338,27 @@ Logger::Level Logger::get_backtrace_level() const
     return backTraceLevel;
 }
 
-void Logger::set_filename(const std::string& s)
+void Logger::LogWriter::setFileName(const std::string& s)
 {
     fileName.assign(s);
 
     std::unique_lock<std::mutex> lock(the_mutex);
-    if (logfile != NULL) fclose(logfile);
+    if (logfile != NULL) {
+        flush();
+        fclose(logfile);
+    }
     logfile = NULL;
-    lock.unlock();
+}
 
+void Logger::set_filename(const std::string& s)
+{
+    _log_writer.setFileName(s);
     enable();
 }
 
 const std::string& Logger::get_filename() const
 {
-    return fileName;
+    return _log_writer.getFileName();
 }
 
 void Logger::set_component(const std::string& c)
@@ -376,7 +383,7 @@ void Logger::set_thread_id_flag(bool flag)
 
 void Logger::set_print_to_stdout_flag(bool flag)
 {
-    printToStdout = flag;
+    _log_writer.printToStdout = flag;
 }
 
 void Logger::set_print_level_flag(bool flag)
@@ -448,12 +455,12 @@ void Logger::log(Logger::Level level, const std::string &txt)
 #endif
     }
 
-    msg_queue.push(new std::string(oss.str()));
+    _log_writer.qmsg(new std::string(oss.str()));
 
     // If the queue gets too full, block until it's flushed to file or
     // stdout. This can sometimes happen, if some component is spewing
     // lots of debugging messages in a tight loop.
-    if (msg_queue.size() > max_queue_size_allowed) flush();
+    if (_log_writer.size() > max_queue_size_allowed) flush();
 
     // Errors are associated with immenent crashes. Make sure that the
     // stack trace is written to disk *before* the crash happens! Yes,
@@ -472,12 +479,12 @@ void Logger::backtrace()
     prt_backtrace(oss);
     #endif
 
-    msg_queue.push(new std::string(oss.str()));
+    _log_writer.qmsg(new std::string(oss.str()));
 
     // If the queue gets too full, block until it's flushed to file or
     // stdout. This can sometimes happen, if some component is spewing
     // lots of debugging messages in a tight loop.
-    if (msg_queue.size() > max_queue_size_allowed) {
+    if (_log_writer.size() > max_queue_size_allowed) {
         flush();
     }
 }
