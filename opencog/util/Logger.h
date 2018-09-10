@@ -352,8 +352,8 @@ private:
         const std::string& getFileName(void) const
             { return fileName; }
 
-        void qmsg(std::string* str)
-            { msg_queue.push(str); }
+        void qmsg(const std::string& str)
+            { msg_queue.push(new std::string(str)); }
 
         size_t size(void)
             { return msg_queue.size(); }

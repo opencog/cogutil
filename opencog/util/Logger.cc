@@ -448,14 +448,14 @@ void Logger::log(Logger::Level level, const std::string &txt)
 
     oss << txt << std::endl;
 
+#ifndef CYGWIN
     if (level <= backTraceLevel)
     {
-#ifndef CYGWIN
         prt_backtrace(oss);
-#endif
     }
+#endif
 
-    _log_writer.qmsg(new std::string(oss.str()));
+    _log_writer.qmsg(oss.str());
 
     // If the queue gets too full, block until it's flushed to file or
     // stdout. This can sometimes happen, if some component is spewing
@@ -479,7 +479,7 @@ void Logger::backtrace()
     prt_backtrace(oss);
     #endif
 
-    _log_writer.qmsg(new std::string(oss.str()));
+    _log_writer.qmsg(oss.str());
 
     // If the queue gets too full, block until it's flushed to file or
     // stdout. This can sometimes happen, if some component is spewing
