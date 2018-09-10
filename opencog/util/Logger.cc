@@ -157,15 +157,18 @@ Logger::LogWriter::LogWriter(void)
 #endif
     logfile = NULL;
     pending_write = false;
+
+    start_write_loop();
 }
 
 Logger::LogWriter::~LogWriter()
 {
+    if (logfile == NULL) return;
+
     // Wait for queue to empty
     flush();
     stop_write_loop();
-
-    if (logfile != NULL) fclose(logfile);
+    fclose(logfile);
 }
 
 void Logger::LogWriter::start_write_loop()
