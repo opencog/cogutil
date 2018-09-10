@@ -250,7 +250,6 @@ void Logger::LogWriter::write_msg(const std::string &msg)
             stop_write_loop();
             return;
         }
-        start_write_loop();
     }
 
     // Write to file.
@@ -274,8 +273,8 @@ void Logger::LogWriter::write_msg(const std::string &msg)
 Logger::Logger(const std::string &fname, Logger::Level level, bool tsEnabled)
     : error(*this), warn(*this), info(*this), debug(*this), fine(*this)
 {
-    _log_writer.setFileName(fname);
     _log_writer.printToStdout = false;
+    _log_writer.setFileName(fname);
 
     this->currentLevel = level;
     this->backTraceLevel = ERROR;
