@@ -157,8 +157,6 @@ Logger::LogWriter::LogWriter(void)
 #endif
     logfile = NULL;
     pending_write = false;
-
-    start_write_loop();
 }
 
 Logger::LogWriter::~LogWriter()
@@ -249,11 +247,10 @@ void Logger::LogWriter::write_msg(const std::string &msg)
             fprintf(stderr, "[ERROR] Unable to open log file \"%s\"\n",
                     fileName.c_str());
             lock.unlock();
-            // disable();
+            stop_write_loop();
             return;
         }
-
-        // enable();
+        start_write_loop();
     }
 
     // Write to file.
@@ -351,6 +348,9 @@ void Logger::LogWriter::setFileName(const std::string& s)
         fclose(logfile);
     }
     logfile = NULL;
+
+    lock.unlock();
+    start_write_loop();
 }
 
 void Logger::set_filename(const std::string& s)
