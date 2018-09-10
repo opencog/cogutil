@@ -144,10 +144,10 @@ static void prt_backtrace(std::ostringstream& oss)
 Logger::~Logger()
 {
     // Wait for queue to empty
-    _log_writer.flush();
+    if (_log_writer) _log_writer->flush();
 }
 
-Logger::LogWriter Logger::_log_writer;
+std::map<std::string, Logger::LogWriter*> Logger::_loggers;
 
 Logger::LogWriter::LogWriter(void)
 {
@@ -212,7 +212,7 @@ void Logger::LogWriter::writing_loop()
 
 void Logger::flush()
 {
-    _log_writer.flush();
+    if (_log_writer) _log_writer->flush();
 }
 
 void Logger::LogWriter::flush()
@@ -273,8 +273,15 @@ void Logger::LogWriter::write_msg(const std::string &msg)
 Logger::Logger(const std::string &fname, Logger::Level level, bool tsEnabled)
     : error(*this), warn(*this), info(*this), debug(*this), fine(*this)
 {
-    _log_writer.printToStdout = false;
-    _log_writer.setFileName(fname);
+    try {
+        _log_writer = _loggers.at(fname);
+    }
+    catch (...) {
+        _log_writer = new LogWriter();
+        _log_writer->printToStdout = false;
+        _log_writer->setFileName(fname);
+        _loggers[fname] = _log_writer;
+    }
 
     this->currentLevel = level;
     this->backTraceLevel = ERROR;
@@ -352,15 +359,25 @@ void Logger::LogWriter::setFileName(const std::string& s)
     start_write_loop();
 }
 
-void Logger::set_filename(const std::string& s)
+void Logger::set_filename(const std::string& fname)
 {
-    _log_writer.setFileName(s);
+    try {
+        _log_writer = _loggers.at(fname);
+    }
+    catch (...) {
+        _log_writer = new LogWriter();
+        _log_writer->setFileName(fname);
+        _loggers[fname] = _log_writer;
+    }
+
     enable();
 }
 
 const std::string& Logger::get_filename() const
 {
-    return _log_writer.getFileName();
+    static std::string bad;
+    if (nullptr == _log_writer) return bad;
+    return _log_writer->getFileName();
 }
 
 void Logger::set_component(const std::string& c)
@@ -385,7 +402,7 @@ void Logger::set_thread_id_flag(bool flag)
 
 void Logger::set_print_to_stdout_flag(bool flag)
 {
-    _log_writer.printToStdout = flag;
+    if (_log_writer) _log_writer->printToStdout = flag;
 }
 
 void Logger::set_print_level_flag(bool flag)
@@ -420,6 +437,7 @@ void Logger::log(Logger::Level level, const std::string &txt)
     // Don't log if not enabled, or level is too low.
     if (!logEnabled) return;
     if (level > currentLevel) return;
+    if (nullptr == _log_writer) return;
 
     std::ostringstream oss;
     if (timestampEnabled)
@@ -457,12 +475,12 @@ void Logger::log(Logger::Level level, const std::string &txt)
     }
 #endif
 
-    _log_writer.qmsg(oss.str());
+    _log_writer->qmsg(oss.str());
 
     // If the queue gets too full, block until it's flushed to file or
     // stdout. This can sometimes happen, if some component is spewing
     // lots of debugging messages in a tight loop.
-    if (_log_writer.size() > max_queue_size_allowed) flush();
+    if (_log_writer->size() > max_queue_size_allowed) flush();
 
     // Errors are associated with immenent crashes. Make sure that the
     // stack trace is written to disk *before* the crash happens! Yes,
@@ -474,6 +492,8 @@ void Logger::log(Logger::Level level, const std::string &txt)
 
 void Logger::backtrace()
 {
+    if (nullptr == _log_writer) return;
+
     static const unsigned int max_queue_size_allowed = 1024;
     std::ostringstream oss;
 
@@ -481,12 +501,12 @@ void Logger::backtrace()
     prt_backtrace(oss);
     #endif
 
-    _log_writer.qmsg(oss.str());
+    _log_writer->qmsg(oss.str());
 
     // If the queue gets too full, block until it's flushed to file or
     // stdout. This can sometimes happen, if some component is spewing
     // lots of debugging messages in a tight loop.
-    if (_log_writer.size() > max_queue_size_allowed) {
+    if (_log_writer->size() > max_queue_size_allowed) {
         flush();
     }
 }

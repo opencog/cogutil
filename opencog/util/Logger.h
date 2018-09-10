@@ -28,6 +28,7 @@
 #define _OPENCOG_LOGGER_H
 
 #include <cstdarg>
+#include <map>
 #include <mutex>
 #include <sstream>
 #include <string>
@@ -361,8 +362,8 @@ private:
         void flush();
     };
 
-    // Singleton instance.
-    static LogWriter _log_writer;
+    LogWriter* _log_writer;
+    static std::map<std::string, LogWriter*> _loggers;
 
 }; // class
 
