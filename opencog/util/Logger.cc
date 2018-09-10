@@ -273,15 +273,7 @@ void Logger::LogWriter::write_msg(const std::string &msg)
 Logger::Logger(const std::string &fname, Logger::Level level, bool tsEnabled)
     : error(*this), warn(*this), info(*this), debug(*this), fine(*this)
 {
-    try {
-        _log_writer = _loggers.at(fname);
-    }
-    catch (...) {
-        _log_writer = new LogWriter();
-        _log_writer->printToStdout = false;
-        _log_writer->setFileName(fname);
-        _loggers[fname] = _log_writer;
-    }
+    set_filename(fname);
 
     this->currentLevel = level;
     this->backTraceLevel = ERROR;
