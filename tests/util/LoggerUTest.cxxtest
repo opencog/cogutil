@@ -52,11 +52,12 @@ public:
 
     static std::string getLastLineFromFile(const std::string& filename) {
         std::ifstream logfile(filename);
-        std::string line, resline;
+        std::string line = {}, resline = {};
         if (logfile.is_open())
         {
             while (logfile.good())
             {
+                line = {};
                 getline(logfile, line);
                 if (!line.empty())
                     resline = line;
@@ -141,7 +142,7 @@ public:
         _logger.flush();
 
         // Hmm. I don't get it. Logger::flush calls fdatasync(),
-        // appearently this is not enough to prevent a race condition
+        // apparently this is not enough to prevent a race condition
         // between the logger write, and the read to count the lines.
         // I really don't get it .. the fdatasync should have been enough.
         // To work around this, force a sync() below to avoid spurious
@@ -246,30 +247,29 @@ public:
     void testLoggerInteraction() {
         logger().set_level(Logger::DEBUG);
         logger().set_timestamp_flag(false);
-        Logger my_logger;
-        my_logger.set_level(Logger::DEBUG);
-        my_logger.set_component("LoggerUTest");
-        my_logger.set_timestamp_flag(false);
-
+        logger().set_component("LoggerUTest");
+        Logger my_logger(logger());
         // Make sure both loggers point to the same file (not really
         // part of the test but better be safe than sorry)
         TS_ASSERT_EQUALS(logger().get_filename(), my_logger.get_filename());
 
         std::string gibberish(randstr("", 10000));
-        std::string message("message");
+        std::string message("message_1");
         std::string prefix("[DEBUG] [LoggerUTest] ");
 
         logger().debug(gibberish);
-        logger().flush();       // Remove to trigger the bug
         my_logger.debug(message);
 
         logger().flush();
         my_logger.flush();
 
         std::string resline = getLastLineFromFile(my_logger.get_filename());
-        std::cout << "resline = " << resline << std::endl;
+        std::cout << "Length of the last line in second logger: " <<
+            resline.length() <<
+            ", Last line: <" << resline << ">" << std::endl;
 
-        TS_ASSERT(resline == prefix + message or resline == prefix + gibberish);
+        TS_ASSERT(resline.length() == (prefix.length() + message.length()));
+        TS_ASSERT(resline == (prefix + message));
     }
 
 }; // class

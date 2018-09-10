@@ -147,7 +147,7 @@ public:
     void set_print_to_stdout_flag(bool);
 
     /**
-     * If set, the logging level is preinted as a part
+     * If set, the logging level is printed as a part
      * of the message,
      */
     void set_print_level_flag(bool);
@@ -314,6 +314,9 @@ private:
     bool printLevel;
     bool syncEnabled;
     FILE *logfile;
+
+    std::mutex sync_threads_mutex;
+    unsigned int logger_message_count = 0;
 
     /** One single thread does all writing of log messages */
     std::thread writer_thread;

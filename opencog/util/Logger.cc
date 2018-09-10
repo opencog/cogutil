@@ -40,6 +40,7 @@
 #include <strings.h>
 #include <time.h>
 #include <unistd.h>
+#include <errno.h>
 
 #ifdef WIN32_NOT_UNIX
 #include <winsock2.h>
@@ -147,7 +148,10 @@ Logger::~Logger()
     flush();
     stop_write_loop();
 
-    if (logfile != NULL) fclose(logfile);
+    {
+        std::unique_lock<std::mutex> lock(the_mutex);
+        if (logfile != NULL) fclose(logfile);
+    }
 }
 
 void Logger::start_write_loop()
@@ -162,11 +166,13 @@ void Logger::start_write_loop()
 
 void Logger::stop_write_loop()
 {
-    std::unique_lock<std::mutex> lock(the_mutex);
-    msg_queue.cancel();
-    // rejoin thread
-    writer_thread.join();
-    writingLoopActive = false;
+    {
+        msg_queue.cancel();
+        std::unique_lock<std::mutex> lock(the_mutex);
+        // rejoin thread
+        writer_thread.join();
+        writingLoopActive = false;
+    }
 }
 
 void Logger::writing_loop()
@@ -206,39 +212,97 @@ void Logger::flush()
         usleep(100);
     }
 
+    int  rv = 0;
     // Force a write to the disk. Don't need to update metadata, though.
-    if (logfile) fdatasync(fileno(logfile));
+    {
+        std::unique_lock<std::mutex> lock(the_mutex);
+        if (logfile) {
+            errno = 0;
+            rv = fdatasync(fileno(logfile));
+        }
+    }
+    if (rv != 0)
+    {
+        fprintf(stderr,
+                "fdatasync returned error: %s\n",
+                strerror(errno));
+    }
 }
 
 void Logger::write_msg(const std::string &msg)
 {
-    std::unique_lock<std::mutex> lock(the_mutex);
+    int                 rv;
+    bool                error_detected = false;
+    std::ostringstream  error_description;
+
+    // Note: stdout, stderr writing must be used with mutex unlocked
+
     // Delay opening the file until the first logging statement is issued;
     // this allows us to set the main logger's filename without creating
     // a useless log file with the default filename.
+    {
+        std::unique_lock<std::mutex> lock(the_mutex);
+        if (logfile == NULL)
+        {
+            logfile = fopen(fileName.c_str(), "a");
+        }
+    }
     if (logfile == NULL)
     {
-        if ((logfile = fopen(fileName.c_str(), "a")) == NULL)
         {
-            fprintf(stderr, "[ERROR] Unable to open log file \"%s\"\n",
-                    fileName.c_str());
-            lock.unlock();
-            disable();
-            return;
+            std::unique_lock<std::mutex> lock(sync_threads_mutex);
+            if (logger_message_count) logger_message_count--;
         }
 
-        enable();
+        fprintf(stderr, "[ERROR] Unable to open log file \"%s\"\n",
+                fileName.c_str());
+        disable();
+        return;
     }
 
-    // Write to file.
-    fprintf(logfile, "%s", msg.c_str());
+    enable();
 
-    // Flush, because log messages are important, especially if we
-    // are about to crash. So we don't want to have these buffered up.
-    fflush(logfile);
+    /* Write to file is now protected by the mutex for entire fprintf and
+     * fflush operations, excluding the stderr operations
+     */
+    {
+        std::unique_lock<std::mutex> lock(the_mutex);
+        errno = 0;
+        rv = fprintf(logfile, "%s", msg.c_str());
+        if (rv != (int)msg.length())
+        {
+            error_detected = true;
+            error_description <<
+                "[ERROR] fprintf to " << fileName.c_str() <<
+                " file returned error: " << strerror(errno) <<
+                ", Detected " << rv <<
+                " bytes written, expected " << (int)msg.length() << std::endl;
+        }
 
-    // Stdout writing must be unlocked.
-    lock.unlock();
+        // Flush, because log messages are important, especially if we
+        // are about to crash. So we don't want to have these buffered up.
+        errno =  0;
+        rv = fflush(logfile);
+        if (rv != 0)
+        {
+            error_detected = true;
+            error_description <<
+                "[ERROR] fflush returned error: " << strerror(errno) <<
+                std::endl;
+        }
+    }
+
+    /*  Synchronize the producer/consumer threads */
+    {
+        std::unique_lock<std::mutex> lock(sync_threads_mutex);
+        if (logger_message_count) logger_message_count--;
+    }
+
+    if (error_detected)
+    {
+        std::cerr << error_description.str();
+        std::cerr.flush();
+    }
 
     // Write to stdout.
     if (printToStdout)
@@ -289,27 +353,27 @@ Logger& Logger::operator=(const Logger& log)
 
 void Logger::set(const Logger& log)
 {
-    std::unique_lock<std::mutex> lock(the_mutex);
-    this->fileName.assign(log.fileName);
-    this->component.assign(log.component);
-    this->currentLevel = log.currentLevel;
-    this->printLevel = log.printLevel;
-    this->backTraceLevel = log.backTraceLevel;
-    this->timestampEnabled = log.timestampEnabled;
-    this->threadIdEnabled = log.threadIdEnabled;
-    this->printToStdout = log.printToStdout;
-    this->syncEnabled = log.syncEnabled;
-    this->logEnabled = log.logEnabled;
+    {
+        std::unique_lock<std::mutex> lock(the_mutex);
+        this->component.assign(log.component);
+        this->currentLevel = log.currentLevel;
+        this->backTraceLevel = log.backTraceLevel;
+        this->timestampEnabled = log.timestampEnabled;
+        this->threadIdEnabled = log.threadIdEnabled;
+        this->logEnabled = log.logEnabled;
+        this->printToStdout = log.printToStdout;
+        this->printLevel = log.printLevel;
+        this->syncEnabled = log.syncEnabled;
 
-    // Set NULL to force the logger to use a new FILE handle. It is
+        this->pending_write = false;
+        this->writingLoopActive = false;
+    }
+
+    // Set logfile to NULL to force the logger to use a new FILE handle. It is
     // safer that way because closing that file may not close file of
     // the parent logger.
-    this->logfile = NULL;
-
-    this->pending_write = false;
-    this->writingLoopActive = false;
-
-    lock.unlock();
+    // This action occurs under set_filename() below
+    set_filename(log.fileName);
 
     start_write_loop();
 }
@@ -341,10 +405,10 @@ void Logger::set_filename(const std::string& s)
 {
     fileName.assign(s);
 
-    std::unique_lock<std::mutex> lock(the_mutex);
-    if (logfile != NULL) fclose(logfile);
-    logfile = NULL;
-    lock.unlock();
+    {
+        std::unique_lock<std::mutex> lock(the_mutex);
+        logfile = NULL;
+    }
 
     enable();
 }
@@ -448,6 +512,11 @@ void Logger::log(Logger::Level level, const std::string &txt)
 #endif
     }
 
+    {
+        std::unique_lock<std::mutex> lock(sync_threads_mutex);
+        logger_message_count++;
+    }
+
     msg_queue.push(new std::string(oss.str()));
 
     // If the queue gets too full, block until it's flushed to file or
@@ -461,6 +530,11 @@ void Logger::log(Logger::Level level, const std::string &txt)
     if (level <= backTraceLevel) flush();
 
     if (syncEnabled) flush();
+
+    while (logger_message_count != 0)
+    {
+        std::this_thread::yield();
+    }
 }
 
 void Logger::backtrace()
