@@ -260,7 +260,6 @@ public:
         std::string prefix("[DEBUG] [LoggerUTest] ");
 
         logger().debug(gibberish);
-        logger().flush();       // Remove to trigger the bug
         my_logger.debug(message);
 
         logger().flush();
