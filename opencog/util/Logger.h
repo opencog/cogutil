@@ -361,6 +361,7 @@ private:
         void flush();
     };
 
+    // Singleton instance.
     static LogWriter _log_writer;
 
 }; // class

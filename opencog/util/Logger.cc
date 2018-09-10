@@ -147,7 +147,7 @@ Logger::~Logger()
     _log_writer.flush();
 }
 
-// Logger::LogWriter _log_writer;
+Logger::LogWriter Logger::_log_writer;
 
 Logger::LogWriter::LogWriter(void)
 {
