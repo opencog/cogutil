@@ -260,7 +260,6 @@ public:
         std::string prefix("[DEBUG] [LoggerUTest] ");
 
         logger().debug(gibberish);
-        logger().flush();       // Remove to trigger the bug
         my_logger.debug(message);
 
         logger().flush();
@@ -269,7 +268,7 @@ public:
         std::string resline = getLastLineFromFile(my_logger.get_filename());
         std::cout << "resline = " << resline << std::endl;
 
-        TS_ASSERT(resline == prefix + message or resline == prefix + gibberish);
+        TS_ASSERT(resline == prefix + message);
     }
 
 }; // class
