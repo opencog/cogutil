@@ -31,7 +31,7 @@ FUNCTION(PROCESS_MODULE_STRUCTURE FILE_NAME)
         ADD_CUSTOM_COMMAND(
             OUTPUT "${GUILE_BIN_DIR}/${MODULE_FILE_DIR_PATH}/${FILE_NAME}"
             COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/${FILE_NAME}" "${GUILE_BIN_DIR}/${MODULE_FILE_DIR_PATH}/${FILE_NAME}"
-            DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${FILE_NAME}" 
+            DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${FILE_NAME}"
         )
         SET(MODULE_FILE_DEPEND "${GUILE_BIN_DIR}/${MODULE_FILE_DIR_PATH}/${FILE_NAME}"
             PARENT_SCOPE)
@@ -45,7 +45,7 @@ FUNCTION(PROCESS_MODULE_STRUCTURE FILE_NAME)
         ADD_CUSTOM_COMMAND(
             OUTPUT "${GUILE_BIN_DIR}/${MODULE_DIR_PATH}/${FILE_NAME}"
             COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/${FILE_NAME}" "${GUILE_BIN_DIR}/${MODULE_DIR_PATH}/${FILE_NAME}"
-            DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${FILE_NAME}" 
+            DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${FILE_NAME}"
         )
         SET(MODULE_FILE_DEPEND "${GUILE_BIN_DIR}/${MODULE_DIR_PATH}/${FILE_NAME}"
             PARENT_SCOPE)
@@ -106,7 +106,7 @@ FUNCTION(ADD_GUILE_MODULE)
             PROCESS_MODULE_STRUCTURE(${FILE_NAME})
             # NOTE: The install configuration isn't part of
             # PROCESS_MODULE_STRUCTURE function so as to avoid "Command
-            # INSTALL() is not scriptable" error, when using it in copying 
+            # INSTALL() is not scriptable" error, when using it in copying
             # scheme files during code-generation by the OPENCOG_ADD_ATOM_TYPES
             # macro.
             INSTALL (FILES
@@ -131,3 +131,21 @@ FUNCTION(ADD_GUILE_MODULE)
         ENDIF()
     ENDIF()
 ENDFUNCTION(ADD_GUILE_MODULE)
+
+FUNCTION(ADD_GUILE_TEST TEST_NAME FILE_NAME)
+    # srfi-64 is installed in guile 2.2 and above, thus check for it.
+    FIND_PACKAGE(Guile 2.2)
+
+    IF(HAVE_GUILE AND (GUILE_VERSION VERSION_GREATER 2.2))
+        SET(FILE_PATH  "${CMAKE_CURRENT_SOURCE_DIR}/${FILE_NAME}")
+        # Check if the file exists in the current source directory.
+        IF(NOT EXISTS ${FILE_PATH})
+            MESSAGE(FATAL_ERROR "${FILE_NAME} file does not exist in "
+                ${CMAKE_CURRENT_SOURCE_DIR})
+        ENDIF()
+
+        ADD_TEST(${TEST_NAME} guile --use-srfi=64 ${FILE_PATH}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+    ENDIF()
+ENDFUNCTION(ADD_GUILE_TEST)
