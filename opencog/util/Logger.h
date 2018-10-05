@@ -28,6 +28,7 @@
 #define _OPENCOG_LOGGER_H
 
 #include <cstdarg>
+#include <map>
 #include <mutex>
 #include <sstream>
 #include <string>
@@ -41,11 +42,10 @@ namespace opencog
  *  @{
  */
 
-//! logging evens
+//! logging events
 class Logger
 {
     void set(const Logger&);
-    bool writingLoopActive;
 public:
 
     // WARNING: if you change the levels don't forget to update
@@ -303,30 +303,14 @@ public:
 
 private:
 
-    std::string fileName;
     std::string component;
     Level currentLevel;
     Level backTraceLevel;
     bool timestampEnabled;
     bool threadIdEnabled;
     bool logEnabled;
-    bool printToStdout;
     bool printLevel;
     bool syncEnabled;
-    FILE *logfile;
-
-    /** One single thread does all writing of log messages */
-    std::thread writer_thread;
-    std::mutex the_mutex;
-
-    /** Queue for log messages */
-    concurrent_queue< std::string* > msg_queue;
-    bool pending_write;
-
-    void start_write_loop();
-    void stop_write_loop();
-    void writing_loop();
-    void write_msg(const std::string &msg);
 
     /**
      * Enable logging messages.
@@ -338,9 +322,52 @@ private:
      */
     void disable();
 
+    class LogWriter
+    {
+        /* One writer per file */
+        std::string fileName;
+        FILE *logfile;
+        bool writingLoopActive;
+
+        /** One single thread does all writing of log messages */
+        std::thread writer_thread;
+        std::mutex the_mutex;
+
+        /** Queue for log messages */
+        concurrent_queue< std::string* > msg_queue;
+        bool pending_write;
+
+        void start_write_loop();
+        void stop_write_loop();
+        void writing_loop();
+        void write_msg(const std::string&);
+
+    public:
+        bool printToStdout;
+
+        LogWriter(void);
+        ~LogWriter();
+
+        void setFileName(const std::string&);
+
+        const std::string& getFileName(void) const
+            { return fileName; }
+
+        void qmsg(const std::string& str)
+            { msg_queue.push(new std::string(str)); }
+
+        size_t size(void)
+            { return msg_queue.size(); }
+
+        void flush();
+    };
+
+    LogWriter* _log_writer;
+    static std::map<std::string, LogWriter*> _loggers;
+
 }; // class
 
-// singleton instance (following Meyer's design pattern)
+// A singleton instance is enough for most users.
 Logger& logger();
 
 // Macros to not evaluate the stream if log level is disabled
