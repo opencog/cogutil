@@ -229,6 +229,10 @@ workflows:
       - moses:
           requires:
             - cogutil
+      - as-moses:
+          requires:
+            - cogutil
+            - atomspace
       - opencog:
           requires:
             - atomspace
