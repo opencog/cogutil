@@ -118,6 +118,42 @@ jobs:
           command: cat build/tests/Testing/Temporary/LastTest.log
           when: always
 
+  as-moses:
+    docker:
+      - image: opencog/opencog-deps
+        user: root
+        environment:
+          CCACHE_DIR: /ws/ccache
+    working_directory: /ws/as-moses
+    steps:
+      - attach_workspace:
+          at: /ws
+      - run:
+          name: Install cogutil
+          command: cd /ws/cogutil/build && make -j4 install && ldconfig
+      - run:
+          name: Install AtomSpace
+          command: cd /ws/atomspace/build && make -j4 install && ldconfig
+      - run:
+          name: Clone AS-MOSES
+          command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/as-moses .
+      - run:
+          name: CMake Configure
+          command: mkdir build && cd build && cmake ..
+      - run:
+          name: Build
+          command: cd build && make -j4
+      - run:
+          name: Build tests
+          command: cd build && make -j4 tests
+      - run:
+          name: Run tests
+          command: cd build && make -j4 test
+      - run:
+          name: Print test log
+          command: cat build/tests/Testing/Temporary/LastTest.log
+          when: always
+
   opencog:
     docker:
       - image: opencog/opencog-deps
