@@ -47,12 +47,12 @@ using boost::adaptors::map_values;
  * @endcode
  * the counter will hold 'blue': 3, 'red': 2, 'green': 1
  */
-template<typename T, typename CT>
-class Counter : public std::map<T, CT>
-    , boost::addable<Counter<T, CT>>
-    , boost::subtractable<Counter<T, CT>>
-    , boost::multipliable2<Counter<T, CT>,CT>
-    , boost::dividable2<Counter<T, CT>,CT>
+template<typename T, typename CT, typename CMP = std::less<T>>
+class Counter : public std::map<T, CT, CMP>
+    , boost::addable<Counter<T, CT, CMP>>
+    , boost::subtractable<Counter<T, CT, CMP>>
+    , boost::multipliable2<Counter<T, CT, CMP>,CT>
+    , boost::dividable2<Counter<T, CT, CMP>,CT>
 
 {
 protected:
@@ -69,7 +69,7 @@ protected:
     }
 
 public:
-    typedef std::map<T, CT> super;
+    typedef std::map<T, CT, CMP> super;
     typedef typename super::value_type value_type;
 
     Counter() {}
@@ -158,10 +158,10 @@ public:
     /// scalar and Counter, etc...
 };
 
-template<typename T, typename CT>
-std::ostream& operator<<(std::ostream& out, const Counter<T, CT>& c)
+template<typename T, typename CT, typename CMP = std::less<T>>
+std::ostream& operator<<(std::ostream& out, const Counter<T, CT, CMP>& c)
 {
-    typedef Counter<T, CT> counter_t;
+    typedef Counter<T, CT, CMP> counter_t;
     out << "{";
     for (typename counter_t::const_iterator it = c.begin(); it != c.end();) {
         out << it->first << ": " << it->second;
