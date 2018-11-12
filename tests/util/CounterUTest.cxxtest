@@ -44,6 +44,28 @@ public:
         TS_ASSERT_EQUALS(c2.total_count(), 5);
     }
 
+	template<typename T>
+	struct cmpByContent {
+		bool operator()(const T a, const T b) const {
+			return *a < *b;
+		}
+	};
+
+	void test_cmp() {
+		int one = 1;
+		int otherone = 1;
+		int * key1 = &one;
+		int * key2 = &otherone;
+		Counter<int*, float> c1 = {{key1,1}},
+							 c2 = {{key1,1},{key2,1}};
+		Counter<int*, float, cmpByContent<int*>> cc1 = {{key1,1}},
+												 cc2 = {{key1,2}};
+		c1[key2] += 1;
+		cc1[key2] += 1;
+		TS_ASSERT_EQUALS(c1,c2);
+		TS_ASSERT_EQUALS(cc1,cc2);
+	}
+
 	void test_addition() {
         Counter<string, float>
             c3 = c1 + c2,
