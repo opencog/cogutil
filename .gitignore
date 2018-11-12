@@ -110,3 +110,6 @@ Makefile
 # This is useful for cross-platform developers who might
 # want folders such as build-w or build-l for respective platforms
 build*/
+
+# Vim swap files
+*.swp
