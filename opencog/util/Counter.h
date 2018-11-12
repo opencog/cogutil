@@ -49,10 +49,8 @@ using boost::adaptors::map_values;
  */
 template<typename T, typename CT, typename CMP = std::less<T>>
 class Counter : public std::map<T, CT, CMP>
-    , boost::addable<Counter<T, CT, CMP>>
-    , boost::subtractable<Counter<T, CT, CMP>>
-    , boost::multipliable2<Counter<T, CT, CMP>,CT>
-    , boost::dividable2<Counter<T, CT, CMP>,CT>
+    , boost::arithmetic<Counter<T, CT, CMP>>
+    , boost::arithmetic2<Counter<T, CT, CMP>,CT>
 
 {
 protected:
@@ -121,15 +119,18 @@ public:
         return key;
     }
 
+	/* Counter operators:
+	 * examples with:
+     * c1 = {'a':1, 'b':2}
+     * c2 = {'b':2, 'c':3}
+	 * v = 2
+	 */
+
     //! add 2 counters,
     /**
-     * for example
-     * c1 = {'a':1, 'b':1}
-     * c2 = {'b':1, 'c':3}
-     * after
      * c1 += c2
-     * now
-     * c1 = {'a':1, 'b':2, 'c':3}
+     * =>
+     * c1 = {'a':1, 'b':4, 'c':3}
      */
     Counter& operator+=(const Counter& other) {
         for (const auto& v : other)
@@ -137,25 +138,86 @@ public:
         return *this;
     }
 
+	//! subtract 2 counters,
+    /**
+     * c1 -= c2
+     * =>
+     * c1 = {'a':1, 'b':0, 'c':-3}
+     */
     Counter& operator-=(const Counter& other) {
         for (const auto& v : other)
             this->operator[](v.first) -= v.second;
         return *this;
     }
 
+	//! multiply 2 counters,
+    /**
+     * c1 *= c2
+     * =>
+     * c1 = {'a':1, 'b':4, 'c':0}
+     */
+    Counter& operator*=(const Counter& other) {
+        for (const auto& v : other)
+            this->operator[](v.first) *= v.second;
+        return *this;
+    }
+
+	//! divide 2 counters,
+    /**
+     * c1 /= c2
+     * =>
+     * c1 = {'a':1, 'b':1, 'c':0}
+	 */
+    Counter& operator/=(const Counter& other) {
+        for (const auto& v : other)
+            this->operator[](v.first) /= v.second;
+        return *this;
+    }
+
+	//! add CT to counter
+	/**
+	 * c1 += v
+	 * =>
+     * c1 = {'a':3, 'b':4}
+	 */
+    Counter& operator+=(const CT& num) {
+        for (auto& v : *this)
+            v.second += num;
+        return *this;
+    }
+
+	/**
+	 * c1 -= v
+	 * =>
+     * c1 = {'a':-1, 'b':0}
+	 */
+    Counter& operator-=(const CT& num) {
+        for (auto& v : *this)
+            v.second -= num;
+        return *this;
+    }
+
+	/**
+	 * c1 *= v
+	 * =>
+     * c1 = {'a':2, 'b':4}
+	 */
     Counter& operator*=(const CT& num) {
         for (auto& v : *this)
             v.second *= num;
         return *this;
     }
 
+	/**
+	 * c1 /= v
+	 * =>
+     * c1 = {'a':0.5, 'b':1}
+	 */
     Counter& operator/=(const CT& num) {
         for (auto& v : *this)
             v.second /= num;
         return *this;
     }
-    /// @todo add method to subtract, multiply, etc Counters, or
-    /// scalar and Counter, etc...
 };
 
 template<typename T, typename CT, typename CMP = std::less<T>>
