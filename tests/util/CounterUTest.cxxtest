@@ -1,4 +1,4 @@
-/** CounterUTest.cxxtest --- 
+/** CounterUTest.cxxtest ---
  *
  * Copyright (C) 2012 Nil Geisweiller
  *
@@ -8,12 +8,12 @@
  * it under the terms of the GNU Affero General Public License v3 as
  * published by the Free Software Foundation and including the exceptions
  * at http://opencog.org/wiki/Licenses
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program; if not, write to:
  * Free Software Foundation, Inc.,
@@ -27,23 +27,98 @@ using namespace std;
 
 class CounterUTest : public CxxTest::TestSuite
 {
+	Counter<string, float> c1;
+	Counter<string, float> c2;
 public:
     CounterUTest() {
         // logger().setPrintToStdoutFlag(true);
         // logger().setLevel(Logger::FINE);
     }
 
+	void setUp() {
+        c1 = {{"a", 1}, {"b", 2}};
+        c2 = {{"b", 2}, {"c", 3}};
+	}
+
     void test_total_count() {
-        Counter<string, unsigned> c = {{"a", 2}, {"b", 3}};
-        TS_ASSERT_EQUALS(c.total_count(), 5);
+        TS_ASSERT_EQUALS(c2.total_count(), 5);
     }
-    
-    void test_addition() {
-        Counter<string, unsigned>
-            c1 = {{"a", 1}, {"b", 1}},
-            c2 = {{"b", 1}, {"c", 3}},
+
+	template<typename T>
+	struct cmpByContent {
+		bool operator()(const T a, const T b) const {
+			return *a < *b;
+		}
+	};
+
+	void test_cmp() {
+		int one = 1;
+		int otherone = 1;
+		int * key1 = &one;
+		int * key2 = &otherone;
+		Counter<int*, float> c1 = {{key1,1}},
+							 c2 = {{key1,1},{key2,1}};
+		Counter<int*, float, cmpByContent<int*>> cc1 = {{key1,1}},
+												 cc2 = {{key1,2}};
+		c1[key2] += 1;
+		cc1[key2] += 1;
+		TS_ASSERT_EQUALS(c1,c2);
+		TS_ASSERT_EQUALS(cc1,cc2);
+	}
+
+	void test_addition() {
+        Counter<string, float>
             c3 = c1 + c2,
-            expected_c = {{"a", 1}, {"b", 2}, {"c", 3}};
+            expected_c = {{"a", 1}, {"b", 4}, {"c", 3}};
+        TS_ASSERT_EQUALS(c3, expected_c);
+    }
+
+    void test_subtraction() {
+        Counter<string, float>
+            c3 = c1 - c2,
+            expected_c = {{"a", 1}, {"b", 0}, {"c", -3}};
+        TS_ASSERT_EQUALS(c3, expected_c);
+    }
+
+	void test_multiplication() {
+        Counter<string, float>
+            c3 = c1 * c2,
+            expected_c = {{"a", 1}, {"b", 4}, {"c", 0}};
+        TS_ASSERT_EQUALS(c3, expected_c);
+    }
+
+    void test_division() {
+        Counter<string, float>
+            c3 = c1 / c2,
+            expected_c = {{"a", 1}, {"b", 1}, {"c", 0}};
+        TS_ASSERT_EQUALS(c3, expected_c);
+    }
+
+	void test_addition2() {
+        Counter<string, float>
+            c3 = c1 + 2,
+            expected_c = {{"a", 3}, {"b", 4}};
+        TS_ASSERT_EQUALS(c3, expected_c);
+    }
+
+    void test_subtraction2() {
+        Counter<string, float>
+            c3 = c1 - 2,
+            expected_c = {{"a", -1}, {"b", 0}};
+        TS_ASSERT_EQUALS(c3, expected_c);
+    }
+
+	void test_multiplication2() {
+        Counter<string, float>
+            c3 = c1 * 2,
+            expected_c = {{"a", 2}, {"b", 4}};
+        TS_ASSERT_EQUALS(c3, expected_c);
+    }
+
+    void test_division2() {
+        Counter<string, float>
+            c3 = c1 / 2,
+            expected_c = {{"a", 0.5}, {"b", 1}};
         TS_ASSERT_EQUALS(c3, expected_c);
     }
 };
