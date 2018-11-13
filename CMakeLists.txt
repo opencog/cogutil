@@ -100,19 +100,6 @@ SET(CPACK_PACKAGE_VERSION_PATCH ${CMAKE_MATCH_1})
 # version-control independent means of declaring versioning.
 SET(SEMANTIC_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 
-# NOTE: `git describe` returns an output with count of commits after the last
-# annotated-tags. This makes relasing multiple daily builds easy as the
-# installed packgaes can easily be sorted. If that doesn't work then for
-# debian packages 'Breaks' and 'Replaces' fields might have to be used.
-EXECUTE_PROCESS(COMMAND  git describe --long "--match=*${SEMANTIC_VERSION}*"
-	OUTPUT_VARIABLE COGUTIL_GIT_VERSION
-	RESULT_VARIABLE RV
-	OUTPUT_STRIP_TRAILING_WHITESPACE)
-IF(${RV})
-	MESSAGE(WARNING "\nThere is no git annotated-tag with semantic-version = "
-	${SEMANTIC_VERSION})
-ENDIF()
-
 
 # ===============================================================
 # Detect different compilers and OS'es, tweak flags as necessary.
@@ -328,15 +315,12 @@ ADD_CUSTOM_TARGET(cscope
 
 # Packaging
 # For what architecture the package is for
-# TODO: Will give error on non debian distros.
+# TODO: Will give error on non debian distros, fix it.
 EXECUTE_PROCESS(COMMAND  dpkg --print-architecture
 	OUTPUT_VARIABLE PACKAGE_ARCHITECTURE
 	OUTPUT_STRIP_TRAILING_WHITESPACE)
-# Cleanup because debain version require that it starts with a number.
-STRING(REGEX MATCH "([0-9]+[0-9.]+)-([a-zA-Z0-9-]+)$"
-	_ "${COGUTIL_GIT_VERSION}")
-SET(CPACK_PACKAGE_VERSION "${CMAKE_MATCH_0}")
-
+STRING(TIMESTAMP UTC_DATE %Y%m%d UTC)
+SET(CPACK_PACKAGE_VERSION "${SEMANTIC_VERSION}-${UTC_DATE}")
 SET(CPACK_PACKAGE_CONTACT "opencog@googlegroups.com")
 SET(CPACK_GENERATOR "DEB")
 SET(CPACK_PACKAGE_FILE_NAME
