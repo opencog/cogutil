@@ -29,12 +29,12 @@
 namespace opencog {
 
 const char* getUserName() { 
-    const char* username = getenv("LOGNAME");
-    if (username == NULL)
-        username = getenv("USER");
-    if (username == NULL)
-        username = "unknown_user";
-    return username;
+	const char* username = getenv("LOGNAME");
+	if (username == NULL)
+		username = getenv("USER");
+	if (username == NULL)
+		username = "unknown_user";
+	return username;
 }
 
 } // ~namespace opencog
@@ -54,21 +54,21 @@ namespace opencog
 
 char* __strtok_r(char *s1, const char *s2, char **lasts)
 {
-    char *ret;
+	char *ret;
 
-    if (s1 == NULL)
-        s1 = *lasts;
-    while (*s1 && strchr(s2, *s1))
-        ++s1;
-    if (*s1 == '\0')
-        return NULL;
-    ret = s1;
-    while (*s1 && !strchr(s2, *s1))
-        ++s1;
-    if (*s1)
-        *s1++ = '\0';
-    *lasts = s1;
-    return ret;
+	if (s1 == NULL)
+		s1 = *lasts;
+	while (*s1 && strchr(s2, *s1))
+		++s1;
+	if (*s1 == '\0')
+		return NULL;
+	ret = s1;
+	while (*s1 && !strchr(s2, *s1))
+		++s1;
+	if (*s1)
+		*s1++ = '\0';
+	*lasts = s1;
+	return ret;
 }
 
 #endif /* HAVE_STRTOK_R */
@@ -89,33 +89,33 @@ using namespace opencog;
 
 int opencog::round(float x)
 {
-    return ((x -(int)(x)) < 0.5 ) ? (int)x : (int)x + 1;
+	return ((x -(int)(x)) < 0.5 ) ? (int)x : (int)x + 1;
 }
 
 int opencog::gettimeofday(struct timeval* tp, void* tzp)
 {
-    struct _timeb timebuffer;
-    _ftime(&timebuffer);
-    tp->tv_sec = (long) timebuffer.time;
-    tp->tv_usec = timebuffer.millitm * 1000;
-    /* 0 indicates that the call succeeded. */
-    return 0;
+	struct _timeb timebuffer;
+	_ftime(&timebuffer);
+	tp->tv_sec = (long) timebuffer.time;
+	tp->tv_usec = timebuffer.millitm * 1000;
+	/* 0 indicates that the call succeeded. */
+	return 0;
 }
 
 void opencog::usleep(unsigned useconds)
 {
-    // Sleep is in milliseconds
-    // If 0 is passed to Sleep()
-    // It skips rest of thread scheduled time
-    // This is the best achievable with Millisecond
-    // resolution
-    Sleep((int)(useconds / 1000));
+	// Sleep is in milliseconds
+	// If 0 is passed to Sleep()
+	// It skips rest of thread scheduled time
+	// This is the best achievable with Millisecond
+	// resolution
+	Sleep((int)(useconds / 1000));
 }
 
 unsigned opencog::sleep(unsigned seconds)
 {
-    Sleep(seconds * 1000);
-    return 0;
+	Sleep(seconds * 1000);
+	return 0;
 }
 
 #ifndef HAVE_STRTOK_R
@@ -123,47 +123,47 @@ unsigned opencog::sleep(unsigned seconds)
 
 char* opencog::__strtok_r(char *s1, const char *s2, char **lasts)
 {
-    char *ret;
+	char *ret;
 
-    if (s1 == NULL)
-        s1 = *lasts;
-    while (*s1 && strchr(s2, *s1))
-        ++s1;
-    if (*s1 == '\0')
-        return NULL;
-    ret = s1;
-    while (*s1 && !strchr(s2, *s1))
-        ++s1;
-    if (*s1)
-        *s1++ = '\0';
-    *lasts = s1;
-    return ret;
+	if (s1 == NULL)
+		s1 = *lasts;
+	while (*s1 && strchr(s2, *s1))
+		++s1;
+	if (*s1 == '\0')
+		return NULL;
+	ret = s1;
+	while (*s1 && !strchr(s2, *s1))
+		++s1;
+	if (*s1)
+		*s1++ = '\0';
+	*lasts = s1;
+	return ret;
 }
 
 #endif /* HAVE_STRTOK_R */
 
 int opencog::__getpid(void)
 {
-    return _getpid();
+	return _getpid();
 }
 
 double opencog::rint(double nr)
 {
-    double f = floor(nr);
-    double c = ceil(nr);
-    return (((c -nr) >= (nr - f)) ? f : c);
+	double f = floor(nr);
+	double c = ceil(nr);
+	return (((c -nr) >= (nr - f)) ? f : c);
 }
 
 int opencog::__dup2(int fd1, int fd2)
 {
-    return _dup2(fd1, fd2);
+	return _dup2(fd1, fd2);
 }
 
 unsigned long long opencog::atoll(const char *str)
 {
-    unsigned long long la = 0;
-    sscanf(str, "%Lu", &la);
-    return la;
+	unsigned long long la = 0;
+	sscanf(str, "%Lu", &la);
+	return la;
 }
 
 #endif // WIN32_NOT_UNIX
@@ -175,15 +175,15 @@ unsigned long long opencog::atoll(const char *str)
 // Return memory usage per sbrk system call.
 size_t opencog::getMemUsage()
 {
-    static void *old_sbrk = 0;
-    void *p = sbrk(0);
-    if (old_sbrk == 0 || old_sbrk > p) 
-    {
-        old_sbrk = p;
-        return 0;
-    }
-    size_t diff = (size_t)p - (size_t)old_sbrk;
-    return diff;
+	static void *old_sbrk = 0;
+	void *p = sbrk(0);
+	if (old_sbrk == 0 || old_sbrk > p) 
+	{
+		old_sbrk = p;
+		return 0;
+	}
+	size_t diff = (size_t)p - (size_t)old_sbrk;
+	return diff;
 }
 
 #ifdef __APPLE__
@@ -201,11 +201,11 @@ uint64_t opencog::getTotalRAM()
    len = sizeof(physmem);
    sysctl(mib, 2, &physmem, &len, NULL, 0);
    return physmem;
-    
+	
 }
 
 uint64_t opencog::getFreeRAM() {
-    return getTotalRAM() - getMemUsage();
+	return getTotalRAM() - getMemUsage();
 }
 
 #else // __APPLE__
@@ -213,13 +213,13 @@ uint64_t opencog::getFreeRAM() {
 
 uint64_t opencog::getTotalRAM()
 {
-    // return getpagesize() * get_phys_pages();
-    return getpagesize() * sysconf(_SC_PHYS_PAGES);
+	// return getpagesize() * get_phys_pages();
+	return getpagesize() * sysconf(_SC_PHYS_PAGES);
 }
 
 uint64_t opencog::getFreeRAM()
 {
-    // return getpagesize() * get_avphys_pages();
-    return getpagesize() * sysconf(_SC_AVPHYS_PAGES);
+	// return getpagesize() * get_avphys_pages();
+	return getpagesize() * sysconf(_SC_AVPHYS_PAGES);
 }
 #endif // __APPLE__

@@ -16,29 +16,29 @@
 // Example usage:
 //
 // void foo(int x, std::vector<int> y) {
-//    printf ("ola %d (%d) [%d %d %d]\n", x, y.size(), y[0], y[1], y[2]);
+//	  printf ("ola %d (%d) [%d %d %d]\n", x, y.size(), y[0], y[1], y[2]);
 // }
 //
 // main () {
-//     SigSlot<int, std::vector<int>> siggy;
-//     siggy.connect(foo);
-//     siggy.emit(42, {68,69,70});
+//	   SigSlot<int, std::vector<int>> siggy;
+//	   siggy.connect(foo);
+//	   siggy.emit(42, {68,69,70});
 // }
 //
 // The following also works:
 //
 // class Bar { public:
-//     void baz(int x, std::vector<int> y) {
-//         printf ("ciao %d\n", x);
-//     }};
+//	   void baz(int x, std::vector<int> y) {
+//		   printf ("ciao %d\n", x);
+//	   }};
 //
 // main () {
-//     Bar bell;
-//     SigSlot<int, std::vector<int>> siggy;
-//     auto glub = std::bind(&Bar::baz, bell,
-//              std::placeholders::_1, std::placeholders::_2);
-//     siggy.connect(glub);
-//     siggy.emit(42, {68,69,70});
+//	   Bar bell;
+//	   SigSlot<int, std::vector<int>> siggy;
+//	   auto glub = std::bind(&Bar::baz, bell,
+//				std::placeholders::_1, std::placeholders::_2);
+//	   siggy.connect(glub);
+//	   siggy.emit(42, {68,69,70});
 // }
 
 template <typename... ARGS>
@@ -73,16 +73,16 @@ class SigSlot
 		// XXX Something like this should work, but I can't get it to go.
 		//
 		// class Bar { public:
-		//     void baz(int x, std::vector<int> y) {
-		//         printf ("ciao %d\n", x);
-		//     }
+		//	   void baz(int x, std::vector<int> y) {
+		//		   printf ("ciao %d\n", x);
+		//	   }
 		// };
 		//
 		// main() {
-		//     Bar bell;
-		//     SigSlot<int, std::vector<int>> siggy;
-		//     siggy.connect_m(&Bar::baz, bell);
-		//     siggy.emit(42, {68,69,70});
+		//	   Bar bell;
+		//	   SigSlot<int, std::vector<int>> siggy;
+		//	   siggy.connect_m(&Bar::baz, bell);
+		//	   siggy.emit(42, {68,69,70});
 		// }
 		template <typename FN, typename... AR>
 		int connect(FN&& fn, AR&& ... ag)

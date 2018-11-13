@@ -33,83 +33,83 @@
 namespace opencog
 {
 /** \addtogroup grp_cogutil
- *  @{
+ *	@{
  */
 
 //! library-wide configuration; keys and values are strings
 class Config
 {
 protected:
-    std::map<std::string, std::string> _table;
-    bool _no_config_loaded;
-    bool _had_to_search;
-    std::string _path_where_found;
-    std::string _abs_path;
-    std::string _cfg_filename;
+	std::map<std::string, std::string> _table;
+	bool _no_config_loaded;
+	bool _had_to_search;
+	std::string _path_where_found;
+	std::string _abs_path;
+	std::string _cfg_filename;
 
-    void check_for_file(std::ifstream&, const char *, const char *);
-    void setup_logger();
+	void check_for_file(std::ifstream&, const char *, const char *);
+	void setup_logger();
 
 public:
-    //! constructor
-    ~Config();
-    //! destructor
-    Config();
+	//! constructor
+	~Config();
+	//! destructor
+	Config();
 
-    //! Returns a new Config instance.
-    static Config* createInstance(void);
+	//! Returns a new Config instance.
+	static Config* createInstance(void);
 
-    //! Reset configuration to default.
-    virtual void reset();
+	//! Reset configuration to default.
+	virtual void reset();
 
-    //! Parse the indicated file for parameter values.
-    void load(const char* config_file, bool resetFirst = true);
+	//! Parse the indicated file for parameter values.
+	void load(const char* config_file, bool resetFirst = true);
 
-    //! Location at which the config file was found.
-    const std::string& path_where_found() const { return _path_where_found; }
+	//! Location at which the config file was found.
+	const std::string& path_where_found() const { return _path_where_found; }
 
-    //! List of paths that were searched, in looking for the config file.
-    const std::vector<std::string> search_paths() const;
+	//! List of paths that were searched, in looking for the config file.
+	const std::vector<std::string> search_paths() const;
 
-    //! Name of the file that was actually searched for.
-    const std::string& search_file() const { return _cfg_filename; }
+	//! Name of the file that was actually searched for.
+	const std::string& search_file() const { return _cfg_filename; }
 
-    //! Return true if a parameter exists.
-    const bool has(const std::string &parameter_name) const;
+	//! Return true if a parameter exists.
+	const bool has(const std::string &parameter_name) const;
 
-    //! Set the value of a given parameter.
-    void set(const std::string &parameter_name, const std::string &parameter_value);
+	//! Set the value of a given parameter.
+	void set(const std::string &parameter_name, const std::string &parameter_value);
 
-    //! Return current value of a given parameter.
-    const std::string& get(const std::string &, const std::string& = "") const;
-    //! Return current value of a given parameter.
-    const std::string& operator[](const std::string &) const;
+	//! Return current value of a given parameter.
+	const std::string& get(const std::string &, const std::string& = "") const;
+	//! Return current value of a given parameter.
+	const std::string& operator[](const std::string &) const;
 
-    //! Return current value of a given parameter as an integer.
-    int get_int(const std::string &, int = 0) const;
+	//! Return current value of a given parameter as an integer.
+	int get_int(const std::string &, int = 0) const;
 
-    //! Return current value of a given parameter as an long.
-    long get_long(const std::string &, long = 0) const;
+	//! Return current value of a given parameter as an long.
+	long get_long(const std::string &, long = 0) const;
 
-    //! Return current value of a given parameter as a double.
-    double get_double(const std::string &, double = 0.0) const;
+	//! Return current value of a given parameter as a double.
+	double get_double(const std::string &, double = 0.0) const;
 
-    //! Return current value of a given parameter as a boolean.
-    bool get_bool(const std::string &, bool = false) const;
+	//! Return current value of a given parameter as a boolean.
+	bool get_bool(const std::string &, bool = false) const;
 
-    //! Dump all configuration parameters to a string.
-    std::string to_string() const;
+	//! Dump all configuration parameters to a string.
+	std::string to_string() const;
 };
 
 //! singleton instance (following meyer's design pattern)
 /**
  * Nil: if overwrite is true then the static variable instance@n
- *      is changed with the createInstance provided@n
- *      it is a temporary dirty hack@n
+ *		is changed with the createInstance provided@n
+ *		it is a temporary dirty hack@n
  */
 typedef Config* ConfigFactory(void);
 Config& config(ConfigFactory* = Config::createInstance,
-               bool overwrite = false);
+			   bool overwrite = false);
 
 /** @}*/
 } // namespace opencog

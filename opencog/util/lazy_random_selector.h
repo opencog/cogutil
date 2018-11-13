@@ -30,7 +30,7 @@
 namespace opencog
 {
 /** \addtogroup grp_cogutil
- *  @{
+ *	@{
  */
 
 //! a lazy random selector without replacement
@@ -40,14 +40,14 @@ namespace opencog
  * each in O(1) and only uses O(m) memory - useful where u-l is much larger than m
  */
 struct lazy_random_selector : public lazy_selector {
-    lazy_random_selector(unsigned int u,
-                         opencog::RandGen& _rng = randGen());
-    lazy_random_selector(unsigned int u, unsigned int l,
-                         opencog::RandGen& _rng = randGen());
+	lazy_random_selector(unsigned int u,
+						 opencog::RandGen& _rng = randGen());
+	lazy_random_selector(unsigned int u, unsigned int l,
+						 opencog::RandGen& _rng = randGen());
 protected:
-    unsigned int select();
+	unsigned int select();
 private:
-    opencog::RandGen& rng;
+	opencog::RandGen& rng;
 };
 
 /** @}*/

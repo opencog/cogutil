@@ -29,38 +29,38 @@
 namespace opencog
 {
 /** \addtogroup grp_cogutil
- *  @{
+ *	@{
  */
 
 class MT19937RandGen : public RandGen
 {
 public:
 
-    MT19937RandGen(result_type s);
+	MT19937RandGen(result_type s);
 
-    //! random int between 0 and max rand number.
-    int randint();
+	//! random int between 0 and max rand number.
+	int randint();
 
-    //! random float in [0,1]
-    float randfloat();
+	//! random float in [0,1]
+	float randfloat();
 
-    //! random double in [0,1]
-    double randdouble();
+	//! random double in [0,1]
+	double randdouble();
 
-    //! random double in [0,1)
-    double randdouble_one_excluded();
+	//! random double in [0,1)
+	double randdouble_one_excluded();
 
-    //! random int in [0,n)
-    int randint(int n);
+	//! random int in [0,n)
+	int randint(int n);
 
-    //! return -1 or 1 randonly
-    int rand_positive_negative();
+	//! return -1 or 1 randonly
+	int rand_positive_negative();
 
-    //! random boolean
-    bool randbool();
+	//! random boolean
+	bool randbool();
 
-    //! random discrete distribution according to some weights
-    int rand_discrete(const std::vector<double>&);
+	//! random discrete distribution according to some weights
+	int rand_discrete(const std::vector<double>&);
 };
 
 /**

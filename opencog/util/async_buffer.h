@@ -39,7 +39,7 @@
 namespace opencog
 {
 /** \addtogroup grp_cogutil
- *  @{
+ *	@{
  */
 
 /**
@@ -49,7 +49,7 @@ namespace opencog
  * asynchornously. It is similar to the async_caller class, in that
  * it calls the indicated method in some different thread, at some
  * later time. Unlike the async caller, it de-duplicates the data
- * before making the call.  That is, if the call is queued multiple
+ * before making the call.	That is, if the call is queued multiple
  * times with the same data, if will be called only once, for that
  * data item.
  *
@@ -70,7 +70,7 @@ namespace opencog
  * async_caller calss does: The buffering helps, if each call
  * takes a long time to run, or if it blocks waiting on I/O.  By
  * running in a different thread, it allows the current thread to
- * return immediately.  It also enables concurrency: a large number of
+ * return immediately.	It also enables concurrency: a large number of
  * threads can handle the time-consuming work in parallel, while the
  * master thread can zip along.
  *
@@ -97,8 +97,8 @@ namespace opencog
  * really is just an async method call. XXX TODO FIXME someday.
  *
  * The number of threads to use for writing is fixed, when the ctor is
- * called.  The default is 4 threads.  This can be set to zero, if
- * desired; as a result, all writes will be *synchronous*.  This can
+ * called.	The default is 4 threads.  This can be set to zero, if
+ * desired; as a result, all writes will be *synchronous*.	This can
  * be a useful thing to do, if this class is being used in a temporary
  * instance somewhere, and the overhead of creating threads is to be
  * avoided. (For example, temporary AtomTables used during evaluation.)
@@ -179,8 +179,8 @@ class async_buffer
 /// to 4 if not specified.
 template<typename Writer, typename Element>
 async_buffer<Writer, Element>::async_buffer(Writer* wr,
-                                            void (Writer::*cb)(const Element&),
-                                            int nthreads)
+											void (Writer::*cb)(const Element&),
+											int nthreads)
 {
 	_writer = wr;
 	_do_write = cb;
@@ -229,7 +229,7 @@ void async_buffer<Writer, Element>::set_watermarks(size_t hi, size_t lo)
 /// Intentionally stall the writer threads, prevent them from writing
 /// until at least _low_watermark elements have accumulated in the pool.
 /// The goal here is to allow the de-duplication services to actually
-/// do thier work.  This has the dangerous side-effect of potentially
+/// do thier work.	This has the dangerous side-effect of potentially
 /// leaving eleemnts in the set forever, never quite getting them
 /// written out. Caveat emptor! You may want to flush periodically,
 /// to avoid this situation.
@@ -310,7 +310,7 @@ void async_buffer<Writer, Element>::stop_writer_threads()
 }
 
 
-/// Drain the set.  Non-synchronizing.
+/// Drain the set.	Non-synchronizing.
 ///
 /// This is NOT synchronizing! It does NOT prevent other threads from
 /// concurrently adding to the queue! Thus, if these other threads are
@@ -339,7 +339,7 @@ void async_buffer<Writer, Element>::flush()
 	_stall_writers = save_stall;
 }
 
-/// Drain the set.  Synchronizing.
+/// Drain the set.	Synchronizing.
 ///
 /// This forces a drain of the pending work-set. It prevents other
 /// threads from adding to the set, while this is being done.
@@ -437,7 +437,7 @@ void async_buffer<Writer, Element>::insert(const Element& elt)
 
 	// If the writer threads are falling behind, mitigate.
 	// Right now, this will be real simple: just spin and wait
-	// for things to catch up.  Maybe we should launch more threads!?
+	// for things to catch up.	Maybe we should launch more threads!?
 	// Note also: even as we block this thread, waiting for the drain
 	// to complete, other threads might be filling the set back up.
 	// If it does over-fill, then those threads will also block, one

@@ -40,7 +40,7 @@
 namespace opencog
 {
 /** \addtogroup grp_cogutil
- *  @{
+ *	@{
  */
 
 /**
@@ -51,7 +51,7 @@ namespace opencog
  * thread, at some later time. This can be very handy if the method
  * takes a long time to run, or if it blocks waiting on I/O.  By
  * running in a different thread, it allows the current thread to
- * return immediately.  It also enables concurrency: a large number of
+ * return immediately.	It also enables concurrency: a large number of
  * threads can handle the time-consuming work in parallel, while the
  * master thread can zip along.
  *
@@ -78,8 +78,8 @@ namespace opencog
  * really is just an async method call. XXX TODO FIXME someday.
  *
  * The number of threads to use for writing is fixed, when the ctor is
- * called.  The default is 4 threads.  This can be set to zero, if
- * desired; as a result, all writes will be *synchronous*.  This can
+ * called.	The default is 4 threads.  This can be set to zero, if
+ * desired; as a result, all writes will be *synchronous*.	This can
  * be a useful thing to do, if this class is being used in a temporary
  * instance somewhere, and the overhead of creating threads is to be
  * avoided. (For example, temporary AtomTables used during evaluation.)
@@ -153,8 +153,8 @@ class async_caller
 /// to 4 if not specified.
 template<typename Writer, typename Element>
 async_caller<Writer, Element>::async_caller(Writer* wr,
-                                            void (Writer::*cb)(const Element&),
-                                            int nthreads)
+											void (Writer::*cb)(const Element&),
+											int nthreads)
 {
 	_writer = wr;
 	_do_write = cb;
@@ -376,7 +376,7 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 
 	// If the writer threads are falling behind, mitigate.
 	// Right now, this will be real simple: just spin and wait
-	// for things to catch up.  Maybe we should launch more threads!?
+	// for things to catch up.	Maybe we should launch more threads!?
 	// Note also: even as we block this thread, waiting for the drain
 	// to complete, other threads might be filling the queue back up.
 	// If it does over-fill, then those threads will also block, one

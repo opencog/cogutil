@@ -31,7 +31,7 @@
 
 namespace opencog {
 /** \addtogroup grp_cogutil
- *  @{
+ *	@{
  */
 
 //! Thread-safe blocking resource allocator.
@@ -55,7 +55,7 @@ namespace opencog {
 ///
 /// A typical usage would be to create the pool in some master thread,
 /// call `give_back()` N times to place N items in the pool, and then
-/// let other threads start borrowing.  Alternately, other threads
+/// let other threads start borrowing.	Alternately, other threads
 /// can start borrowing right away; they'll block until someone puts
 /// something into the pool.
 ///
@@ -75,40 +75,40 @@ namespace opencog {
 template<typename Resource>
 class pool
 {
-    public:
-        /// Fetch a resource from the pool. Block if the pool is empty.
-        /// If blocked, this will unblock when a resource is put into
-        /// the pool.
-        Resource& borrow()
-        {
-            std::unique_lock<std::mutex> lock(mu);
-            while (objs.empty()) {
-                cond.wait(lock);
-            }
-            Resource& rv = objs.front();
-            objs.pop();
-            return rv;
-        }
+	public:
+		/// Fetch a resource from the pool. Block if the pool is empty.
+		/// If blocked, this will unblock when a resource is put into
+		/// the pool.
+		Resource& borrow()
+		{
+			std::unique_lock<std::mutex> lock(mu);
+			while (objs.empty()) {
+				cond.wait(lock);
+			}
+			Resource& rv = objs.front();
+			objs.pop();
+			return rv;
+		}
 
-        /// Put a resource into the pool.  If the pool is empty, and
-        /// other threads are blocked and waiting, this will release
-        /// some other blocked thread.
-        void give_back(Resource& obj)
-        {
-            std::lock_guard<std::mutex> lock(mu);
-            objs.push(obj);
-            cond.notify_one();
-        }
+		/// Put a resource into the pool.  If the pool is empty, and
+		/// other threads are blocked and waiting, this will release
+		/// some other blocked thread.
+		void give_back(Resource& obj)
+		{
+			std::lock_guard<std::mutex> lock(mu);
+			objs.push(obj);
+			cond.notify_one();
+		}
 
-        size_t available()
-        {
-            return objs.size();
-        }
+		size_t available()
+		{
+			return objs.size();
+		}
 
-    private:
-        std::mutex mu;
-        std::condition_variable cond;
-        std::queue<Resource> objs;
+	private:
+		std::mutex mu;
+		std::condition_variable cond;
+		std::queue<Resource> objs;
 };
 
 

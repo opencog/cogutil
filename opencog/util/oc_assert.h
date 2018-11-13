@@ -5,7 +5,7 @@
  * All Rights Reserved
  *
  * Written by Thiago Maia <thiago@vettatech.com>
- *            Andre Senna <senna@vettalabs.com>
+ *			  Andre Senna <senna@vettalabs.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License v3 as
@@ -29,30 +29,30 @@
 #include <opencog/util/exceptions.h>
 
 /** \addtogroup grp_cogutil
- *  @{
+ *	@{
  */
 
 /** @name Assertions
- *  Macro OC_ASSERT corresponding to opencog::cassert(TRACE_INFO, ...)
- *  if IGNORE_OC_ASSERT is not defined, and ignored otherwise.
+ *	Macro OC_ASSERT corresponding to opencog::cassert(TRACE_INFO, ...)
+ *	if IGNORE_OC_ASSERT is not defined, and ignored otherwise.
  *
- *  To disable assertions:
- *  @code
- *  #define IGNORE_OC_ASSERT
- *  @endcode
+ *	To disable assertions:
+ *	@code
+ *	#define IGNORE_OC_ASSERT
+ *	@endcode
  */
 ///@{
 
 #ifndef IGNORE_OC_ASSERT
 #define OC_ASSERT(cond,...) \
-    /* Test cond first, so that __VA_ARGS__ are NOT evaluated */ \
-    /* unless cond is false! (Sometimes, evaluating the args is */ \
-    /* CPU intensive, and/or requires taking locks!) */ \
-    { bool test = (cond); \
-    if (not test) opencog::cassert(TRACE_INFO, test, ##__VA_ARGS__); }
+	/* Test cond first, so that __VA_ARGS__ are NOT evaluated */ \
+	/* unless cond is false! (Sometimes, evaluating the args is */ \
+	/* CPU intensive, and/or requires taking locks!) */ \
+	{ bool test = (cond); \
+	if (not test) opencog::cassert(TRACE_INFO, test, ##__VA_ARGS__); }
 #else
 #define OC_ASSERT(...) \
-    ((void)0)
+	((void)0)
 #endif
 
 namespace opencog {

@@ -28,7 +28,7 @@
 
 namespace opencog {
 /** \addtogroup grp_cogutil
- *  @{
+ *	@{
  */
 
 //! Return a rank given a counter. Ties ranks are averaged.
@@ -38,13 +38,13 @@ namespace opencog {
  */
 template<typename Key, typename FloatT>
 Counter<Key, FloatT> ranking(const Counter<Key, FloatT>& counter) {
-    Counter<Key, FloatT> res;
-    FloatT lrank = 1;
-    for (const auto& v : counter) {
-        res.insert(res.end(), {v.first, (2*lrank + v.second - 1) / 2});
-        lrank += v.second;
-    }
-    return res;
+	Counter<Key, FloatT> res;
+	FloatT lrank = 1;
+	for (const auto& v : counter) {
+		res.insert(res.end(), {v.first, (2*lrank + v.second - 1) / 2});
+		lrank += v.second;
+	}
+	return res;
 }
 
 /** @}*/

@@ -28,7 +28,7 @@
 // needed by CHECK_FREAD
 #include <boost/current_function.hpp>
 /** \addtogroup grp_cogutil
- *  @{
+ *	@{
  */
 
 //! helper to create strings at compile time
@@ -43,11 +43,11 @@
 //! to false for failure; b_read must have beed declared before:
 //! bool b_read = true;
 #define FREAD_CK(ptr,size,count,stream) \
-    b_read = b_read && (fread(ptr,size,count,stream)==(size_t)count)
+	b_read = b_read && (fread(ptr,size,count,stream)==(size_t)count)
 //! check the b_read used for fread function and throw an exception
 //! if b_read is false
 #define CHECK_FREAD \
-    { if ( !b_read ) throw IOException(TRACE_INFO, "%s - failed to read.", BOOST_CURRENT_FUNCTION ); }
+	{ if ( !b_read ) throw IOException(TRACE_INFO, "%s - failed to read.", BOOST_CURRENT_FUNCTION ); }
 
 
 /** @}*/

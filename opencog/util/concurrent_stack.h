@@ -33,7 +33,7 @@
 #include <mutex>
 
 /** \addtogroup grp_cogutil
- *  @{
+ *	@{
  */
 
 //! Represents a thread-safe first in-first out list.
@@ -58,160 +58,160 @@ template<typename Element>
 class concurrent_stack
 {
 private:
-    std::stack<Element> the_stack;
-    mutable std::mutex the_mutex;
-    std::condition_variable the_cond;
-    bool is_canceled;
+	std::stack<Element> the_stack;
+	mutable std::mutex the_mutex;
+	std::condition_variable the_cond;
+	bool is_canceled;
 
 public:
-    concurrent_stack()
-        : the_stack(), the_mutex(), the_cond(), is_canceled(false)
-    {}
-    concurrent_stack(const concurrent_stack&) = delete;  // disable copying
-    concurrent_stack& operator=(const concurrent_stack&) = delete; // no assign
+	concurrent_stack()
+		: the_stack(), the_mutex(), the_cond(), is_canceled(false)
+	{}
+	concurrent_stack(const concurrent_stack&) = delete;  // disable copying
+	concurrent_stack& operator=(const concurrent_stack&) = delete; // no assign
 
-    struct Canceled : public std::exception
-    {
-        const char * what() { return "Cancellation of wait on concurrent_stack"; }
-    };
+	struct Canceled : public std::exception
+	{
+		const char * what() { return "Cancellation of wait on concurrent_stack"; }
+	};
 
-    /// Push the Element onto the stack.
-    void push(const Element& item)
-    {
-        std::unique_lock<std::mutex> lock(the_mutex);
-        if (is_canceled) throw Canceled();
-        the_stack.push(item);
-        lock.unlock();
-        the_cond.notify_one();
-    }
+	/// Push the Element onto the stack.
+	void push(const Element& item)
+	{
+		std::unique_lock<std::mutex> lock(the_mutex);
+		if (is_canceled) throw Canceled();
+		the_stack.push(item);
+		lock.unlock();
+		the_cond.notify_one();
+	}
 
-    /// Push the Element onto the stack, by moving it.
-    void push(Element&& item)
-    {
-        std::unique_lock<std::mutex> lock(the_mutex);
-        if (is_canceled) throw Canceled();
-        the_stack.push(std::move(item));
-        lock.unlock();
-        the_cond.notify_one();
-    }
+	/// Push the Element onto the stack, by moving it.
+	void push(Element&& item)
+	{
+		std::unique_lock<std::mutex> lock(the_mutex);
+		if (is_canceled) throw Canceled();
+		the_stack.push(std::move(item));
+		lock.unlock();
+		the_cond.notify_one();
+	}
 
-    /// Return true if the stack is empty.
-    bool is_empty() const
-    {
-        std::lock_guard<std::mutex> lock(the_mutex);
-        if (is_canceled) throw Canceled();
-        return the_stack.empty();
-    }
+	/// Return true if the stack is empty.
+	bool is_empty() const
+	{
+		std::lock_guard<std::mutex> lock(the_mutex);
+		if (is_canceled) throw Canceled();
+		return the_stack.empty();
+	}
 
-    /// Return the size of the stack.
-    /// Since the stack is time-varying, the size may become incorrect
-    /// shortly after this method returns.
-    unsigned int size() const
-    {
-        std::lock_guard<std::mutex> lock(the_mutex);
-        return the_stack.size();
-    }
+	/// Return the size of the stack.
+	/// Since the stack is time-varying, the size may become incorrect
+	/// shortly after this method returns.
+	unsigned int size() const
+	{
+		std::lock_guard<std::mutex> lock(the_mutex);
+		return the_stack.size();
+	}
 
-    /// Try to pop an element off the top of the stack. Return true
-    /// if success, else return false.
-    bool try_pop(Element& value)
-    {
-        std::lock_guard<std::mutex> lock(the_mutex);
-        if (is_canceled) throw Canceled();
-        if (the_stack.empty())
-        {
-            return false;
-        }
+	/// Try to pop an element off the top of the stack. Return true
+	/// if success, else return false.
+	bool try_pop(Element& value)
+	{
+		std::lock_guard<std::mutex> lock(the_mutex);
+		if (is_canceled) throw Canceled();
+		if (the_stack.empty())
+		{
+			return false;
+		}
 
-        value = the_stack.top();
-        the_stack.pop();
-        return true;
-    }
+		value = the_stack.top();
+		the_stack.pop();
+		return true;
+	}
 
-    /// Pop an item off the stack. Block if the stack is empty.
-    void pop(Element& value)
-    {
-        std::unique_lock<std::mutex> lock(the_mutex);
+	/// Pop an item off the stack. Block if the stack is empty.
+	void pop(Element& value)
+	{
+		std::unique_lock<std::mutex> lock(the_mutex);
 
-        // Use two nested loops here.  It can happen that the cond
-        // wakes up, and yet the stack is empty.  And calling front()
-        // on an empty stack is undefined and/or throws ick.
-        do
-        {
-            while (the_stack.empty() and not is_canceled)
-            {
-                the_cond.wait(lock);
-            }
-            if (is_canceled) throw Canceled();
-        }
-        while (the_stack.empty());
+		// Use two nested loops here.  It can happen that the cond
+		// wakes up, and yet the stack is empty.  And calling front()
+		// on an empty stack is undefined and/or throws ick.
+		do
+		{
+			while (the_stack.empty() and not is_canceled)
+			{
+				the_cond.wait(lock);
+			}
+			if (is_canceled) throw Canceled();
+		}
+		while (the_stack.empty());
 
-        value = the_stack.top();
-        the_stack.pop();
-    }
+		value = the_stack.top();
+		the_stack.pop();
+	}
 
-    Element pop()
-    {
-        Element value;
-        pop(value);
-        return value;
-    }
+	Element pop()
+	{
+		Element value;
+		pop(value);
+		return value;
+	}
 
-    std::stack<Element> wait_and_take_all()
-    {
-        std::unique_lock<std::mutex> lock(the_mutex);
+	std::stack<Element> wait_and_take_all()
+	{
+		std::unique_lock<std::mutex> lock(the_mutex);
 
-        // Use two nested loops here.  It can happen that the cond
-        // wakes up, and yet the stack is empty.
-        do
-        {
-            while (the_stack.empty() and not is_canceled)
-            {
-                the_cond.wait(lock);
-            }
-            if (is_canceled) throw Canceled();
-        }
-        while (the_stack.empty());
+		// Use two nested loops here.  It can happen that the cond
+		// wakes up, and yet the stack is empty.
+		do
+		{
+			while (the_stack.empty() and not is_canceled)
+			{
+				the_cond.wait(lock);
+			}
+			if (is_canceled) throw Canceled();
+		}
+		while (the_stack.empty());
 
-        std::stack<Element> retval;
-        the_stack.swap(retval);
-        return retval;
-    }
+		std::stack<Element> retval;
+		the_stack.swap(retval);
+		return retval;
+	}
 
-    /// A weak barrier.  This will block as long as the queue is empty,
-    /// returning only when the queue isn't. It's "weak", because while
-    /// it waits, other threads may push and then pop something from
-    /// the queue, while this thread slept the entire time. However,
-    /// if this call does return, then the queue is almost surely not
-    /// empty.  "Almost surely" means that none of the other threads
-    /// that are currently waiting to pop from the queue will be woken.
-    void barrier()
-    {
-        std::unique_lock<std::mutex> lock(the_mutex);
+	/// A weak barrier.  This will block as long as the queue is empty,
+	/// returning only when the queue isn't. It's "weak", because while
+	/// it waits, other threads may push and then pop something from
+	/// the queue, while this thread slept the entire time. However,
+	/// if this call does return, then the queue is almost surely not
+	/// empty.	"Almost surely" means that none of the other threads
+	/// that are currently waiting to pop from the queue will be woken.
+	void barrier()
+	{
+		std::unique_lock<std::mutex> lock(the_mutex);
 
-        while (the_stack.empty() and not is_canceled)
-        {
-            the_cond.wait(lock);
-        }
-        if (is_canceled) throw Canceled();
-    }
+		while (the_stack.empty() and not is_canceled)
+		{
+			the_cond.wait(lock);
+		}
+		if (is_canceled) throw Canceled();
+	}
 
-    void cancel_reset()
-    {
-       // This doesn't lose data, but it instead allows new calls
-       // to not throw Canceled exceptions
-       std::lock_guard<std::mutex> lock(the_mutex);
-       is_canceled = false;
-    }
+	void cancel_reset()
+	{
+	   // This doesn't lose data, but it instead allows new calls
+	   // to not throw Canceled exceptions
+	   std::lock_guard<std::mutex> lock(the_mutex);
+	   is_canceled = false;
+	}
 
-    void cancel()
-    {
-       std::unique_lock<std::mutex> lock(the_mutex);
-       if (is_canceled) throw Canceled();
-       is_canceled = true;
-       lock.unlock();
-       the_cond.notify_all();
-    }
+	void cancel()
+	{
+	   std::unique_lock<std::mutex> lock(the_mutex);
+	   if (is_canceled) throw Canceled();
+	   is_canceled = true;
+	   lock.unlock();
+	   the_cond.notify_all();
+	}
 
 };
 /** @}*/

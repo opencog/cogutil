@@ -29,7 +29,7 @@
 namespace opencog
 {
 /** \addtogroup grp_cogutil
- *  @{
+ *	@{
  */
 
 //! apply lazy_selector but the select method returns always the same
@@ -40,14 +40,14 @@ namespace opencog
 // distribution with the given mean and deviation, right?
 ///
 struct lazy_normal_selector : public lazy_selector {
-    lazy_normal_selector(unsigned int n, unsigned int s = 0) :
-        lazy_selector(n), _s(s) {
-        OC_ASSERT(s < n);
-    }
+	lazy_normal_selector(unsigned int n, unsigned int s = 0) :
+		lazy_selector(n), _s(s) {
+		OC_ASSERT(s < n);
+	}
 protected:
-    unsigned int select();
+	unsigned int select();
 private:
-    unsigned int _s;
+	unsigned int _s;
 };
 
 /** @}*/

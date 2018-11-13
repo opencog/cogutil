@@ -43,38 +43,38 @@ namespace boost { namespace accumulators
 
 namespace impl
 {
-    ///////////////////////////////////////////////////////////////////////////////
-    // geometric_mean_impl
-    template<typename Sample, typename Tag>
-    struct geometric_mean_impl
-      : accumulator_base
-    {
-        // for boost::result_of
-        typedef Sample result_type;
+	///////////////////////////////////////////////////////////////////////////////
+	// geometric_mean_impl
+	template<typename Sample, typename Tag>
+	struct geometric_mean_impl
+	  : accumulator_base
+	{
+		// for boost::result_of
+		typedef Sample result_type;
 
-        template<typename Args>
-        geometric_mean_impl(Args const &args)
-          : prod(1.0)
-        {
-        }
+		template<typename Args>
+		geometric_mean_impl(Args const &args)
+		  : prod(1.0)
+		{
+		}
 
-        template<typename Args>
-        void operator ()(Args const &args)
-        {
-            // what about overflow?
-            this->prod *= args[parameter::keyword<Tag>::get()];
-        }
+		template<typename Args>
+		void operator ()(Args const &args)
+		{
+			// what about overflow?
+			this->prod *= args[parameter::keyword<Tag>::get()];
+		}
 
-        template<typename Args>
-        result_type result(Args const &args) const
-        {
-            return std::pow(this->prod, 1.0 / count(args));
-        }
+		template<typename Args>
+		result_type result(Args const &args) const
+		{
+			return std::pow(this->prod, 1.0 / count(args));
+		}
 
-    private:
+	private:
 
-        Sample prod;
-    };
+		Sample prod;
+	};
 
 } // namespace impl
 
@@ -83,13 +83,13 @@ namespace impl
 //
 namespace tag
 {
-    struct geometric_mean
-      : depends_on<count>
-    {
-        /// INTERNAL ONLY
-        ///
-        typedef accumulators::impl::geometric_mean_impl<mpl::_1, tag::sample> impl;
-    };
+	struct geometric_mean
+	  : depends_on<count>
+	{
+		/// INTERNAL ONLY
+		///
+		typedef accumulators::impl::geometric_mean_impl<mpl::_1, tag::sample> impl;
+	};
 
 }
 
@@ -98,9 +98,9 @@ namespace tag
 //
 namespace extract
 {
-    extractor<tag::geometric_mean> const geometric_mean = {};
+	extractor<tag::geometric_mean> const geometric_mean = {};
 
-    BOOST_ACCUMULATORS_IGNORE_GLOBAL(geometric_mean)
+	BOOST_ACCUMULATORS_IGNORE_GLOBAL(geometric_mean)
 }
 
 using extract::geometric_mean;

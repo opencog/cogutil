@@ -28,7 +28,7 @@
 
 namespace opencog {
 /** \addtogroup grp_cogutil
- *  @{
+ *	@{
  */
 
 /**
@@ -42,29 +42,29 @@ namespace opencog {
 // boost::program_options API
 template<typename T>
 bool to_string(const boost::program_options::variable_value& vv,
-               std::string& str,
-               std::string separator)
+			   std::string& str,
+			   std::string separator)
 {
-    if(vv.value().type() == typeid(T)) {
-        str = boost::lexical_cast<std::string>(vv.as<T>());
-        return true;
-    } else if(vv.value().type() == typeid(std::vector<T>)) {
-        str = opencog::container_to_str(vv.as<std::vector<T> >(), separator.c_str());
-        return true;
-    }
-    return false;
+	if(vv.value().type() == typeid(T)) {
+		str = boost::lexical_cast<std::string>(vv.as<T>());
+		return true;
+	} else if(vv.value().type() == typeid(std::vector<T>)) {
+		str = opencog::container_to_str(vv.as<std::vector<T> >(), separator.c_str());
+		return true;
+	}
+	return false;
 }
 std::string to_string(const boost::program_options::variable_value& vv,
-                      std::string separator = "_");
+					  std::string separator = "_");
 
 /**
  * determine a log file name automatically depending on its
  * boost.program_option.
  */
 std::string determine_log_name(const std::string& log_file_prefix,
-                               const boost::program_options::variables_map& vm,
-                               const std::set<std::string>& ignore_opt,
-                               const std::string& log_file_suffix = ".log");
+							   const boost::program_options::variables_map& vm,
+							   const std::set<std::string>& ignore_opt,
+							   const std::string& log_file_suffix = ".log");
 
 /** @}*/
 } // ~namespace opencog

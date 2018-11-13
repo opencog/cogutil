@@ -35,18 +35,18 @@ using namespace opencog;
 
 StringTokenizer::StringTokenizer()
 {
-    reset();
+	reset();
 
-    str.assign("");
-    delimiter.assign("");
+	str.assign("");
+	delimiter.assign("");
 }
 
 StringTokenizer::StringTokenizer(const std::string &str, const std::string &delimiter)
 {
-    reset();
+	reset();
 
-    this->str = str;
-    this->delimiter = delimiter;
+	this->str = str;
+	this->delimiter = delimiter;
 }
 
 StringTokenizer::~StringTokenizer()
@@ -55,88 +55,88 @@ StringTokenizer::~StringTokenizer()
 
 std::string StringTokenizer::get_string()
 {
-    return str;
+	return str;
 }
 
 void StringTokenizer::set_string(const std::string &str)
 {
-    this->str = str;
+	this->str = str;
 }
 
 const std::string & StringTokenizer::get_delimiter()
 {
-    return delimiter;
+	return delimiter;
 }
 
 void StringTokenizer::set_delimiter(const std::string &str)
 {
-    this->delimiter = str;
+	this->delimiter = str;
 }
 
 void StringTokenizer::reset()
 {
-    start = 0;
-    end = 0;
+	start = 0;
+	end = 0;
 }
 
 const std::string StringTokenizer::next_token()
 {
-    OC_ASSERT(str != "", "StringTokenizer - string should not be empty.");
-    OC_ASSERT(delimiter != "", "StringTokenized - delimiter should not be empty.");
+	OC_ASSERT(str != "", "StringTokenizer - string should not be empty.");
+	OC_ASSERT(delimiter != "", "StringTokenized - delimiter should not be empty.");
 
-    // end of the string
-    if (end == str.size()) {
-        return "";
-    }
+	// end of the string
+	if (end == str.size()) {
+		return "";
+	}
 
-    if (start ==  0 && end == 0) {
-        end = str.find(delimiter);
-        if ( end == std::string::npos ) {
-            end = str.size();
-        }
-        return str.substr(start, end - start);
-    }
+	if (start ==  0 && end == 0) {
+		end = str.find(delimiter);
+		if ( end == std::string::npos ) {
+			end = str.size();
+		}
+		return str.substr(start, end - start);
+	}
 
-    do {
-        start = end + delimiter_size();
-        if (start == str.size()) {
-            end = start;
-            return "";
-        }
-        end = str.find(delimiter, start);
-        if (end == std::string::npos) {
-            end = str.size();
-        }
-    } while ( str.substr(start, end - start) == delimiter || end == start);
+	do {
+		start = end + delimiter_size();
+		if (start == str.size()) {
+			end = start;
+			return "";
+		}
+		end = str.find(delimiter, start);
+		if (end == std::string::npos) {
+			end = str.size();
+		}
+	} while ( str.substr(start, end - start) == delimiter || end == start);
 
-    return str.substr(start, end - start);
+	return str.substr(start, end - start);
 }
 
 std::string::size_type StringTokenizer::delimiter_size()
 {
-    return delimiter.size();
+	return delimiter.size();
 }
 
 
 AltStringTokenizer::AltStringTokenizer(const std::string &rStr, const std::string &rDelimiters)
 {
-    std::string::size_type lastPos(rStr.find_first_not_of(rDelimiters, 0));
-    std::string::size_type pos(rStr.find_first_of(rDelimiters, lastPos));
-    while (std::string::npos != pos || std::string::npos != lastPos) {
-        push_back(rStr.substr(lastPos, pos - lastPos));
-        lastPos = rStr.find_first_not_of(rDelimiters, pos);
-        pos = rStr.find_first_of(rDelimiters, lastPos);
-    }
+	std::string::size_type lastPos(rStr.find_first_not_of(rDelimiters, 0));
+	std::string::size_type pos(rStr.find_first_of(rDelimiters, lastPos));
+	while (std::string::npos != pos || std::string::npos != lastPos) {
+		push_back(rStr.substr(lastPos, pos - lastPos));
+		lastPos = rStr.find_first_not_of(rDelimiters, pos);
+		pos = rStr.find_first_of(rDelimiters, lastPos);
+	}
 }
 
 std::vector<std::string> AltStringTokenizer::without_empty() const
 {
-    std::vector<std::string> ret;
+	std::vector<std::string> ret;
 
-    for (unsigned int i = 0; i < this->size(); i++)
-        if (!(*this)[i].empty())
-            ret.push_back((*this)[i]);
+	for (unsigned int i = 0; i < this->size(); i++)
+		if (!(*this)[i].empty())
+			ret.push_back((*this)[i]);
 
-    return ret;
+	return ret;
 }
 

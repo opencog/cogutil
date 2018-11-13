@@ -42,29 +42,29 @@ using boost::counting_iterator;
 using boost::bind;
 
 lazy_selector::lazy_selector(unsigned int u, unsigned int l)
-    : _u(u), _l(l) {
-    OC_ASSERT(u - l > 0, "you cannot select any thing from an empty list");
+	: _u(u), _l(l) {
+	OC_ASSERT(u - l > 0, "you cannot select any thing from an empty list");
 }
 
 bool lazy_selector::empty() const {
-    return _l >= _u;
+	return _l >= _u;
 }
 
 unsigned int lazy_selector::count_n_free() const {
-    return count_if(counting_iterator<unsigned int>(_l),
-                    counting_iterator<unsigned int>(_u),
-                    bind(&lazy_selector::is_free, this, _1));
+	return count_if(counting_iterator<unsigned int>(_l),
+					counting_iterator<unsigned int>(_u),
+					bind(&lazy_selector::is_free, this, _1));
 }
 
 void lazy_selector::reset_range(unsigned int new_u) {
-    _u = new_u;
+	_u = new_u;
 }
 void lazy_selector::reset_range(unsigned int new_u, unsigned int new_l) {
 	OC_ASSERT(new_l >= _l,
-	          "You cannot reset the lower bound by a lower number, "
-	          "due to the workings of the algorithm.");
-    _u = new_u;
-    _l = new_l;
+			  "You cannot reset the lower bound by a lower number, "
+			  "due to the workings of the algorithm.");
+	_u = new_u;
+	_l = new_l;
 }
 
 /**
@@ -81,30 +81,30 @@ void lazy_selector::reset_range(unsigned int new_u, unsigned int new_l) {
  */
 unsigned int lazy_selector::operator()()
 {
-    OC_ASSERT(!empty(), "lazy_selector - selector is empty.");
+	OC_ASSERT(!empty(), "lazy_selector - selector is empty.");
 
-    unsigned int sel_idx = select();
-    
-    // If the selected index points to nothing then the result is
-    // itself otherwise it is _l
-    unsigned int res = is_free(sel_idx) ? sel_idx : _l;
+	unsigned int sel_idx = select();
+	
+	// If the selected index points to nothing then the result is
+	// itself otherwise it is _l
+	unsigned int res = is_free(sel_idx) ? sel_idx : _l;
 
-    // Move _l from res so that it is now a free index
-    if(res == _l) increase_l_till_free();
+	// Move _l from res so that it is now a free index
+	if(res == _l) increase_l_till_free();
 
-    _picked.insert(res);
+	_picked.insert(res);
 
-    return res;
+	return res;
 }
 
 bool lazy_selector::is_free(unsigned int idx) const {
-    return _picked.find(idx) == _picked.end();
+	return _picked.find(idx) == _picked.end();
 }
 
 void lazy_selector::increase_l_till_free() {
-    do {
-        _l++;
-    } while(!is_free(_l));
+	do {
+		_l++;
+	} while(!is_free(_l));
 }
 
 } //~namespace opencog

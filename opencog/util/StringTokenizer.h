@@ -31,7 +31,7 @@
 namespace opencog
 {
 /** \addtogroup grp_cogutil
- *  @{
+ *	@{
  */
 
 //! Tokenize a string and produce a std::vector list of items
@@ -41,8 +41,8 @@ namespace opencog
 class AltStringTokenizer : public std::vector<std::string>
 {
 public:
-    AltStringTokenizer(const std::string &rStr, const std::string &rDelimiters = " ,\n");
-    std::vector<std::string> without_empty() const;
+	AltStringTokenizer(const std::string &rStr, const std::string &rDelimiters = " ,\n");
+	std::vector<std::string> without_empty() const;
 };
 
 //! Tokenize a string one call at a time
@@ -56,47 +56,47 @@ class StringTokenizer
 
 public:
 
-    /**
-     * Constructor and destructor
-     */
-    StringTokenizer();
-    StringTokenizer(const std::string &str, const std::string &delimiter);
-    ~StringTokenizer();
+	/**
+	 * Constructor and destructor
+	 */
+	StringTokenizer();
+	StringTokenizer(const std::string &str, const std::string &delimiter);
+	~StringTokenizer();
 
-    /**
-     * Getter and setter for the string to be parsed, that is, to extract
-     * its tokens.
-     */
-    std::string get_string();
-    void set_string(const std::string &str);
+	/**
+	 * Getter and setter for the string to be parsed, that is, to extract
+	 * its tokens.
+	 */
+	std::string get_string();
+	void set_string(const std::string &str);
 
-    //! Getter for the delimiter to the tokens.
-    const std::string & get_delimiter();
-    //! Setter for the delimiter to the tokens.
-    void set_delimiter(const std::string &str);
+	//! Getter for the delimiter to the tokens.
+	const std::string & get_delimiter();
+	//! Setter for the delimiter to the tokens.
+	void set_delimiter(const std::string &str);
 
-    /**
-     * Return the next token from the string. If the end of the string is
-     * reached the method retuns a empty string ""
-     */
-    const std::string next_token();
+	/**
+	 * Return the next token from the string. If the end of the string is
+	 * reached the method retuns a empty string ""
+	 */
+	const std::string next_token();
 
-    //! Reset the position pointers to init position.
-    void reset();
+	//! Reset the position pointers to init position.
+	void reset();
 
 private:
-    //! string to split
-    std::string str;
-    //! delimiter to use
-    std::string delimiter;
+	//! string to split
+	std::string str;
+	//! delimiter to use
+	std::string delimiter;
 
-    //! start position pointer
-    std::string::size_type start;
-    //! end position pointer
-    std::string::size_type end;
+	//! start position pointer
+	std::string::size_type start;
+	//! end position pointer
+	std::string::size_type end;
 
-    //! Inform the delimiter size
-    std::string::size_type delimiter_size();
+	//! Inform the delimiter size
+	std::string::size_type delimiter_size();
 
 }; // class
 

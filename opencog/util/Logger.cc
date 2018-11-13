@@ -7,9 +7,9 @@
  * All Rights Reserved
  *
  * Written by Andre Senna <senna@vettalabs.com>
- *            Gustavo Gama <gama@vettalabs.com>
- *            Linas Vepstas <linasvepstas@gmail.com>
- *            Joel Pitt <joel@opencog.org>
+ *			  Gustavo Gama <gama@vettalabs.com>
+ *			  Linas Vepstas <linasvepstas@gmail.com>
+ *			  Joel Pitt <joel@opencog.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License v3 as
@@ -69,7 +69,7 @@ using namespace opencog;
 const char* levelStrings[] = {"NONE", "ERROR", "WARN", "INFO", "DEBUG", "FINE"};
 
 #ifndef CYGWIN /// @todo backtrace and backtrace_symbols is UNIX, we
-              /// may need a WIN32 version
+			  /// may need a WIN32 version
 static void prt_backtrace(std::ostringstream& oss)
 {
 #define BT_BUFSZ 50
@@ -78,8 +78,8 @@ static void prt_backtrace(std::ostringstream& oss)
 	int stack_depth = backtrace(bt_buf, BT_BUFSZ);
 	char **syms = oc_backtrace_symbols(bt_buf, stack_depth);
 
-    // Depending on how the dependencies are met, syms could be NULL
-    if (syms == NULL) return;
+	// Depending on how the dependencies are met, syms could be NULL
+	if (syms == NULL) return;
 
 	// Start printing at a bit into the stack, so as to avoid recording
 	// the logger functions in the stack trace.
@@ -143,174 +143,174 @@ static void prt_backtrace(std::ostringstream& oss)
 
 Logger::~Logger()
 {
-    // Wait for queue to empty
-    if (_log_writer) _log_writer->flush();
+	// Wait for queue to empty
+	if (_log_writer) _log_writer->flush();
 }
 
 std::map<std::string, Logger::LogWriter*> Logger::_loggers;
 
 Logger::LogWriter::LogWriter(void)
 {
-    writingLoopActive = false;
+	writingLoopActive = false;
 #ifdef HAVE_VALGRIND
-    DRD_IGNORE_VAR(this->msg_queue);
+	DRD_IGNORE_VAR(this->msg_queue);
 #endif
-    logfile = NULL;
-    pending_write = false;
+	logfile = NULL;
+	pending_write = false;
 }
 
 Logger::LogWriter::~LogWriter()
 {
-    if (logfile == NULL) return;
+	if (logfile == NULL) return;
 
-    // Wait for queue to empty
-    flush();
-    stop_write_loop();
-    fclose(logfile);
+	// Wait for queue to empty
+	flush();
+	stop_write_loop();
+	fclose(logfile);
 }
 
 void Logger::LogWriter::start_write_loop()
 {
-    std::unique_lock<std::mutex> lock(the_mutex);
-    if (!writingLoopActive)
-    {
-        writingLoopActive = true;
-        writer_thread = std::thread(&Logger::LogWriter::writing_loop, this);
-    }
+	std::unique_lock<std::mutex> lock(the_mutex);
+	if (!writingLoopActive)
+	{
+		writingLoopActive = true;
+		writer_thread = std::thread(&Logger::LogWriter::writing_loop, this);
+	}
 }
 
 void Logger::LogWriter::stop_write_loop()
 {
-    std::unique_lock<std::mutex> lock(the_mutex);
-    msg_queue.cancel();
-    // rejoin thread
-    writer_thread.join();
-    writingLoopActive = false;
+	std::unique_lock<std::mutex> lock(the_mutex);
+	msg_queue.cancel();
+	// rejoin thread
+	writer_thread.join();
+	writingLoopActive = false;
 }
 
 void Logger::LogWriter::writing_loop()
 {
-    try
-    {
-        while (true)
-        {
-            // The pending_write flag prevents Logger::flush()
-            // from returning prematurely.
-            std::string* msg = msg_queue.pop();
-            pending_write = true;
-            write_msg(*msg);
-            pending_write = false;
-            delete msg;
-        }
-    }
-    catch (concurrent_queue< std::string* >::Canceled &e)
-    {
-        pending_write = false;
-        return;
-    }
+	try
+	{
+		while (true)
+		{
+			// The pending_write flag prevents Logger::flush()
+			// from returning prematurely.
+			std::string* msg = msg_queue.pop();
+			pending_write = true;
+			write_msg(*msg);
+			pending_write = false;
+			delete msg;
+		}
+	}
+	catch (concurrent_queue< std::string* >::Canceled &e)
+	{
+		pending_write = false;
+		return;
+	}
 }
 
 void Logger::flush()
 {
-    if (_log_writer) _log_writer->flush();
+	if (_log_writer) _log_writer->flush();
 }
 
 void Logger::LogWriter::flush()
 {
-    // There is a timing window between when pending_write is set,
-    // and the msg_queue being empty. We could fall through that
-    // window. Yes, its stupid, but too low-importance to fix.
-    // try to work around it by sleeping.
-    usleep(10);
+	// There is a timing window between when pending_write is set,
+	// and the msg_queue being empty. We could fall through that
+	// window. Yes, its stupid, but too low-importance to fix.
+	// try to work around it by sleeping.
+	usleep(10);
 
-    // Perhaps we could do this with semaphores, but this is not
-    // really critical code, so a busy-wait is good enough.
-    while (pending_write or not msg_queue.is_empty())
-    {
-        usleep(100);
-    }
+	// Perhaps we could do this with semaphores, but this is not
+	// really critical code, so a busy-wait is good enough.
+	while (pending_write or not msg_queue.is_empty())
+	{
+		usleep(100);
+	}
 
-    // Force a write to the disk. Don't need to update metadata, though.
-    if (logfile) fdatasync(fileno(logfile));
+	// Force a write to the disk. Don't need to update metadata, though.
+	if (logfile) fdatasync(fileno(logfile));
 }
 
 void Logger::LogWriter::write_msg(const std::string &msg)
 {
-    std::unique_lock<std::mutex> lock(the_mutex);
-    // Delay opening the file until the first logging statement is issued;
-    // this allows us to set the main logger's filename without creating
-    // a useless log file with the default filename.
-    if (logfile == NULL)
-    {
-        if ((logfile = fopen(fileName.c_str(), "a")) == NULL)
-        {
-            fprintf(stderr, "[ERROR] Unable to open log file \"%s\"\n",
-                    fileName.c_str());
-            lock.unlock();
-            stop_write_loop();
-            return;
-        }
-    }
+	std::unique_lock<std::mutex> lock(the_mutex);
+	// Delay opening the file until the first logging statement is issued;
+	// this allows us to set the main logger's filename without creating
+	// a useless log file with the default filename.
+	if (logfile == NULL)
+	{
+		if ((logfile = fopen(fileName.c_str(), "a")) == NULL)
+		{
+			fprintf(stderr, "[ERROR] Unable to open log file \"%s\"\n",
+					fileName.c_str());
+			lock.unlock();
+			stop_write_loop();
+			return;
+		}
+	}
 
-    // Write to file.
-    fprintf(logfile, "%s", msg.c_str());
+	// Write to file.
+	fprintf(logfile, "%s", msg.c_str());
 
-    // Flush, because log messages are important, especially if we
-    // are about to crash. So we don't want to have these buffered up.
-    fflush(logfile);
+	// Flush, because log messages are important, especially if we
+	// are about to crash. So we don't want to have these buffered up.
+	fflush(logfile);
 
-    // Stdout writing must be unlocked.
-    lock.unlock();
+	// Stdout writing must be unlocked.
+	lock.unlock();
 
-    // Write to stdout.
-    if (printToStdout)
-    {
-        std::cout << msg;
-        std::cout.flush();
-    }
+	// Write to stdout.
+	if (printToStdout)
+	{
+		std::cout << msg;
+		std::cout.flush();
+	}
 }
 
 Logger::Logger(const std::string &fname, Logger::Level level, bool tsEnabled)
-    : error(*this), warn(*this), info(*this), debug(*this), fine(*this)
+	: error(*this), warn(*this), info(*this), debug(*this), fine(*this)
 {
-    set_filename(fname);
+	set_filename(fname);
 
-    this->currentLevel = level;
-    this->backTraceLevel = ERROR;
+	this->currentLevel = level;
+	this->backTraceLevel = ERROR;
 
-    this->timestampEnabled = tsEnabled;
-    this->threadIdEnabled = false;
-    this->printLevel = true;
-    this->syncEnabled = false;
+	this->timestampEnabled = tsEnabled;
+	this->threadIdEnabled = false;
+	this->printLevel = true;
+	this->syncEnabled = false;
 
-    this->logEnabled = true;
+	this->logEnabled = true;
 #ifdef HAVE_VALGRIND
-    DRD_IGNORE_VAR(this->logEnabled);
+	DRD_IGNORE_VAR(this->logEnabled);
 #endif
 }
 
 Logger::Logger(const Logger& log)
-    : error(*this), warn(*this), info(*this), debug(*this), fine(*this)
+	: error(*this), warn(*this), info(*this), debug(*this), fine(*this)
 {
-    set(log);
+	set(log);
 }
 
 Logger& Logger::operator=(const Logger& log)
 {
-    this->set(log);
-    return *this;
+	this->set(log);
+	return *this;
 }
 
 void Logger::set(const Logger& log)
 {
-    this->component.assign(log.component);
-    this->currentLevel = log.currentLevel;
-    this->printLevel = log.printLevel;
-    this->backTraceLevel = log.backTraceLevel;
-    this->timestampEnabled = log.timestampEnabled;
-    this->threadIdEnabled = log.threadIdEnabled;
-    this->syncEnabled = log.syncEnabled;
-    this->logEnabled = log.logEnabled;
+	this->component.assign(log.component);
+	this->currentLevel = log.currentLevel;
+	this->printLevel = log.printLevel;
+	this->backTraceLevel = log.backTraceLevel;
+	this->timestampEnabled = log.timestampEnabled;
+	this->threadIdEnabled = log.threadIdEnabled;
+	this->syncEnabled = log.syncEnabled;
+	this->logEnabled = log.logEnabled;
 }
 
 // ***********************************************/
@@ -318,253 +318,253 @@ void Logger::set(const Logger& log)
 
 void Logger::set_level(Logger::Level newLevel)
 {
-    currentLevel = newLevel;
+	currentLevel = newLevel;
 }
 
 Logger::Level Logger::get_level() const
 {
-    return currentLevel;
+	return currentLevel;
 }
 
 void Logger::set_backtrace_level(Logger::Level newLevel)
 {
-    backTraceLevel = newLevel;
+	backTraceLevel = newLevel;
 }
 
 Logger::Level Logger::get_backtrace_level() const
 {
-    return backTraceLevel;
+	return backTraceLevel;
 }
 
 void Logger::LogWriter::setFileName(const std::string& s)
 {
-    fileName.assign(s);
+	fileName.assign(s);
 
-    std::unique_lock<std::mutex> lock(the_mutex);
-    if (logfile != NULL) {
-        flush();
-        fclose(logfile);
-    }
-    logfile = NULL;
+	std::unique_lock<std::mutex> lock(the_mutex);
+	if (logfile != NULL) {
+		flush();
+		fclose(logfile);
+	}
+	logfile = NULL;
 
-    lock.unlock();
-    start_write_loop();
+	lock.unlock();
+	start_write_loop();
 }
 
 void Logger::set_filename(const std::string& fname)
 {
-    try {
-        _log_writer = _loggers.at(fname);
-    }
-    catch (...) {
-        _log_writer = new LogWriter();
-        _log_writer->setFileName(fname);
-        _loggers[fname] = _log_writer;
-    }
+	try {
+		_log_writer = _loggers.at(fname);
+	}
+	catch (...) {
+		_log_writer = new LogWriter();
+		_log_writer->setFileName(fname);
+		_loggers[fname] = _log_writer;
+	}
 
-    enable();
+	enable();
 }
 
 const std::string& Logger::get_filename() const
 {
-    static std::string bad;
-    if (nullptr == _log_writer) return bad;
-    return _log_writer->getFileName();
+	static std::string bad;
+	if (nullptr == _log_writer) return bad;
+	return _log_writer->getFileName();
 }
 
 void Logger::set_component(const std::string& c)
 {
-    component = c;
+	component = c;
 }
 
 const std::string& Logger::get_component() const
 {
-    return component;
+	return component;
 }
 
 void Logger::set_timestamp_flag(bool flag)
 {
-    timestampEnabled = flag;
+	timestampEnabled = flag;
 }
 
 void Logger::set_thread_id_flag(bool flag)
 {
-    threadIdEnabled = flag;
+	threadIdEnabled = flag;
 }
 
 void Logger::set_print_to_stdout_flag(bool flag)
 {
-    if (_log_writer) _log_writer->printToStdout = flag;
+	if (_log_writer) _log_writer->printToStdout = flag;
 }
 
 void Logger::set_print_level_flag(bool flag)
 {
-    printLevel = flag;
+	printLevel = flag;
 }
 
 void Logger::set_sync_flag(bool flag)
 {
-    syncEnabled = flag;
+	syncEnabled = flag;
 }
 
 void Logger::set_print_error_level_stdout()
 {
-    set_print_to_stdout_flag(true);
-    set_level(Logger::ERROR);
+	set_print_to_stdout_flag(true);
+	set_level(Logger::ERROR);
 }
 
 void Logger::enable()
 {
-    logEnabled = true;
+	logEnabled = true;
 }
 
 void Logger::disable()
 {
-    logEnabled = false;
+	logEnabled = false;
 }
 
 void Logger::log(Logger::Level level, const std::string &txt)
 {
-    static const unsigned int max_queue_size_allowed = 1024;
-    // Don't log if not enabled, or level is too low.
-    if (!logEnabled) return;
-    if (level > currentLevel) return;
-    if (nullptr == _log_writer) return;
+	static const unsigned int max_queue_size_allowed = 1024;
+	// Don't log if not enabled, or level is too low.
+	if (!logEnabled) return;
+	if (level > currentLevel) return;
+	if (nullptr == _log_writer) return;
 
-    std::ostringstream oss;
-    if (timestampEnabled)
-    {
-        struct timeval stv;
-        struct tm stm;
-        char timestamp[64];
-        char timestampStr[256];
+	std::ostringstream oss;
+	if (timestampEnabled)
+	{
+		struct timeval stv;
+		struct tm stm;
+		char timestamp[64];
+		char timestampStr[256];
 
 
-        ::gettimeofday(&stv, NULL);
-        time_t t = stv.tv_sec;
-        gmtime_r(&t, &stm);
-        strftime(timestamp, sizeof(timestamp), "%F %T", &stm);
-        snprintf(timestampStr, sizeof(timestampStr),
-                "[%s:%03ld] ",timestamp, (long)stv.tv_usec / 1000);
-        oss << timestampStr;
-    }
+		::gettimeofday(&stv, NULL);
+		time_t t = stv.tv_sec;
+		gmtime_r(&t, &stm);
+		strftime(timestamp, sizeof(timestamp), "%F %T", &stm);
+		snprintf(timestampStr, sizeof(timestampStr),
+				"[%s:%03ld] ",timestamp, (long)stv.tv_usec / 1000);
+		oss << timestampStr;
+	}
 
-    if (printLevel)
-        oss << "[" << get_level_string(level) << "] ";
+	if (printLevel)
+		oss << "[" << get_level_string(level) << "] ";
 
-    if (!component.empty())
-        oss << "[" << component << "] ";
+	if (!component.empty())
+		oss << "[" << component << "] ";
 
-    if (threadIdEnabled)
-        oss << "[thread-" << std::this_thread::get_id() << "] ";
+	if (threadIdEnabled)
+		oss << "[thread-" << std::this_thread::get_id() << "] ";
 
-    oss << txt << std::endl;
+	oss << txt << std::endl;
 
 #ifndef CYGWIN
-    if (level <= backTraceLevel)
-    {
-        prt_backtrace(oss);
-    }
+	if (level <= backTraceLevel)
+	{
+		prt_backtrace(oss);
+	}
 #endif
 
-    _log_writer->qmsg(oss.str());
+	_log_writer->qmsg(oss.str());
 
-    // If the queue gets too full, block until it's flushed to file or
-    // stdout. This can sometimes happen, if some component is spewing
-    // lots of debugging messages in a tight loop.
-    if (_log_writer->size() > max_queue_size_allowed) flush();
+	// If the queue gets too full, block until it's flushed to file or
+	// stdout. This can sometimes happen, if some component is spewing
+	// lots of debugging messages in a tight loop.
+	if (_log_writer->size() > max_queue_size_allowed) flush();
 
-    // Errors are associated with immenent crashes. Make sure that the
-    // stack trace is written to disk *before* the crash happens! Yes,
-    // this introduces latency and lag. Tough. Don't generate errors.
-    if (level <= backTraceLevel) flush();
+	// Errors are associated with immenent crashes. Make sure that the
+	// stack trace is written to disk *before* the crash happens! Yes,
+	// this introduces latency and lag. Tough. Don't generate errors.
+	if (level <= backTraceLevel) flush();
 
-    if (syncEnabled) flush();
+	if (syncEnabled) flush();
 }
 
 void Logger::backtrace()
 {
-    if (nullptr == _log_writer) return;
+	if (nullptr == _log_writer) return;
 
-    static const unsigned int max_queue_size_allowed = 1024;
-    std::ostringstream oss;
+	static const unsigned int max_queue_size_allowed = 1024;
+	std::ostringstream oss;
 
-    #ifndef CYGWIN
-    prt_backtrace(oss);
-    #endif
+	#ifndef CYGWIN
+	prt_backtrace(oss);
+	#endif
 
-    _log_writer->qmsg(oss.str());
+	_log_writer->qmsg(oss.str());
 
-    // If the queue gets too full, block until it's flushed to file or
-    // stdout. This can sometimes happen, if some component is spewing
-    // lots of debugging messages in a tight loop.
-    if (_log_writer->size() > max_queue_size_allowed) {
-        flush();
-    }
+	// If the queue gets too full, block until it's flushed to file or
+	// stdout. This can sometimes happen, if some component is spewing
+	// lots of debugging messages in a tight loop.
+	if (_log_writer->size() > max_queue_size_allowed) {
+		flush();
+	}
 }
 
 void Logger::logva(Logger::Level level, const char *fmt, va_list args)
 {
-    if (level <= currentLevel) {
-        char buffer[MAX_PRINTF_STYLE_MESSAGE_SIZE];
-        vsnprintf(buffer, sizeof(buffer), fmt, args);
-        std::string msg = buffer;
-        log(level, msg);
-    }
+	if (level <= currentLevel) {
+		char buffer[MAX_PRINTF_STYLE_MESSAGE_SIZE];
+		vsnprintf(buffer, sizeof(buffer), fmt, args);
+		std::string msg = buffer;
+		log(level, msg);
+	}
 }
 
 void Logger::log(Logger::Level level, const char *fmt, ...)
 {
-    va_list args; va_start(args, fmt); logva(level, fmt, args); va_end(args);
+	va_list args; va_start(args, fmt); logva(level, fmt, args); va_end(args);
 }
 
 void Logger::Error::operator()(const char *fmt, ...)
 {
-    va_list args; va_start(args, fmt); logger.logva(ERROR, fmt, args); va_end(args);
+	va_list args; va_start(args, fmt); logger.logva(ERROR, fmt, args); va_end(args);
 }
 
 void Logger::Warn::operator()(const char *fmt, ...)
 {
-    va_list args; va_start(args, fmt); logger.logva(WARN,  fmt, args); va_end(args);
+	va_list args; va_start(args, fmt); logger.logva(WARN,  fmt, args); va_end(args);
 }
 
 void Logger::Info::operator()(const char *fmt, ...)
 {
-    va_list args; va_start(args, fmt); logger.logva(INFO,  fmt, args); va_end(args);
+	va_list args; va_start(args, fmt); logger.logva(INFO,  fmt, args); va_end(args);
 }
 
 void Logger::Debug::operator()(const char *fmt, ...)
 {
-    va_list args; va_start(args, fmt); logger.logva(DEBUG, fmt, args); va_end(args);
+	va_list args; va_start(args, fmt); logger.logva(DEBUG, fmt, args); va_end(args);
 }
 
 void Logger::Fine::operator()(const char *fmt, ...)
 {
-    va_list args; va_start(args, fmt); logger.logva(FINE,  fmt, args); va_end(args);
+	va_list args; va_start(args, fmt); logger.logva(FINE,  fmt, args); va_end(args);
 }
 
 const char* Logger::get_level_string(const Logger::Level level)
 {
-    if (level == BAD_LEVEL)
-        return "Bad level";
-    else
-        return levelStrings[level];
+	if (level == BAD_LEVEL)
+		return "Bad level";
+	else
+		return levelStrings[level];
 }
 
 Logger::Level Logger::get_level_from_string(const std::string& levelStr)
 {
-    unsigned int nLevels = sizeof(levelStrings) / sizeof(levelStrings[0]);
-    const char* lstr = levelStr.c_str();
-    for (unsigned int i = 0; i < nLevels; ++i) {
-        if (0 == strcasecmp(lstr, levelStrings[i]))
-            return (Logger::Level) i;
-    }
-    return BAD_LEVEL;
+	unsigned int nLevels = sizeof(levelStrings) / sizeof(levelStrings[0]);
+	const char* lstr = levelStr.c_str();
+	for (unsigned int i = 0; i < nLevels; ++i) {
+		if (0 == strcasecmp(lstr, levelStrings[i]))
+			return (Logger::Level) i;
+	}
+	return BAD_LEVEL;
 }
 
 // Create and return the single instance
 Logger& opencog::logger()
 {
-    static Logger instance;
-    return instance;
+	static Logger instance;
+	return instance;
 }

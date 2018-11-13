@@ -33,11 +33,11 @@
 namespace opencog
 {
 /** \addtogroup grp_cogutil
- *  @{
+ *	@{
  */
 
 //! interface for random generators
-    
+	
 // RandGen inherits std::mt19937. This may seem like a hack because
 // there is no point having that abstract class inherit a concrete
 // random generator. But it's clear we don't need that home made
@@ -51,31 +51,31 @@ class RandGen : public std::mt19937
 
 public:
 
-    virtual ~RandGen() {}
+	virtual ~RandGen() {}
 
-    //! random int between 0 and max rand number.
-    virtual int randint() = 0;
+	//! random int between 0 and max rand number.
+	virtual int randint() = 0;
 
-    //! random float in [0,1]
-    virtual float randfloat() = 0;
+	//! random float in [0,1]
+	virtual float randfloat() = 0;
 
-    //! random double in [0,1]
-    virtual double randdouble() = 0;
+	//! random double in [0,1]
+	virtual double randdouble() = 0;
 
-    //! random double in [0,1)
-    virtual double randdouble_one_excluded() = 0;
+	//! random double in [0,1)
+	virtual double randdouble_one_excluded() = 0;
 
-    //! random int in [0,n)
-    virtual int randint(int n) = 0;
+	//! random int in [0,n)
+	virtual int randint(int n) = 0;
 
-    //! return -1 or 1 randonly
-    virtual int rand_positive_negative() = 0;
+	//! return -1 or 1 randonly
+	virtual int rand_positive_negative() = 0;
 
-    //! random boolean
-    virtual bool randbool() = 0;
+	//! random boolean
+	virtual bool randbool() = 0;
 
-    //! random discrete base on weights
-    virtual int rand_discrete(const std::vector<double>&) = 0;
+	//! random discrete base on weights
+	virtual int rand_discrete(const std::vector<double>&) = 0;
 };
 
 /** @}*/

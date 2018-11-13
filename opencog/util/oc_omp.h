@@ -25,7 +25,7 @@
 #define _OPENCOG_OC_OMP_H
 
 /** \addtogroup grp_cogutil
- *  @{
+ *	@{
  */
 
 /** @name Multi-threading support

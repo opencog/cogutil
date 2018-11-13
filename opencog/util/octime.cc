@@ -46,17 +46,17 @@ static bool referenceTimeInitialized = false;
 
 void init_reference_time()
 {
-    gettimeofday(&referenceTime, NULL);
-    referenceTimeInitialized = true;
+	gettimeofday(&referenceTime, NULL);
+	referenceTimeInitialized = true;
 }
 
 unsigned long get_elapsed_millis()
 {
-    OC_ASSERT(referenceTimeInitialized,
-            "utils - refenceTimeInitialized should have been initialized.");
-    timeval currentTime;
-    gettimeofday(&currentTime, NULL);
-    return (currentTime.tv_sec -referenceTime.tv_sec)*1000 + (currentTime.tv_usec - referenceTime.tv_usec) / 1000;
+	OC_ASSERT(referenceTimeInitialized,
+			"utils - refenceTimeInitialized should have been initialized.");
+	timeval currentTime;
+	gettimeofday(&currentTime, NULL);
+	return (currentTime.tv_sec -referenceTime.tv_sec)*1000 + (currentTime.tv_usec - referenceTime.tv_usec) / 1000;
 }
 
 

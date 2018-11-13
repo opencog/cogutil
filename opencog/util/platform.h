@@ -42,29 +42,29 @@
 namespace opencog
 {
 /** \addtogroup grp_cogutil
- *  @{
+ *	@{
  */
 
 struct eqstr {
-    bool operator()(char *s1, char *s2) const {
-        return strcmp(s1, s2) == 0;
-    }
+	bool operator()(char *s1, char *s2) const {
+		return strcmp(s1, s2) == 0;
+	}
 };
 
 struct eqconststr {
-    bool operator()(const char *s1, const char *s2) const {
-        return strcmp(s1, s2) == 0;
-    }
+	bool operator()(const char *s1, const char *s2) const {
+		return strcmp(s1, s2) == 0;
+	}
 };
 
 struct eqint {
-    bool operator()(int s1, int s2) const {
-        return s1 == s2;
-    }
+	bool operator()(int s1, int s2) const {
+		return s1 == s2;
+	}
 };
 
 #ifdef __APPLE__
-char*              __strtok_r(char *s1, const char *s2, char **lasts);
+char*			   __strtok_r(char *s1, const char *s2, char **lasts);
 #endif
 
 #ifdef WIN32_NOT_UNIX
@@ -73,15 +73,15 @@ char*              __strtok_r(char *s1, const char *s2, char **lasts);
 
 struct timezone {};
 
-int                round(float x);
-char*              __strtok_r(char *s1, const char *s2, char **lasts);
-int                gettimeofday(struct timeval* tp, void* tzp);
-void               usleep(unsigned useconds);
-int                __getpid(void);
-double             rint(double nr);
-int                __dup2(int, int);
+int				   round(float x);
+char*			   __strtok_r(char *s1, const char *s2, char **lasts);
+int				   gettimeofday(struct timeval* tp, void* tzp);
+void			   usleep(unsigned useconds);
+int				   __getpid(void);
+double			   rint(double nr);
+int				   __dup2(int, int);
 unsigned long long atoll(const char *str);
-unsigned int       sleep(unsigned seconds);
+unsigned int	   sleep(unsigned seconds);
 
 #endif // ~WIN32_NOT_UNIX
 

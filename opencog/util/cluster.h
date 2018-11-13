@@ -31,7 +31,7 @@
 #define	_C_CLUSTERING_LIBRARY_H
 
 /** \addtogroup grp_cogutil
- *  @{
+ *	@{
  */
 
 /** @name C Clustering Library
@@ -59,38 +59,38 @@ The routine returns the distance in double precision.
 If the parameter transpose is set to a nonzero value, the clusters are
 interpreted as clusters of microarrays, otherwise as clusters of gene.
 
-\param nrows     (input) int
+\param nrows	 (input) int
 The number of rows (i.e., the number of genes) in the gene expression data
 matrix.
 
-\param ncolumns      (input) int
+\param ncolumns		 (input) int
 The number of columns (i.e., the number of microarrays) in the gene expression
 data matrix.
 
-\param data       (input) double[nrows][ncolumns]
+\param data		  (input) double[nrows][ncolumns]
 The array containing the data of the vectors.
 
-\param mask       (input) int[nrows][ncolumns]
+\param mask		  (input) int[nrows][ncolumns]
 This array shows which data values are missing. If mask[i][j]==0, then
 data[i][j] is missing.
 
-\param weight     (input) double[ncolumns] if transpose==0;
-                   double[nrows]    if transpose==1
+\param weight	  (input) double[ncolumns] if transpose==0;
+				   double[nrows]	if transpose==1
 The weights that are used to calculate the distance.
 
-\param n1         (input) int
+\param n1		  (input) int
 The number of elements in the first cluster.
 
-\param n2         (input) int
+\param n2		  (input) int
 The number of elements in the second cluster.
 
-\param index1     (input) int[n1]
+\param index1	  (input) int[n1]
 Identifies which genes/microarrays belong to the first cluster.
 
-\param index2     (input) int[n2]
+\param index2	  (input) int[n2]
 Identifies which genes/microarrays belong to the second cluster.
 
-\param dist       (input) char
+\param dist		  (input) char
 Defines which distance measure is used, as given by the table:
 dist=='e': Euclidean distance
 dist=='b': City-block distance
@@ -102,7 +102,7 @@ dist=='s': Spearman's rank correlation
 dist=='k': Kendall's tau
 For other values of dist, the default (Euclidean distance) is used.
 
-\param method     (input) char
+\param method	  (input) char
 Defines how the distance between two clusters is defined, given which genes
 belong to which cluster:
 method=='a': the distance between the arithmetic means of the two clusters
@@ -136,7 +136,7 @@ the routine returns a NULL pointer, and all memory allocated so far for the
 distance matrix is freed.
 
 
-\param nrows      (input) int
+\param nrows	  (input) int
 The number of rows in the gene expression data matrix (i.e., the number of
 genes)
 
@@ -144,10 +144,10 @@ genes)
 The number of columns in the gene expression data matrix (i.e., the number of
 microarrays)
 
-\param data       (input) double[nrows][ncolumns]
+\param data		  (input) double[nrows][ncolumns]
 The array containing the gene expression data.
 
-\param mask       (input) int[nrows][ncolumns]
+\param mask		  (input) int[nrows][ncolumns]
 This array shows which data values are missing. If mask[i][j]==0, then
 data[i][j] is missing.
 
@@ -156,7 +156,7 @@ The weights that are used to calculate the distance. The length of this vector
 is equal to the number of columns if the distances between genes are calculated,
 or the number of rows if the distances between microarrays are calculated.
 
-\param dist       (input) char
+\param dist		  (input) char
 Defines which distance measure is used, as given by the table:
 dist=='e': Euclidean distance
 dist=='b': City-block distance
@@ -187,7 +187,7 @@ all elements belonging to a cluster.
 \param nclusters  (input) int
 The number of clusters.
 
-\param nrows     (input) int
+\param nrows	 (input) int
 The number of rows in the gene expression data matrix, equal to the number of
 genes.
 
@@ -195,25 +195,25 @@ genes.
 The number of columns in the gene expression data matrix, equal to the number of
 microarrays.
 
-\param data       (input) double[nrows][ncolumns]
+\param data		  (input) double[nrows][ncolumns]
 The array containing the gene expression data.
 
-\param mask       (input) int[nrows][ncolumns]
+\param mask		  (input) int[nrows][ncolumns]
 This array shows which data values are missing. If mask[i][j]==0, then
 data[i][j] is missing.
 
 \param clusterid  (output) int[nrows] if transpose==0
-                    int[ncolumns] if transpose==1
+					int[ncolumns] if transpose==1
 The cluster number to which each element belongs. If transpose==0, then the
 dimension of clusterid is equal to nrows (the number of genes). Otherwise, it
 is equal to ncolumns (the number of microarrays).
 
-\param cdata      (output) double[nclusters][ncolumns] if transpose==0
-                    double[nrows][nclusters] if transpose==1
+\param cdata	  (output) double[nclusters][ncolumns] if transpose==0
+					double[nrows][nclusters] if transpose==1
 On exit of getclustercentroids, this array contains the cluster centroids.
 
-\param cmask      (output) int[nclusters][ncolumns] if transpose==0
-                    int[nrows][nclusters] if transpose==1
+\param cmask	  (output) int[nclusters][ncolumns] if transpose==0
+					int[nrows][nclusters] if transpose==1
 This array shows which data values of are missing for each centroid. If
 cmask[i][j]==0, then cdata[i][j] is missing. A data value is missing for
 a centroid if all corresponding data values of the cluster members are missing.
@@ -222,7 +222,7 @@ a centroid if all corresponding data values of the cluster members are missing.
 If transpose==0, clusters of rows (genes) are specified. Otherwise, clusters of
 columns (microarrays) are specified.
 
-\param method     (input) char
+\param method	  (input) char
 For method=='a', the centroid is defined as the mean over all elements
 belonging to a cluster for each dimension.
 For method=='m', the centroid is defined as the median over all elements
@@ -262,7 +262,7 @@ The cluster number to which each element belongs.
 \param centroid   (output) int[nclusters]
 The index of the element that functions as the centroid for each cluster.
 
-\param errors     (output) double[nclusters]
+\param errors	  (output) double[nclusters]
 The within-cluster sum of distances between the items and the cluster
 centroid.
 */
@@ -278,15 +278,15 @@ solution, each time starting from a different initial clustering.
 nclusters  (input) int
 \param The number of clusters to be found.
 
-\param data       (input) double[nrows][ncolumns]
+\param data		  (input) double[nrows][ncolumns]
 The array containing the data of the elements to be clustered (i.e., the gene
 expression data).
 
-\param mask       (input) int[nrows][ncolumns]
+\param mask		  (input) int[nrows][ncolumns]
 This array shows which data values are missing. If
 mask[i][j] == 0, then data[i][j] is missing.
 
-\param nrows     (input) int
+\param nrows	 (input) int
 The number of rows in the data matrix, equal to the number of genes.
 
 \param ncolumns  (input) int
@@ -299,7 +299,7 @@ The weights that are used to calculate the distance.
 If transpose==0, the rows of the matrix are clustered. Otherwise, columns
 of the matrix are clustered.
 
-\param npass      (input) int
+\param npass	  (input) int
 The number of times clustering is performed. Clustering is performed npass
 times, each time starting from a different (random) initial assignment of 
 genes to clusters. The clustering solution with the lowest within-cluster sum
@@ -307,11 +307,11 @@ of distances is chosen.
 If npass==0, then the clustering algorithm will be run once, where the initial
 assignment of elements to clusters is taken from the clusterid array.
 
-\param method     (input) char
+\param method	  (input) char
 Defines whether the arithmetic mean (method=='a') or the median
 (method=='m') is used to calculate the cluster center.
 
-\param dist       (input) char
+\param dist		  (input) char
 Defines which distance measure is used, as given by the table:
 dist=='e': Euclidean distance
 dist=='b': City-block distance
@@ -324,17 +324,17 @@ dist=='k': Kendall's tau
 For other values of dist, the default (Euclidean distance) is used.
 
 \param clusterid  (output; input) int[nrows] if transpose==0
-                           int[ncolumns] if transpose==1
+						   int[ncolumns] if transpose==1
 The cluster number to which a gene or microarray was assigned. If npass==0,
 then on input clusterid contains the initial clustering assignment from which
 the clustering algorithm starts. On output, it contains the clustering solution
 that was found.
 
-\param error      (output) double*
+\param error	  (output) double*
 The sum of distances to the cluster center of each item in the optimal k-means
 clustering solution that was found.
 
-\param ifound     (output) int*
+\param ifound	  (output) int*
 The number of times the optimal clustering solution was
 found. The value of ifound is at least 1; its maximum value is npass. If the
 number of clusters is larger than the number of elements being clustered,
@@ -363,7 +363,7 @@ The distance matrix. To save space, the distance matrix is given in the
 form of a ragged array. The distance matrix is symmetric and has zeros
 on the diagonal. See distancematrix for a description of the content.
 
-\param npass      (input) int
+\param npass	  (input) int
 The number of times clustering is performed. Clustering is performed npass
 times, each time starting from a different (random) initial assignment of genes
 to clusters. The clustering solution with the lowest within-cluster sum of
@@ -381,11 +381,11 @@ contains the number of the cluster to which each item was assigned. On output,
 the number of a cluster is defined as the item number of the centroid of the
 cluster.
 
-\param error      (output) double
+\param error	  (output) double
 The sum of distances to the cluster center of each item in the optimal k-medoids
 clustering solution that was found.
 
-\param ifound     (output) int
+\param ifound	  (output) int
 If kmedoids is successful: the number of times the optimal clustering solution
 was found. The value of ifound is at least 1; its maximum value is npass.
 If the user requested more clusters than elements available, ifound is set
@@ -415,16 +415,16 @@ containing the hierarchical clustering solution, and NULL if a memory error
 occurs. The pointer should be freed by the calling routine to prevent memory
 leaks.
 
-\param nrows     (input) int
+\param nrows	 (input) int
 The number of rows in the data matrix, equal to the number of genes.
 
 \param ncolumns  (input) int
 The number of columns in the data matrix, equal to the number of microarrays.
 
-\param data       (input) double[nrows][ncolumns]
+\param data		  (input) double[nrows][ncolumns]
 The array containing the data of the vectors to be clustered.
 
-\param mask       (input) int[nrows][ncolumns]
+\param mask		  (input) int[nrows][ncolumns]
 This array shows which data values are missing. If mask[i][j]==0, then
 data[i][j] is missing.
 
@@ -435,7 +435,7 @@ The weights that are used to calculate the distance.
 If transpose==0, the rows of the matrix are clustered. Otherwise, columns
 of the matrix are clustered.
 
-\param dist       (input) char
+\param dist		  (input) char
 Defines which distance measure is used, as given by the table:
 dist=='e': Euclidean distance
 dist=='b': City-block distance
@@ -447,7 +447,7 @@ dist=='s': Spearman's rank correlation
 dist=='k': Kendall's tau
 For other values of dist, the default (Euclidean distance) is used.
 
-\param method     (input) char
+\param method	  (input) char
 Defines which hierarchical clustering method is used:
 method=='s': pairwise single-linkage clustering
 method=='m': pairwise maximum- (or complete-) linkage clustering
@@ -485,19 +485,19 @@ The cuttree routine takes the output of a hierarchical clustering routine, and
 divides the elements in the tree structure into clusters based on the
 hierarchical clustering result. The number of clusters is specified by the user.
 
-\param nelements      (input) int
+\param nelements	  (input) int
 The number of elements that were clustered.
 
-\param tree           (input) Node[nelements-1]
+\param tree			  (input) Node[nelements-1]
 The clustering solution. Each node in the array describes one linking event,
 with tree[i].left and tree[i].right representig the elements that were joined.
 The original elements are numbered 0..nelements-1, nodes are numbered
 -1..-(nelements-1).
 
-\param nclusters      (input) int
+\param nclusters	  (input) int
 The number of clusters to be formed.
 
-\param clusterid      (output) int[nelements]
+\param clusterid	  (output) int[nelements]
 The number of the cluster to which each element was assigned. Space for this
 array should be allocated before calling the cuttree routine. If a memory
 error occured, all elements in clusterid are set to -1.
@@ -510,21 +510,21 @@ The somcluster routine implements a self-organizing map (Kohonen) on a
 rectangular grid, using a given set of vectors. The distance measure to be
 used to find the similarity between genes and nodes is given by dist.
 
-\param nrows     (input) int
+\param nrows	 (input) int
 The number of rows in the data matrix, equal to the number of genes.
 
 \param ncolumns  (input) int
 The number of columns in the data matrix, equal to the number of microarrays.
 
-\param data       (input) double[nrows][ncolumns]
+\param data		  (input) double[nrows][ncolumns]
 The array containing the gene expression data.
 
-\param mask       (input) int[nrows][ncolumns]
+\param mask		  (input) int[nrows][ncolumns]
 This array shows which data values are missing. If
 mask[i][j] == 0, then data[i][j] is missing.
 
-\param weights    (input) double[ncolumns] if transpose==0;
-                   double[nrows]    if transpose==1
+\param weights	  (input) double[ncolumns] if transpose==0;
+				   double[nrows]	if transpose==1
 The weights that are used to calculate the distance. The length of this vector
 is ncolumns if genes are being clustered, or nrows if microarrays are being
 clustered.
@@ -533,19 +533,19 @@ clustered.
 If transpose==0, the rows (genes) of the matrix are clustered. Otherwise,
 columns (microarrays) of the matrix are clustered.
 
-\param nxgrid    (input) int
+\param nxgrid	 (input) int
 The number of grid cells horizontally in the rectangular topology of clusters.
 
-\param nygrid    (input) int
+\param nygrid	 (input) int
 The number of grid cells horizontally in the rectangular topology of clusters.
 
-\param inittau    (input) double
+\param inittau	  (input) double
 The initial value of tau, representing the neighborhood function.
 
-\param niter      (input) int
+\param niter	  (input) int
 The number of iterations to be performed.
 
-\param dist       (input) char
+\param dist		  (input) char
 Defines which distance measure is used, as given by the table:
 dist=='e': Euclidean distance
 dist=='b': City-block distance
@@ -558,14 +558,14 @@ dist=='k': Kendall's tau
 For other values of dist, the default (Euclidean distance) is used.
 
 \param celldata (output) double[nxgrid][nygrid][ncolumns] if transpose==0;
-                  double[nxgrid][nygrid][nrows]    if tranpose==1
+				  double[nxgrid][nygrid][nrows]    if tranpose==1
 The gene expression data for each node (cell) in the 2D grid. This can be
 interpreted as the centroid for the cluster corresponding to that cell. If
 celldata is NULL, then the centroids are not returned. If celldata is not
 NULL, enough space should be allocated to store the centroid data before callingsomcluster.
 
-\param clusterid (output), int[nrows][2]    if transpose==0;
-                    int[ncolumns][2] if transpose==1
+\param clusterid (output), int[nrows][2]	if transpose==0;
+					int[ncolumns][2] if transpose==1
 For each item (gene or microarray) that is clustered, the coordinates of the
 cell in the 2D grid to which the item was assigned. If clusterid is NULL, the
 cluster assignments are not returned. If clusterid is not NULL, enough memory
@@ -582,22 +582,22 @@ void somcluster (int nrows, int ncolumns, double** data, int** mask,
 This subroutine uses the singular value decomposition to perform principal
 components analysis of a real nrows by ncolumns rectangular matrix.
 
-\param nrows     (input) int
+\param nrows	 (input) int
 The number of rows in the matrix u.
 
 \param ncolumns  (input) int
 The number of columns in the matrix v.
 
-\param u          (input) double[nrows][ncolumns]
+\param u		  (input) double[nrows][ncolumns]
 On input, the array containing the data to which the principal component
 analysis should be applied. The function assumes that the mean has already been
 subtracted of each column, and hence that the mean of each column is zero.
 On output, see below.
 
-\param v          (input) double[n][n], where n = min(nrows, ncolumns)
+\param v		  (input) double[n][n], where n = min(nrows, ncolumns)
 Not used on input.
 
-\param w          (input) double[n], where n = min(nrows, ncolumns)
+\param w		  (input) double[n], where n = min(nrows, ncolumns)
 Not used on input.
 
 
@@ -654,7 +654,7 @@ Michael Eisen:
 w[i] = 1.0 / sum_{j where d[i][j]<cutoff} (1 - d[i][j]/cutoff)^exponent
 where the cutoff and the exponent are specified by the user.
 
-\param nrows      (input) int
+\param nrows	  (input) int
 The number of rows in the gene expression data matrix, equal to the number of
 genes.
 
@@ -662,15 +662,15 @@ genes.
 The number of columns in the gene expression data matrix, equal to the number of
 microarrays.
 
-\param data       (input) double[nrows][ncolumns]
+\param data		  (input) double[nrows][ncolumns]
 The array containing the gene expression data.
 
-\param mask       (input) int[nrows][ncolumns]
+\param mask		  (input) int[nrows][ncolumns]
 This array shows which data values are missing. If mask[i][j]==0, then
 data[i][j] is missing.
 
-\param weight     (input) int[ncolumns] if transpose==0,
-                   int[nrows]    if transpose==1
+\param weight	  (input) int[ncolumns] if transpose==0,
+				   int[nrows]	 if transpose==1
 The weights that are used to calculate the distance. The length of this vector
 is ncolumns if gene weights are being clustered, and nrows if microarrays
 weights are being clustered.
@@ -679,7 +679,7 @@ weights are being clustered.
 If transpose==0, the weights of the rows of the data matrix are calculated.
 Otherwise, the weights of the columns of the data matrix are calculated.
 
-\param dist      (input) char
+\param dist		 (input) char
 Defines which distance measure is used, as given by the table:
 dist=='e': Euclidean distance
 dist=='b': City-block distance
@@ -691,7 +691,7 @@ dist=='s': Spearman's rank correlation
 dist=='k': Kendall's tau
 For other values of dist, the default (Euclidean distance) is used.
 
-\param cutoff    (input) double
+\param cutoff	 (input) double
 The cutoff to be used to calculate the weights.
 
 \param exponent  (input) double

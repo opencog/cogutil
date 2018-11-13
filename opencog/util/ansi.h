@@ -26,7 +26,7 @@
 #include <opencog/util/Config.h>
 namespace opencog {
 /** \addtogroup grp_cogutil
- *  @{
+ *	@{
  */
 
 //!@{
@@ -44,7 +44,7 @@ static const char* const WHITE = "\033[37m";
 
 //! inserts the code only if \b ANSI_ENABLED variable is set
 inline void ansi_code(std::string &s,const std::string &code) {
-    if (config().get_bool("ANSI_ENABLED")) s.append(code);
+	if (config().get_bool("ANSI_ENABLED")) s.append(code);
 }
 
 //!@{

@@ -26,16 +26,16 @@ namespace opencog
 {
 
 lazy_random_selector::lazy_random_selector(unsigned int u,
-                                           opencog::RandGen& _rng)
-    : lazy_selector(u), rng(_rng) {}
+										   opencog::RandGen& _rng)
+	: lazy_selector(u), rng(_rng) {}
 
 lazy_random_selector::lazy_random_selector(unsigned int u, unsigned int l,
-                                           opencog::RandGen& _rng)
-    : lazy_selector(u, l), rng(_rng) {}
+										   opencog::RandGen& _rng)
+	: lazy_selector(u, l), rng(_rng) {}
 
 unsigned int lazy_random_selector::select()
 {
-    return rng.randint(_u);
+	return rng.randint(_u);
 }
 
 } //~namespace opencog

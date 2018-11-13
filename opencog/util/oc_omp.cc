@@ -26,28 +26,28 @@ namespace opencog {
 
 void setting_omp(unsigned num_threads, unsigned min_n) {
 #ifdef OC_OMP
-    omp_set_dynamic(false);
-    omp_set_num_threads(num_threads);
-    __gnu_parallel::_Settings gps;
-    gps.transform_minimal_n = min_n;
-    gps.for_each_minimal_n = min_n;
-    gps.replace_minimal_n = min_n;
-    __gnu_parallel::_Settings::set(gps);
+	omp_set_dynamic(false);
+	omp_set_num_threads(num_threads);
+	__gnu_parallel::_Settings gps;
+	gps.transform_minimal_n = min_n;
+	gps.for_each_minimal_n = min_n;
+	gps.replace_minimal_n = min_n;
+	__gnu_parallel::_Settings::set(gps);
 #endif
 }
 
 unsigned num_threads() {
 #ifdef OC_OMP
-    return omp_get_max_threads();
+	return omp_get_max_threads();
 #else
-    return 1;
+	return 1;
 #endif
 }
 
 std::pair<unsigned, unsigned> split_jobs(unsigned n_jobs) {
-    unsigned n_jobs1 = n_jobs / 2;
-    unsigned n_jobs2 = std::max(1U, n_jobs - n_jobs1);
-    return {n_jobs1, n_jobs2};
+	unsigned n_jobs1 = n_jobs / 2;
+	unsigned n_jobs2 = std::max(1U, n_jobs - n_jobs1);
+	return {n_jobs1, n_jobs2};
 }
 
 }

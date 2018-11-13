@@ -29,7 +29,7 @@ strndup (char const *s, size_t n)
   char *x = (char*)malloc (len + 1);
 
   if (x == NULL)
-    return NULL;
+	return NULL;
 
   x[len] = '\0';
   return (char*) memcpy (x, s, len);

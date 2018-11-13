@@ -5,7 +5,7 @@
  * All Rights Reserved
  *
  * Written by Thiago Maia <thiago@vettatech.com>
- *            Andre Senna <senna@vettalabs.com>
+ *			  Andre Senna <senna@vettalabs.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License v3 as
@@ -28,34 +28,34 @@
 
 void opencog::cassert(const char * trace, bool condition, const char *fmt, ...)
 {
-    if (condition) return;
+	if (condition) return;
 
-    va_list        ap;
-    va_start(ap, fmt);
+	va_list		   ap;
+	va_start(ap, fmt);
 
-    char * c_msg = new char[strlen(fmt) + strlen(trace) + 1];
-    *c_msg = '\0'; // empty c-string
+	char * c_msg = new char[strlen(fmt) + strlen(trace) + 1];
+	*c_msg = '\0'; // empty c-string
 
-    strcat(c_msg, fmt);
-    strcat(c_msg, trace);
+	strcat(c_msg, fmt);
+	strcat(c_msg, trace);
 
-    AssertionException ex = AssertionException(c_msg, ap);
-    va_end(ap);
+	AssertionException ex = AssertionException(c_msg, ap);
+	va_end(ap);
 
-    delete [] c_msg;
-    throw ex;
+	delete [] c_msg;
+	throw ex;
 }
 
 void opencog::cassert(const char* trace, bool condition, const std::string& msg) {
-    opencog::cassert(trace, condition, msg.c_str());
+	opencog::cassert(trace, condition, msg.c_str());
 }
 
 void opencog::cassert(const char * trace, bool condition)
 {
 
-    if (condition) return;
+	if (condition) return;
 
-    AssertionException ex = AssertionException(trace);
-    throw ex;
+	AssertionException ex = AssertionException(trace);
+	throw ex;
 }
 

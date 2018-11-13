@@ -41,7 +41,7 @@
 
 namespace opencog {
 /** \addtogroup grp_cogutil
- *  @{
+ *	@{
  */
 
 //! Pick an element of container c randomly, with uniform
@@ -49,8 +49,8 @@ namespace opencog {
 template<typename C>
 const typename C::value_type& rand_element(const C& c, RandGen& rng=randGen())
 {
-    OC_ASSERT(!c.empty());
-    return *std::next(c.begin(), rng.randint(c.size()));
+	OC_ASSERT(!c.empty());
+	return *std::next(c.begin(), rng.randint(c.size()));
 }
 
 //! Non-const version of above. Pick an element of container c
@@ -59,8 +59,8 @@ const typename C::value_type& rand_element(const C& c, RandGen& rng=randGen())
 template<typename C>
 typename C::value_type& rand_element(C& c, RandGen& rng=randGen())
 {
-    OC_ASSERT(!c.empty());
-    return *std::next(c.begin(), rng.randint(c.size()));
+	OC_ASSERT(!c.empty());
+	return *std::next(c.begin(), rng.randint(c.size()));
 }
 
 //! Pick an element of container c randomly, with distribution d.
@@ -68,8 +68,8 @@ typename C::value_type& rand_element(C& c, RandGen& rng=randGen())
 template<typename C, typename D>
 const typename C::value_type& rand_element(const C& c, D& d, RandGen& rng=randGen())
 {
-    OC_ASSERT(!c.empty());
-    return *std::next(c.begin(), d(rng));
+	OC_ASSERT(!c.empty());
+	return *std::next(c.begin(), d(rng));
 }
 
 //! Non-const version of above. Pick an element of container c
@@ -78,8 +78,8 @@ const typename C::value_type& rand_element(const C& c, D& d, RandGen& rng=randGe
 template<typename C, typename D>
 typename C::value_type& rand_element(C& c, D& d, RandGen& rng=randGen())
 {
-    OC_ASSERT(!c.empty());
-    return *std::next(c.begin(), d(rng));
+	OC_ASSERT(!c.empty());
+	return *std::next(c.begin(), d(rng));
 }
 
 //! Pick an element of container c randomly, with uniform
@@ -88,11 +88,11 @@ typename C::value_type& rand_element(C& c, D& d, RandGen& rng=randGen())
 template<typename C>
 typename C::value_type rand_element_erase(C& c, RandGen& rng=randGen())
 {
-    OC_ASSERT(!c.empty());
-    auto it = std::next(c.begin(), rng.randint(c.size()));
-    typename C::value_type val = *it;
-    c.erase(it);
-    return val;
+	OC_ASSERT(!c.empty());
+	auto it = std::next(c.begin(), rng.randint(c.size()));
+	typename C::value_type val = *it;
+	c.erase(it);
+	return val;
 }
 
 //! Return a random number sampled according to a Gaussian distribution.
@@ -101,32 +101,32 @@ typename C::value_type rand_element_erase(C& c, RandGen& rng=randGen())
 template<typename T>
 T gaussian_rand(T mean, T std_dev, RandGen& rng=randGen())
 {
-    double val = mean + std_dev *
-        std::sqrt(-2 * std::log(rng.randdouble_one_excluded())) * 
-        std::cos(2 * PI * rng.randdouble_one_excluded());
-    T res;
-    try {
-        res = boost::numeric_cast<T>(val);
-    } catch(boost::numeric::positive_overflow&) {
-        res = std::numeric_limits<T>::max();
-    } catch(boost::numeric::negative_overflow&) {
-        res = std::numeric_limits<T>::min();
-    }
-    return res;
+	double val = mean + std_dev *
+		std::sqrt(-2 * std::log(rng.randdouble_one_excluded())) * 
+		std::cos(2 * PI * rng.randdouble_one_excluded());
+	T res;
+	try {
+		res = boost::numeric_cast<T>(val);
+	} catch(boost::numeric::positive_overflow&) {
+		res = std::numeric_limits<T>::max();
+	} catch(boost::numeric::negative_overflow&) {
+		res = std::numeric_limits<T>::min();
+	}
+	return res;
 }
 
 //! linear biased random bool, b in [0,1] when b tends to 1 the result
 //! tends to be true
 static inline bool biased_randbool(float b, RandGen& rng=randGen())
 {
-    return b > rng.randfloat();
+	return b > rng.randfloat();
 }
 
 //! Generate a random string of characters in the given base, using n
 //! random ints, and appending it to a given prefix.
 static inline std::string randstr(const std::string& prefix=std::string(),
-                                  unsigned n=1, int base=16,
-                                  RandGen& rng=randGen())
+								  unsigned n=1, int base=16,
+								  RandGen& rng=randGen())
 {
 	std::stringstream ss;
 	ss << prefix << std::setbase(base);
