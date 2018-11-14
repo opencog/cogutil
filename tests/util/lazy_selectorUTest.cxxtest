@@ -42,74 +42,74 @@ class lazy_selectorUTest : public CxxTest::TestSuite
 
 public:
 
-    void test_lazy_normal_selector() {
+	void test_lazy_normal_selector() {
 
-        std::cout << "test_lazy_normal_selector" << std::endl;
+		std::cout << "test_lazy_normal_selector" << std::endl;
 
-        lazy_normal_selector lns(n,s);
+		lazy_normal_selector lns(n,s);
 
-        std::set<unsigned int> nset;
+		std::set<unsigned int> nset;
 
-        dorepeat(n) {
-            unsigned int selected = lns();
-            // std::cout << "Selected number: " << selected << std::endl;
-            // Check that the selected number has not been previously selected
-            TS_ASSERT(nset.find(selected) == nset.end());
-            nset.insert(selected);
-        }
-        // Reset upper bound
-        lns.reset_range(n*2);
-        dorepeat(n) {
-            unsigned int selected = lns();
-            // std::cout << "Selected number: " << selected << std::endl;
-            // Check that the selected number has not been previously selected
-            TS_ASSERT(nset.find(selected) == nset.end());
-            nset.insert(selected);
-        }
-        // Reset both upper and lower bounds
-        lns.reset_range(n*4, n*3);
-        dorepeat(n) {
-            unsigned int selected = lns();
-            // std::cout << "Selected number: " << selected << std::endl;
-            // Check that the selected number has not been previously selected
-            TS_ASSERT(nset.find(selected) == nset.end());
-            nset.insert(selected);
-        }        
-    }
+		dorepeat(n) {
+			unsigned int selected = lns();
+			// std::cout << "Selected number: " << selected << std::endl;
+			// Check that the selected number has not been previously selected
+			TS_ASSERT(nset.find(selected) == nset.end());
+			nset.insert(selected);
+		}
+		// Reset upper bound
+		lns.reset_range(n*2);
+		dorepeat(n) {
+			unsigned int selected = lns();
+			// std::cout << "Selected number: " << selected << std::endl;
+			// Check that the selected number has not been previously selected
+			TS_ASSERT(nset.find(selected) == nset.end());
+			nset.insert(selected);
+		}
+		// Reset both upper and lower bounds
+		lns.reset_range(n*4, n*3);
+		dorepeat(n) {
+			unsigned int selected = lns();
+			// std::cout << "Selected number: " << selected << std::endl;
+			// Check that the selected number has not been previously selected
+			TS_ASSERT(nset.find(selected) == nset.end());
+			nset.insert(selected);
+		}		 
+	}
 
-    void test_lazy_random_selector() {
-        std::cout << "test_lazy_random_selector" << std::endl;
+	void test_lazy_random_selector() {
+		std::cout << "test_lazy_random_selector" << std::endl;
 
-        MT19937RandGen rnd(1);
+		MT19937RandGen rnd(1);
 
-        lazy_random_selector lrs(n, rnd);
+		lazy_random_selector lrs(n, rnd);
 
-        std::set<unsigned int> nset;
+		std::set<unsigned int> nset;
 
-        dorepeat(n) {
-            unsigned int selected = lrs();
-            // std::cout << "Selected number: " << selected << std::endl;
-            // Check that the selected number has not been previously selected
-            TS_ASSERT(nset.find(selected) == nset.end());
-            nset.insert(selected);
-        }
-        // Reset upper bound
-        lrs.reset_range(n*2);
-        dorepeat(n) {
-            unsigned int selected = lrs();
-            // std::cout << "Selected number: " << selected << std::endl;
-            // Check that the selected number has not been previously selected
-            TS_ASSERT(nset.find(selected) == nset.end());
-            nset.insert(selected);
-        }        
-        // Reset both upper and lower bounds
-        lrs.reset_range(n*4, n*3);
-        dorepeat(n) {
-            unsigned int selected = lrs();
-            // std::cout << "Selected number: " << selected << std::endl;
-            // Check that the selected number has not been previously selected
-            TS_ASSERT(nset.find(selected) == nset.end());
-            nset.insert(selected);
-        }        
-    }
+		dorepeat(n) {
+			unsigned int selected = lrs();
+			// std::cout << "Selected number: " << selected << std::endl;
+			// Check that the selected number has not been previously selected
+			TS_ASSERT(nset.find(selected) == nset.end());
+			nset.insert(selected);
+		}
+		// Reset upper bound
+		lrs.reset_range(n*2);
+		dorepeat(n) {
+			unsigned int selected = lrs();
+			// std::cout << "Selected number: " << selected << std::endl;
+			// Check that the selected number has not been previously selected
+			TS_ASSERT(nset.find(selected) == nset.end());
+			nset.insert(selected);
+		}		 
+		// Reset both upper and lower bounds
+		lrs.reset_range(n*4, n*3);
+		dorepeat(n) {
+			unsigned int selected = lrs();
+			// std::cout << "Selected number: " << selected << std::endl;
+			// Check that the selected number has not been previously selected
+			TS_ASSERT(nset.find(selected) == nset.end());
+			nset.insert(selected);
+		}		 
+	}
 };

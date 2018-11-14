@@ -31,28 +31,28 @@ using std::string;
 class printContainerUTest : public CxxTest::TestSuite
 {
 
-    std::vector<int> _NN;
-    
+	std::vector<int> _NN;
+	
 public:
-    printContainerUTest() {
-        _NN = {1, 2, 3, 4};
-    }
+	printContainerUTest() {
+		_NN = {1, 2, 3, 4};
+	}
 
-    void test_ostreamContainer() {
-        stringstream ss;
-        ostream_container(ss, _NN, ";", "{", "}");
-        TS_ASSERT_EQUALS(string("{1;2;3;4}"), ss.str());
-    }
-    void test_istreamContainer1() {
-        std::vector<int> NN;
-        stringstream ss("[1 2 3 4] 5");
-        istream_container(ss, std::back_inserter(NN), "[", "]");
-        TS_ASSERT_EQUALS(_NN, NN);
-    }
-    void test_istreamContainer2() {
-        std::vector<int> NN;
-        stringstream ss("1 2 3 4");
-        istream_container(ss, std::back_inserter(NN));
-        TS_ASSERT_EQUALS(_NN, NN);
-    }
+	void test_ostreamContainer() {
+		stringstream ss;
+		ostream_container(ss, _NN, ";", "{", "}");
+		TS_ASSERT_EQUALS(string("{1;2;3;4}"), ss.str());
+	}
+	void test_istreamContainer1() {
+		std::vector<int> NN;
+		stringstream ss("[1 2 3 4] 5");
+		istream_container(ss, std::back_inserter(NN), "[", "]");
+		TS_ASSERT_EQUALS(_NN, NN);
+	}
+	void test_istreamContainer2() {
+		std::vector<int> NN;
+		stringstream ss("1 2 3 4");
+		istream_container(ss, std::back_inserter(NN));
+		TS_ASSERT_EQUALS(_NN, NN);
+	}
 };

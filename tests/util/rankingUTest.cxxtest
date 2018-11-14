@@ -28,18 +28,18 @@ using namespace std;
 class rankingUTest : public CxxTest::TestSuite
 {
 public:
-    rankingUTest() {
-        // logger().setPrintToStdoutFlag(true);
-        // logger().setLevel(Logger::FINE);
-    }
+	rankingUTest() {
+		// logger().setPrintToStdoutFlag(true);
+		// logger().setLevel(Logger::FINE);
+	}
 
-    void test_ranking() {
-        Counter<string, float> c(vector<string>({"a", "a", "a", "b", "b", "c"}));
-        Counter<string, float> expected_rank = { {"a", 2}, {"b", 4.5}, {"c", 6} };
-        Counter<string, float> c_rank = ranking(c);
-        cout << endl << c_rank << endl;
-        TS_ASSERT_EQUALS(c_rank, expected_rank);
-    }
+	void test_ranking() {
+		Counter<string, float> c(vector<string>({"a", "a", "a", "b", "b", "c"}));
+		Counter<string, float> expected_rank = { {"a", 2}, {"b", 4.5}, {"c", 6} };
+		Counter<string, float> c_rank = ranking(c);
+		cout << endl << c_rank << endl;
+		TS_ASSERT_EQUALS(c_rank, expected_rank);
+	}
 };
 
 

@@ -33,90 +33,90 @@ using namespace opencog;
 
 class lru_cacheUTest : public CxxTest::TestSuite
 {
-    class _function : public std::unary_function<float, int> {
-        MT19937RandGen* rnd;
-        public:
-        _function() {
-            rnd = new MT19937RandGen(1);
-        }
-        // FOr some reason this segfaults?
-        // ~_function() { delete rnd; }
+	class _function : public std::unary_function<float, int> {
+		MT19937RandGen* rnd;
+		public:
+		_function() {
+			rnd = new MT19937RandGen(1);
+		}
+		// FOr some reason this segfaults?
+		// ~_function() { delete rnd; }
 
-        float operator()(const int& x) const {
-            if(x == 2000)
-                throw std::exception();
-            return x + rnd->randfloat();
-        }
+		float operator()(const int& x) const {
+			if(x == 2000)
+				throw std::exception();
+			return x + rnd->randfloat();
+		}
 
-        bool my_method() const {
-            std::cout << "my_method" << std::endl;
-            return true;
-        }
-    };
+		bool my_method() const {
+			std::cout << "my_method" << std::endl;
+			return true;
+		}
+	};
 
 
 public:
 
-    void test_lru_cache() {
-        _function f;
-        float answer;
-        lru_cache<lru_cacheUTest::_function> cache(1000, f);
-        for (unsigned int i=0; i < 1000; i++) {
-            answer = cache(i);
-            TS_ASSERT(answer >= i);
-            TS_ASSERT(answer <= i+1);
-        }
-        TS_ASSERT_EQUALS(cache.get_misses(), 1000);
-        TS_ASSERT_EQUALS(cache.get_hits(), 0);
-        for (unsigned int i=0; i < 1000; i++) {
-            answer = cache(i);
-            TS_ASSERT(answer >= i);
-            TS_ASSERT(answer <= i+1);
-        }
-        TS_ASSERT_EQUALS(cache.get_misses(), 1000);
-        TS_ASSERT_EQUALS(cache.get_hits(), 1000);
+	void test_lru_cache() {
+		_function f;
+		float answer;
+		lru_cache<lru_cacheUTest::_function> cache(1000, f);
+		for (unsigned int i=0; i < 1000; i++) {
+			answer = cache(i);
+			TS_ASSERT(answer >= i);
+			TS_ASSERT(answer <= i+1);
+		}
+		TS_ASSERT_EQUALS(cache.get_misses(), 1000);
+		TS_ASSERT_EQUALS(cache.get_hits(), 0);
+		for (unsigned int i=0; i < 1000; i++) {
+			answer = cache(i);
+			TS_ASSERT(answer >= i);
+			TS_ASSERT(answer <= i+1);
+		}
+		TS_ASSERT_EQUALS(cache.get_misses(), 1000);
+		TS_ASSERT_EQUALS(cache.get_hits(), 1000);
 
-        for (unsigned int i=500; i < 1500; i++) {
-            answer = cache(i);
-            TS_ASSERT(answer >= i);
-            TS_ASSERT(answer <= i+1);
-        }
-        TS_ASSERT_EQUALS(cache.get_misses(), 1500);
-        TS_ASSERT_EQUALS(cache.get_hits(), 1500);
+		for (unsigned int i=500; i < 1500; i++) {
+			answer = cache(i);
+			TS_ASSERT(answer >= i);
+			TS_ASSERT(answer <= i+1);
+		}
+		TS_ASSERT_EQUALS(cache.get_misses(), 1500);
+		TS_ASSERT_EQUALS(cache.get_hits(), 1500);
 
-        answer = cache(500);
-        TS_ASSERT_EQUALS(cache.get_misses(), 1500);
-        TS_ASSERT_EQUALS(cache.get_hits(), 1501);
+		answer = cache(500);
+		TS_ASSERT_EQUALS(cache.get_misses(), 1500);
+		TS_ASSERT_EQUALS(cache.get_hits(), 1501);
 
-        answer = cache(1500);
-        TS_ASSERT_EQUALS(cache.get_misses(), 1501);
-        TS_ASSERT_EQUALS(cache.get_hits(), 1501);
+		answer = cache(1500);
+		TS_ASSERT_EQUALS(cache.get_misses(), 1501);
+		TS_ASSERT_EQUALS(cache.get_hits(), 1501);
 
-        // Ensure that entry for 500 wasn't removed as the earlier access should
-        // move it up the lru list
-        answer = cache(500);
-        TS_ASSERT_EQUALS(cache.get_misses(), 1501);
-        TS_ASSERT_EQUALS(cache.get_hits(), 1502);
+		// Ensure that entry for 500 wasn't removed as the earlier access should
+		// move it up the lru list
+		answer = cache(500);
+		TS_ASSERT_EQUALS(cache.get_misses(), 1501);
+		TS_ASSERT_EQUALS(cache.get_hits(), 1502);
 
-        // Ensure that if the function throws an exception the cache
-        // transmit it
-        TS_ASSERT_THROWS(cache(2000), std::exception);
-        TS_ASSERT_EQUALS(cache.get_misses(), 1502);
-        TS_ASSERT_EQUALS(cache.get_hits(), 1502);
-        
-        // Ensure that after throwing the exception the cache doesn't
-        // get inconsistent (which would throw an exception)
-        TS_ASSERT_THROWS_NOTHING(cache(500));        
-    }
+		// Ensure that if the function throws an exception the cache
+		// transmit it
+		TS_ASSERT_THROWS(cache(2000), std::exception);
+		TS_ASSERT_EQUALS(cache.get_misses(), 1502);
+		TS_ASSERT_EQUALS(cache.get_hits(), 1502);
+		
+		// Ensure that after throwing the exception the cache doesn't
+		// get inconsistent (which would throw an exception)
+		TS_ASSERT_THROWS_NOTHING(cache(500));		 
+	}
 
-    /**
-     * Test to check if we can access a method of a function being
-     * cached.
-     */
-    void test_lru_cache_inherit() {
-        _function f;
-        lru_cache<lru_cacheUTest::_function> cache(1000, f);
-        TS_ASSERT(cache.my_method());
-    }
+	/**
+	 * Test to check if we can access a method of a function being
+	 * cached.
+	 */
+	void test_lru_cache_inherit() {
+		_function f;
+		lru_cache<lru_cacheUTest::_function> cache(1000, f);
+		TS_ASSERT(cache.my_method());
+	}
 
 };

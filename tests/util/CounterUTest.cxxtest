@@ -30,19 +30,19 @@ class CounterUTest : public CxxTest::TestSuite
 	Counter<string, float> c1;
 	Counter<string, float> c2;
 public:
-    CounterUTest() {
-        // logger().setPrintToStdoutFlag(true);
-        // logger().setLevel(Logger::FINE);
-    }
-
-	void setUp() {
-        c1 = {{"a", 1}, {"b", 2}};
-        c2 = {{"b", 2}, {"c", 3}};
+	CounterUTest() {
+		// logger().setPrintToStdoutFlag(true);
+		// logger().setLevel(Logger::FINE);
 	}
 
-    void test_total_count() {
-        TS_ASSERT_EQUALS(c2.total_count(), 5);
-    }
+	void setUp() {
+		c1 = {{"a", 1}, {"b", 2}};
+		c2 = {{"b", 2}, {"c", 3}};
+	}
+
+	void test_total_count() {
+		TS_ASSERT_EQUALS(c2.total_count(), 5);
+	}
 
 	template<typename T>
 	struct cmpByContent {
@@ -67,58 +67,58 @@ public:
 	}
 
 	void test_addition() {
-        Counter<string, float>
-            c3 = c1 + c2,
-            expected_c = {{"a", 1}, {"b", 4}, {"c", 3}};
-        TS_ASSERT_EQUALS(c3, expected_c);
-    }
+		Counter<string, float>
+			c3 = c1 + c2,
+			expected_c = {{"a", 1}, {"b", 4}, {"c", 3}};
+		TS_ASSERT_EQUALS(c3, expected_c);
+	}
 
-    void test_subtraction() {
-        Counter<string, float>
-            c3 = c1 - c2,
-            expected_c = {{"a", 1}, {"b", 0}, {"c", -3}};
-        TS_ASSERT_EQUALS(c3, expected_c);
-    }
+	void test_subtraction() {
+		Counter<string, float>
+			c3 = c1 - c2,
+			expected_c = {{"a", 1}, {"b", 0}, {"c", -3}};
+		TS_ASSERT_EQUALS(c3, expected_c);
+	}
 
 	void test_multiplication() {
-        Counter<string, float>
-            c3 = c1 * c2,
-            expected_c = {{"a", 1}, {"b", 4}, {"c", 0}};
-        TS_ASSERT_EQUALS(c3, expected_c);
-    }
+		Counter<string, float>
+			c3 = c1 * c2,
+			expected_c = {{"a", 1}, {"b", 4}, {"c", 0}};
+		TS_ASSERT_EQUALS(c3, expected_c);
+	}
 
-    void test_division() {
-        Counter<string, float>
-            c3 = c1 / c2,
-            expected_c = {{"a", 1}, {"b", 1}, {"c", 0}};
-        TS_ASSERT_EQUALS(c3, expected_c);
-    }
+	void test_division() {
+		Counter<string, float>
+			c3 = c1 / c2,
+			expected_c = {{"a", 1}, {"b", 1}, {"c", 0}};
+		TS_ASSERT_EQUALS(c3, expected_c);
+	}
 
 	void test_addition2() {
-        Counter<string, float>
-            c3 = c1 + 2,
-            expected_c = {{"a", 3}, {"b", 4}};
-        TS_ASSERT_EQUALS(c3, expected_c);
-    }
+		Counter<string, float>
+			c3 = c1 + 2,
+			expected_c = {{"a", 3}, {"b", 4}};
+		TS_ASSERT_EQUALS(c3, expected_c);
+	}
 
-    void test_subtraction2() {
-        Counter<string, float>
-            c3 = c1 - 2,
-            expected_c = {{"a", -1}, {"b", 0}};
-        TS_ASSERT_EQUALS(c3, expected_c);
-    }
+	void test_subtraction2() {
+		Counter<string, float>
+			c3 = c1 - 2,
+			expected_c = {{"a", -1}, {"b", 0}};
+		TS_ASSERT_EQUALS(c3, expected_c);
+	}
 
 	void test_multiplication2() {
-        Counter<string, float>
-            c3 = c1 * 2,
-            expected_c = {{"a", 2}, {"b", 4}};
-        TS_ASSERT_EQUALS(c3, expected_c);
-    }
+		Counter<string, float>
+			c3 = c1 * 2,
+			expected_c = {{"a", 2}, {"b", 4}};
+		TS_ASSERT_EQUALS(c3, expected_c);
+	}
 
-    void test_division2() {
-        Counter<string, float>
-            c3 = c1 / 2,
-            expected_c = {{"a", 0.5}, {"b", 1}};
-        TS_ASSERT_EQUALS(c3, expected_c);
-    }
+	void test_division2() {
+		Counter<string, float>
+			c3 = c1 / 2,
+			expected_c = {{"a", 0.5}, {"b", 1}};
+		TS_ASSERT_EQUALS(c3, expected_c);
+	}
 };
