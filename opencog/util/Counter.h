@@ -60,8 +60,8 @@ protected:
 	template<typename IT>
 	void init(IT from, IT to) {
 		while(from != to) {
-			this->operator[](*from) += 1;  // we don't use ++ to put the
-										   // least assumption on on CT
+			//we don't use ++ to put the least assumption on on CT
+			this->operator[](*from) += 1;
 			++from;
 		}
 	}
