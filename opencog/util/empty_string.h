@@ -35,7 +35,14 @@
 
 namespace opencog {
 
+// Empty static string. This is mostly to make oc_to_string and poc
+// (see
+// https://wiki.opencog.org/w/Development_standards#Pretty_Print_OpenCog_Objects)
+// easier to define.
 const static std::string empty_string = "";
+
+// Default indentation for oc_to_string when there is some.
+const static std::string oc_to_string_indent = "  ";
 
 } // ~namespace opencog
 
