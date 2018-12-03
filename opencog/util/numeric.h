@@ -72,6 +72,7 @@ using __gnu_cxx::power;
 const double EPSILON = 1e-6; // default error when comparing 2 floats
 const double SMALL_EPSILON = 1e-32;
 const double PROB_EPSILON = 1e-127; // error when comparing 2 probabilities
+const int MAX_ULPS = 24;
 
 //! absolute_value_order
 //!   codes the following order, for T == int, -1,1,-2,2,-3,3,...
@@ -273,6 +274,20 @@ template<typename Int> Int ndigits(Int x, Int base = 10) {
 template<typename FloatT> bool is_between(FloatT x, FloatT min_, FloatT max_)
 {
     return x >= min_ && x <= max_;
+}
+
+// Compare floats with ULPS, because they are lexicographically
+// ordered. For technical explanation, see
+// http://www.cygnus-software.com/papers/comparingfloats/Comparing%20floating%20point%20numbers.htm
+template<typename FloatT> bool is_approx_eq_ulp(FloatT x,FloatT y,int max_ulps)
+{
+	int ulps = llabs(*(int64_t*) &(x) - *(int64_t*)&(y))
+	return max_ulps > ulps;
+}
+
+template<typename FloatT> bool is_approx_eq_ulp(FloatT x,FloatT y)
+{
+	return is_approx_eq_ulp(x,y,MAX_ULPS)
 }
 
 //! returns true iff abs(x - y) <= epsilon
