@@ -260,9 +260,6 @@ ADD_DEFINITIONS(-DDATADIR=\\"${DATADIR}\\")
 # (re?)define MAN_INSTALL_DIR
 SET (MAN_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/share/man")
 
-# include custom opencog cmake macros
-INCLUDE("${CMAKE_SOURCE_DIR}/cmake/OpenCogMacros.cmake")
-
 # small hack to handle unixes that use "/usr/lib64" instead of "/usr/lib" as the
 # default lib path on 64 bit archs
 IF (NOT DEFINED LIB_DIR_SUFFIX)
