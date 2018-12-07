@@ -30,6 +30,16 @@ SET(CMAKE_INSTALL_MESSAGE "LAZY")
 
 PROJECT(cogutil)
 
+# Get cogutil version
+# NOTE: This is the official semantic-version, as it is derived from a
+# version-control independent means of declaring versioning.
+# TODO: Once CMAKE_MINIMUM_REQUIRED >= 3.0.2 check use of policy CMP0048.
+FILE(READ "${CMAKE_SOURCE_DIR}/opencog/util/cogutil.h" _CU_H_CONTENTS)
+STRING(REGEX MATCH
+	"#define COGUTIL_VERSION_STRING \"([0-9]+[.0-9]+[.0-9]+)\""
+	_ "${_CU_H_CONTENTS}")
+SET(SEMANTIC_VERSION ${CMAKE_MATCH_1})
+
 IF (WIN32) # Windows host but not cygwin
 	MESSAGE(FATAL_ERROR "You must use Cygwin if compiling under Windows.")
 
@@ -75,44 +85,6 @@ ADD_DEFINITIONS(-DPROJECT_SOURCE_DIR=\\"${CMAKE_SOURCE_DIR}\\"
 
 # add the 'cmake' dir to cmake's module search path
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/")
-
-# determine version
-SET(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/packages")
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "The OpenCog Basic C++ Utilities")
-SET(CPACK_PACKAGE_NAME "libcogutil-dev")
-SET(CPACK_PACKAGE_VENDOR "opencog.org")
-SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
-FILE(READ "${CMAKE_SOURCE_DIR}/opencog/util/cogutil.h" _CU_H_CONTENTS)
-STRING(REGEX MATCH
-	"#define COGUTIL_MAJOR_VERSION ([0-9]+)"
-	_ "${_CU_H_CONTENTS}")
-SET(CPACK_PACKAGE_VERSION_MAJOR ${CMAKE_MATCH_1})
-STRING(REGEX MATCH
-	"#define COGUTIL_MINOR_VERSION ([0-9]+)"
-	_ "${_CU_H_CONTENTS}")
-SET(CPACK_PACKAGE_VERSION_MINOR ${CMAKE_MATCH_1})
-STRING(REGEX MATCH
-	"#define COGUTIL_MICRO_VERSION ([0-9]+)"
-	_ "${_CU_H_CONTENTS}")
-SET(CPACK_PACKAGE_VERSION_PATCH ${CMAKE_MATCH_1})
-# NOTE: This is the official semantic-version, as it is derived from a
-# version-control independent means of declaring versioning.
-SET(SEMANTIC_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
-
-# NOTE: `git describe` returns an output with count of commits after the last
-# annotated-tags. This makes relasing multiple daily builds easy as the
-# installed packgaes can easily be sorted. If that doesn't work then for
-# debian packages 'Breaks' and 'Replaces' fields might have to be used.
-EXECUTE_PROCESS(COMMAND  git describe --long "--match=*${SEMANTIC_VERSION}*"
-	OUTPUT_VARIABLE COGUTIL_GIT_VERSION
-	RESULT_VARIABLE RV
-	OUTPUT_STRIP_TRAILING_WHITESPACE)
-IF(${RV})
-	MESSAGE(WARNING "\nThere is no git annotated-tag with semantic-version = "
-	${SEMANTIC_VERSION})
-ENDIF()
-
 
 # ===============================================================
 # Detect different compilers and OS'es, tweak flags as necessary.
@@ -325,48 +297,24 @@ ADD_CUSTOM_TARGET(cscope
 
 # Packaging
 # For what architecture the package is for
-# TODO: Will give error on non debian distros.
+# TODO: Will give error on non debian distros, fix it.
 EXECUTE_PROCESS(COMMAND  dpkg --print-architecture
 	OUTPUT_VARIABLE PACKAGE_ARCHITECTURE
 	OUTPUT_STRIP_TRAILING_WHITESPACE)
-# Cleanup because debain version require that it starts with a number.
-STRING(REGEX MATCH "([0-9]+[0-9.]+)-([a-zA-Z0-9-]+)$"
-	_ "${COGUTIL_GIT_VERSION}")
-SET(CPACK_PACKAGE_VERSION "${CMAKE_MATCH_0}")
+STRING(TIMESTAMP UTC_DATE %Y%m%d UTC)
 
-SET(CPACK_PACKAGE_CONTACT "opencog@googlegroups.com")
+## Cpack configuration
 SET(CPACK_GENERATOR "DEB")
+SET(CPACK_PACKAGE_CONTACT "opencog@googlegroups.com")
+SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+SET(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/packages")
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "The OpenCog Basic C++ Utilities")
+SET(CPACK_PACKAGE_NAME "libcogutil-dev")
+SET(CPACK_PACKAGE_VENDOR "opencog.org")
+SET(CPACK_PACKAGE_VERSION "${SEMANTIC_VERSION}-${UTC_DATE}")
+SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 SET(CPACK_PACKAGE_FILE_NAME
 	"${CPACK_PACKAGE_NAME}_${CPACK_PACKAGE_VERSION}_${PACKAGE_ARCHITECTURE}")
-SET(CPACK_SOURCE_IGNORE_FILES
-	"~$"
-	".a$"
-	".so$"
-	".log$"
-	".tar.z$"
-	".tar.gz$"
-	".tar.bz2$"
-	"/Makefile$"
-	"/CMakeFiles/"
-	"/CMakeFiles/"
-	"/CMakeCache.txt$"
-	"/DartTestfile.txt$"
-	"/cmake_install.cmake$"
-	"/*.cmake$"
-	"/*.make$"
-	"UTest$"
-	"UTest.cpp$"
-	"/_CPack_Packages/"
-	"/sniff$"
-	"/install_manifest.txt$"
-	"${CPACK_PACKAGE_FILE_NAME}"
-	"${CPACK_PACKAGE_DIRECTORY}"
-	"^${PROJECT_SOURCE_DIR}/debian/"
-	"^${PROJECT_SOURCE_DIR}/.*spec$"
-	"^${PROJECT_SOURCE_DIR}/vendor/"
-	"^${PROJECT_SOURCE_DIR}/.git/"
-)
-
 SET(CPACK_PACKAGING_INSTALL_PREFIX "/usr/local")
 
 ## Debian specific configurations
@@ -384,6 +332,7 @@ SET(DEPENDENCY_LIST
 	"binutils-dev"
 	"libiberty-dev"
 )
+
 STRING(REPLACE ";" ", " MAIN_DEPENDENCIES "${DEPENDENCY_LIST}")
 SET(CPACK_DEBIAN_PACKAGE_DEPENDS "${MAIN_DEPENDENCIES}")
 SET(CPACK_DEBIAN_PACKAGE_SECTION "libdevel")
