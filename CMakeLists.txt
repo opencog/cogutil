@@ -90,11 +90,13 @@ SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/")
 # Detect different compilers and OS'es, tweak flags as necessary.
 
 IF (CMAKE_COMPILER_IS_GNUCXX)  # Compiler is GCC
-	# aiiee cmake version 2.8.8 or newer is needed for below to
-	# work...
-	# IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.6.4)
-	#	MESSAGE(FATAL_ERROR "GCC version must be at least 4.6.4!")
-	# ENDIF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.6.4)
+	#
+	# The variadic templates in the atomspace require something
+	# newer than gcc-4.9.0. See issue opencog/atomspace#1916
+	#
+	# IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.4.0)
+	#	MESSAGE(FATAL_ERROR "GCC version must be at least 5.4.0!")
+	# ENDIF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.4.0)
 
 	IF (APPLE)
 		SET(CMAKE_C_FLAGS "-Wall -Wno-long-long -Wno-conversion")
@@ -117,7 +119,8 @@ IF (CMAKE_COMPILER_IS_GNUCXX)  # Compiler is GCC
 	#
 	# 2) -fopenmp for multithreading support
 	#
-	# 3) -std=gnu++0x for C++0x and GNU extensions support
+	# 3) -std=gnu++11 for C++11 and GNU extensions support
+	#    XXX maybe we can move to a newer C++ standard, now?
 	SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wno-variadic-macros -fopenmp -std=gnu++11")
 
 	SET(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
@@ -170,6 +173,7 @@ IF (Boost_FOUND)
 	SET(Boost_FOUND_SAVE 1)
 
 	# Boost.Signals2 requires this in signal_type.hpp
+	# XXX FIXME, except we no longer use signals2 anywhere. right?
 	SET(BOOST_PARAMETER_MAX_ARITY 7)
 	ADD_DEFINITIONS(-DBOOST_PARAMETER_MAX_ARITY=${BOOST_PARAMETER_MAX_ARITY})
 ELSE(Boost_FOUND)
@@ -209,7 +213,7 @@ ELSE (IBERTY_FOUND)
 ENDIF (IBERTY_FOUND)
 
 
-# ==========================================================
+# ===================================================================
 # Decide what to build, based on the packages found.
 
 IF (Boost_FOUND)
@@ -217,7 +221,7 @@ IF (Boost_FOUND)
 ENDIF (Boost_FOUND)
 
 # ===================================================================
-# global includes
+# Global includes
 
 # set confdir and datadir
 IF (NOT DEFINED CONFDIR)
@@ -232,8 +236,8 @@ ADD_DEFINITIONS(-DDATADIR=\\"${DATADIR}\\")
 # (re?)define MAN_INSTALL_DIR
 SET (MAN_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/share/man")
 
-# small hack to handle unixes that use "/usr/lib64" instead of "/usr/lib" as the
-# default lib path on 64 bit archs
+# Small hack to handle unixes that use "/usr/lib64" instead of
+# "/usr/lib" as the default lib path on 64 bit archs.
 IF (NOT DEFINED LIB_DIR_SUFFIX)
 	EXECUTE_PROCESS(COMMAND ${CMAKE_CXX_COMPILER} -print-search-dirs OUTPUT_VARIABLE PRINT_SEARCH_DIRS_OUTPUT)
 	STRING(REGEX MATCH "\r?\nlibraries:.*\r?\n" COMPILER_LIB_SEARCH_DIRS ${PRINT_SEARCH_DIRS_OUTPUT})
