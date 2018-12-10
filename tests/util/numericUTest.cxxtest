@@ -21,11 +21,9 @@
  */
 
 #include <opencog/util/numeric.h>
-#include <opencog/comboreduct/table/table.h>
 
 using namespace std;
 using namespace opencog;
-using namespace combo;
 
 class numericUTest : public CxxTest::TestSuite
 {
