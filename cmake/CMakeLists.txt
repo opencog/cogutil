@@ -33,9 +33,6 @@ INSTALL(FILES
         FindUUID.cmake
         Findcpprest.cmake
         Summary.cmake
-        OpenCogFunctions.cmake
-        OpenCogAtomTypes.cmake
-        OpenCogMacros.cmake
         COPYING-CMAKE-SCRIPTS
         DESTINATION
         ${DATADIR}/cmake/)
