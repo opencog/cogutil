@@ -279,13 +279,18 @@ template<typename FloatT> bool is_between(FloatT x, FloatT min_, FloatT max_)
 // Compare floats with ULPS, because they are lexicographically
 // ordered. For technical explanation, see
 // http://www.cygnus-software.com/papers/comparingfloats/Comparing%20floating%20point%20numbers.htm
-template<typename FloatT> bool is_approx_eq_ulp(FloatT x,FloatT y,long long int max_ulps)
+bool is_approx_eq_ulp(double x,double y,long long int max_ulps)
 {
+	if ((x < 0) != (y < 0)) {
+		if (x == y) //incase x==0 y==-0
+			return true;
+		return false;
+	}
 	long long int ulps = llabs(*(int64_t*) &(x) - *(int64_t*)&(y));
 	return max_ulps > ulps;
 }
 
-template<typename FloatT> bool is_approx_eq_ulp(FloatT x,FloatT y)
+bool is_approx_eq_ulp(double x,double y)
 {
 	return is_approx_eq_ulp(x,y,MAX_ULPS);
 }
