@@ -199,10 +199,10 @@ template<typename FloatT> bool is_within(FloatT x, FloatT y, FloatT epsilon)
 template<typename FloatT> bool is_approx_eq(FloatT x, FloatT y, FloatT epsilon)
 {
     FloatT diff = std::fabs(x - y);
+    if (diff < epsilon) return true;
+
     FloatT amp = std::fabs(x + y);
-    if (amp*amp > epsilon)
-        return diff <= epsilon * amp;
-    else return diff <= epsilon;
+    return diff <= epsilon * amp;
 }
 
 //! compare 2 FloatT with precision EPSILON
