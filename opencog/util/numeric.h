@@ -33,10 +33,8 @@
 
 #include <boost/range/numeric.hpp>
 
-#include <opencog/util/exceptions.h>
-#include <opencog/util/oc_assert.h>
-
 #include <opencog/util/iostreamContainer.h>
+#include <opencog/util/oc_assert.h>
 
 /** \addtogroup grp_cogutil
  *  @{
@@ -180,6 +178,7 @@ inline unsigned int count_bits32(T v)
     v = (v & 0x33333333) + ((v >> 2) & 0x33333333);     // temp
     return ((v + (v >> 4) & 0xF0F0F0F) * 0x1010101) >> 24; // count
 }
+
 template<typename T>
 inline unsigned int count_bits(T v)
 {
@@ -239,28 +238,6 @@ inline unsigned int nbits_to_pack(size_t multy)
 {
     OC_ASSERT(multy > 0);
     return next_power_of_two(integer_log2(multy -1) + 1);
-}
-
-//! sums of natural logarithms (for a particular floating-point type)
-template<typename FloatT>
-FloatT logsum(size_t n)
-{
-    static std::vector<FloatT> sums;
-    if (n >= sums.size()) {
-        int to = next_power_of_two(n) + 2;
-        sums.reserve(to);
-        if (sums.empty()) {
-            sums.push_back(0);
-            sums.push_back(0);
-        }
-
-        FloatT v = sums.back();
-        for (int i = sums.size();i < to;++i) {
-            v += log(FloatT(i - 1));
-            sums.push_back(v);
-        }
-    }
-    return sums[n];
 }
 
 //! return the number of digits (in base 10 by default) of an integer
