@@ -67,6 +67,8 @@ using std::iota;
 using __gnu_cxx::power;
 #endif
 
+// XXX FIXME; these should almost surely be replaced by
+// some version of std::numeric_limits<double>::epsilon
 const double EPSILON = 1e-6; // default error when comparing 2 floats
 const double SMALL_EPSILON = 1e-32;
 const double PROB_EPSILON = 1e-127; // error when comparing 2 probabilities
@@ -85,24 +87,6 @@ struct absolute_value_order
 /** @name Bithacks
  */
 ///@{
-
-//! return p the smallest power of 2 so that p >= x
-/// So for instance:
-///   - next_power_of_two(1) = 1
-///   - next_power_of_two(2) = 2
-///   - next_power_of_two(3) = 4
-inline size_t next_power_of_two(size_t x)
-{
-    OC_ASSERT(x > 0);
-    x--;
-    x |= x >> 1;
-    x |= x >> 2;
-    x |= x >> 4;
-    x |= x >> 8;
-    x |= x >> 16;
-    x++;
-    return x;
-}
 
 /// Return the index of the first non-zero bit in the integer value,
 /// minus one.
@@ -128,6 +112,28 @@ inline unsigned int integer_log2(size_t v)
     v |= v >> 16;
     v = (v >> 1) + 1;
     return MultiplyDeBruijnBitPosition[static_cast<uint32_t>(v * 0x077CB531UL) >> 27];
+#endif
+}
+
+//! return p the smallest power of 2 so that p >= x
+/// So for instance:
+///   - next_power_of_two(1) = 1
+///   - next_power_of_two(2) = 2
+///   - next_power_of_two(3) = 4
+inline size_t next_power_of_two(size_t x)
+{
+    OC_ASSERT(x > 0);
+#ifdef __GNUC__
+    return 1UL << (8*sizeof(size_t) - __builtin_clzl(x-1));
+#else
+    x--;
+    x |= x >> 1;
+    x |= x >> 2;
+    x |= x >> 4;
+    x |= x >> 8;
+    x |= x >> 16;
+    x++;
+    return x;
 #endif
 }
 
