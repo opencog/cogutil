@@ -149,6 +149,7 @@ inline unsigned int integer_log2(size_t v)
 inline unsigned int nbits_to_pack(size_t multy)
 {
     OC_ASSERT(multy > 0);
+// #define ALIGNED_NOT_ACTUALLY_REQUIRED 1
 #ifdef ALIGNED_NOT_ACTUALLY_REQUIRED
     return integer_log2(multy -1) + 1;
 #else
