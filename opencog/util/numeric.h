@@ -104,8 +104,18 @@ inline size_t next_power_of_two(size_t x)
     return x;
 }
 
+/// Return the index of the first non-zero bit in the integer value,
+/// minus one.
 inline unsigned int integer_log2(size_t v)
 {
+#ifdef __GNUC__
+    // On x86_64, this uses the BSR (Bit scane Reverse) insn or
+    // the LZCNT (Leading Zero Count) insn.
+    // This should also work on ARM, according to the interwebs.
+    // And other arches, including POWER (?!)
+    if (0 == v) return 0;
+    return (8*sizeof(size_t) - 1) - __builtin_clzl(v);
+#else
     static const int MultiplyDeBruijnBitPosition[32] = {
         0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
         31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
@@ -118,19 +128,32 @@ inline unsigned int integer_log2(size_t v)
     v |= v >> 16;
     v = (v >> 1) + 1;
     return MultiplyDeBruijnBitPosition[static_cast<uint32_t>(v * 0x077CB531UL) >> 27];
+#endif
 }
 
-//! return the smaller exponent in base 2. 
-/// This is used to know how
-/// many bits should be used to pack a certain number of values. So
-/// for instance
+/// Return the number of bits needed to hold the value, aligned to
+/// the next power of two. This is used by moses, to pack int values
+/// into bits.  It is asking for a power-of-two alignment, presumably
+/// with the idea that the compiler generates faster code!? However,
+/// the unit tests don't seem to actually require this; it works
+/// just fine, (and not any slower) if alignment is discarded.
+/// That is, the moses unit tests run equally fast, and pass, when
+/// #define ALIGNED_NOT_ACTUALLY_REQUIRED 1 is set.
+///
+/// Examples of alignment:
 ///    - nbits_to_pack(2) = 1,
 ///    - nbits_to_pack(3) = 2,
-///    - nbits_to_pack(50) = 8
+///    - nbits_to_pack(50) = 8  (not 6)
+///    - nbits_to_pack(257) = 16  (not 9)
+///
 inline unsigned int nbits_to_pack(size_t multy)
 {
     OC_ASSERT(multy > 0);
+#ifdef ALIGNED_NOT_ACTUALLY_REQUIRED
+    return integer_log2(multy -1) + 1;
+#else
     return next_power_of_two(integer_log2(multy -1) + 1);
+#endif
 }
 
 //! returns true iff x >= min and x <= max
