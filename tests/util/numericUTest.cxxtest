@@ -86,13 +86,14 @@ public:
             res_4 = next_power_of_two(4),
             res_5 = next_power_of_two(5),
             res_50 = next_power_of_two(50),
+            res_255 = next_power_of_two(255),
             res_256 = next_power_of_two(256),
             res_257 = next_power_of_two(257);
 
         cout << "test_next_power_of_two: ";
         cout << res_1 << " " << res_2 << " " << res_3 << " "
              << res_4 << " " << res_5 << " "
-             << res_50 << " "
+             << res_50 << " " << res_255 << " "
              << res_256 << " " << res_257 << endl;
 
         TS_ASSERT_EQUALS(res_1, 1);
@@ -101,6 +102,7 @@ public:
         TS_ASSERT_EQUALS(res_4, 4);
         TS_ASSERT_EQUALS(res_5, 8);
         TS_ASSERT_EQUALS(res_50, 64);
+        TS_ASSERT_EQUALS(res_255, 256);
         TS_ASSERT_EQUALS(res_256, 256);
         TS_ASSERT_EQUALS(res_257, 512);
     }

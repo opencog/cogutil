@@ -110,6 +110,7 @@ inline size_t next_power_of_two(size_t x)
 {
     OC_ASSERT(x > 0);
 #ifdef __GNUC__
+    if (1==x) return 1;  // because __builtin_clzl(0) is -MAX_INT
     return 1UL << (8*sizeof(size_t) - __builtin_clzl(x-1));
 #else
     x--;
