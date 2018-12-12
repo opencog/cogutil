@@ -282,9 +282,7 @@ template<typename FloatT> bool is_between(FloatT x, FloatT min_, FloatT max_)
 bool is_approx_eq_ulp(double x,double y,long long int max_ulps)
 {
 	if ((x < 0) != (y < 0)) {
-		if (x == y) //incase x==0 y==-0
-			return true;
-		return false;
+		return x == y //incase x==0 y==-0
 	}
 	long long int ulps = llabs(*(int64_t*) &(x) - *(int64_t*)&(y));
 	return max_ulps > ulps;
