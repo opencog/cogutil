@@ -44,13 +44,16 @@ public:
                                  << "d3: " << d3 << endl
                                  << "d4: " << d4 << endl;
         TS_ASSERT(not (d3 == d4))
-        TS_ASSERT(is_approx_eq_ulp(d3,d4))
+
+// Allow as many as 24 bits to be different.
+#define COMPARE_ULPS 24
+        TS_ASSERT(is_approx_eq_ulp(d3, d4, COMPARE_ULPS))
 
         double d5 = -0.0000000000000000000000000000001,
                d6 =  0.0000000000000000000000000000001;
 
-        TS_ASSERT(not is_approx_eq_ulp(d5,d6))
-        TS_ASSERT(not is_approx_eq_ulp(d5,0.0))
+        TS_ASSERT(not is_approx_eq_ulp(d5, d6, COMPARE_ULPS))
+        TS_ASSERT(not is_approx_eq_ulp(d5, 0.0, COMPARE_ULPS))
     }
 
     void test_integer_log2()

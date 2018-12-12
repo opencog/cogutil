@@ -58,8 +58,6 @@ namespace opencog
 // Maximum acceptable difference when comparing distances.
 #define DISTANCE_EPSILON 1e-32
 
-#define MAX_ULPS 24
-
 //! absolute_value_order
 //!   codes the following order, for T == int, -1,1,-2,2,-3,3,...
 template<typename T>
@@ -188,11 +186,6 @@ static inline bool is_approx_eq_ulp(double x, double y, long int max_ulps)
 
 	long int ulps = labs(*xbits - *ybits);
 	return max_ulps > ulps;
-}
-
-static inline bool is_approx_eq_ulp(double x, double y)
-{
-	return is_approx_eq_ulp(x, y, MAX_ULPS);
 }
 
 //! returns true iff abs(x - y) <= epsilon
@@ -453,7 +446,6 @@ Float angular_distance(const Vec& a, const Vec& b, bool pos_n_neg = true)
 // Avoid spewing garbage into the namespace!
 #undef PROB_EPSILON
 #undef DISTANCE_EPSILON
-#undef MAX_ULPS
 
 } // ~namespace opencog
 /** @}*/
