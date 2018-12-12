@@ -133,13 +133,6 @@ inline unsigned int nbits_to_pack(size_t multy)
     return next_power_of_two(integer_log2(multy -1) + 1);
 }
 
-//! return the number of digits (in base 10 by default) of an integer
-template<typename Int> Int ndigits(Int x, Int base = 10) {
-    Int nd = 0;
-    while (x != 0) { x /= base; nd++; }
-    return nd;
-}
-
 //! returns true iff x >= min and x <= max
 template<typename FloatT> bool is_between(FloatT x, FloatT min_, FloatT max_)
 {
