@@ -53,12 +53,12 @@
 namespace opencog
 {
 
-// XXX FIXME; these should almost surely be replaced by
-// some version of std::numeric_limits<double>::epsilon
-const double EPSILON = 1e-6; // default error when comparing 2 floats
-const double SMALL_EPSILON = 1e-32;
-const double PROB_EPSILON = 1e-127; // error when comparing 2 probabilities
-const int MAX_ULPS = 24;
+// Maximum acceptable difference when comparing probabilities.
+#define PROB_EPSILON 1e-127
+// Maximum acceptable difference when comparing distances.
+#define DISTANCE_EPSILON 1e-32
+
+#define MAX_ULPS 24
 
 //! absolute_value_order
 //!   codes the following order, for T == int, -1,1,-2,2,-3,3,...
@@ -216,7 +216,7 @@ template<typename FloatT> bool is_approx_eq(FloatT x, FloatT y, FloatT epsilon)
 /// note that, unlike isWithin, the precision adapts with the scale of x and y
 template<typename FloatT> bool is_approx_eq(FloatT x, FloatT y)
 {
-    return is_approx_eq(x, y, static_cast<FloatT>(EPSILON));
+    return is_approx_eq(x, y, std::numeric_limits<FloatT>::epsilon());
 }
 
 // TODO: replace the following by C++17 std::clamp
@@ -400,7 +400,7 @@ Float tanimoto_distance(const Vec& a, const Vec& b)
         bb = boost::inner_product(b, b, Float(0)),
         numerator = aa + bb - ab;
 
-    if (numerator >= Float(SMALL_EPSILON))
+    if (numerator >= Float(DISTANCE_EPSILON))
         return 1 - (ab / numerator);
     else
         return 0;
@@ -441,7 +441,7 @@ Float angular_distance(const Vec& a, const Vec& b, bool pos_n_neg = true)
         bb = boost::inner_product(b, b, Float(0)),
         numerator = sqrt(aa * bb);
     
-    if (numerator >= Float(SMALL_EPSILON)) {
+    if (numerator >= Float(DISTANCE_EPSILON)) {
         // in case of rounding error
         Float r = clamp(ab / numerator, Float(-1), Float(1));
         return (pos_n_neg ? 1 : 2) * acos(r) / PI;
@@ -449,6 +449,11 @@ Float angular_distance(const Vec& a, const Vec& b, bool pos_n_neg = true)
     else
         return 0;
 }
+
+// Avoid spewing garbage into the namespace!
+#undef PROB_EPSILON
+#undef DISTANCE_EPSILON
+#undef MAX_ULPS
 
 } // ~namespace opencog
 /** @}*/
