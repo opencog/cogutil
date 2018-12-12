@@ -83,37 +83,8 @@ struct absolute_value_order
 };
 
 /** @name Bithacks
- *
- * The following functions are adapted from the bit twiddling hacks page:
- * http://graphics.stanford.edu/~seander/bithacks.html
- * 32-bit version is faster, than the others
- * but beware, you need to check the number of bits yourself
- * awkward phrasing cuz c++ doesn't allow partial specialization of functions
- *
- * a few possibilities were tried; gcc has a built-in function called
- * __builtin_popcount which is somewhat slower. Using a lookup table might
- * be somwhat faster under some circumstances, but was avoided because it
- * might hog the fast memory ...
  */
 ///@{
-
-//! count_bits will work up to 128-bits
-template<typename T>
-inline unsigned int count_bits32(T v)
-{
-    v = v - ((v >> 1) & 0x55555555);                    // reuse input as temp
-    v = (v & 0x33333333) + ((v >> 2) & 0x33333333);     // temp
-    return ((v + (v >> 4) & 0xF0F0F0F) * 0x1010101) >> 24; // count
-}
-
-template<typename T>
-inline unsigned int count_bits(T v)
-{
-    v = v - ((v >> 1) & (T)~(T)0 / 3);                         // temp
-    v = (v & (T)~(T)0 / 15 * 3) + ((v >> 2) & (T)~(T)0 / 15 * 3);      // temp
-    v = (v + (v >> 4)) & (T)~(T)0 / 255 * 15;                  // temp
-    return ((T)(v * ((T)~(T)0 / 255)) >> (sizeof(v) - 1) * CHAR_BIT);
-}
 
 //! return p the smallest power of 2 so that p >= x
 /// So for instance:
