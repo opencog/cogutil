@@ -82,14 +82,6 @@ struct absolute_value_order
     }
 };
 
-template<typename T>
-struct absolute_value_equality
-{
-    bool operator()(T a,T b) const {
-        return (a == b || a == -b);
-    }
-};
-
 /** @name Bithacks
  *
  * The following functions are adapted from the bit twiddling hacks page:
@@ -104,71 +96,6 @@ struct absolute_value_equality
  * might hog the fast memory ...
  */
 ///@{
-
-template<int> struct bits
-{
-    template<typename T>
-    static inline unsigned int count(T v);
-};
-
-template<> struct bits<32>
-{
-    template<typename T>
-    static inline unsigned int count(T v) {
-        v = v - ((v >> 1) & 0x55555555);                       // reuse v as temp
-        v = (v & 0x33333333) + ((v >> 2) & 0x33333333);        // temp
-        return ((v + (v >> 4) & 0xF0F0F0F) * 0x1010101) >> 24; // count
-    }
-    template<typename T>
-    static inline void interleave(T& v) {
-        static const unsigned int B[] = {0x55555555, 0x33333333, 0x0F0F0F0F, 0x00FF00FF};
-        static const unsigned int S[] = {1, 2, 4, 8};
-
-        T upperbits = (v >> 16);
-        upperbits = (upperbits | (upperbits << S[3])) & B[3];
-        upperbits = (upperbits | (upperbits << S[2])) & B[2];
-        upperbits = (upperbits | (upperbits << S[1])) & B[1];
-        upperbits = (upperbits | (upperbits << S[0])) & B[0];
-        v &= 0xFFFF; //take the lower 16 bits
-        v = (v | (v << S[3])) & B[3];
-        v = (v | (v << S[2])) & B[2];
-        v = (v | (v << S[1])) & B[1];
-        v = (v | (v << S[0])) & B[0];
-        v = v | (upperbits << 1);
-    }
-};
-
-template<> struct bits<64>
-{
-    template<typename T>
-    static inline unsigned int count(T v) {
-        v = v - ((v >> 1) & (T)~(T)0 / 3);                         // temp
-        v = (v & (T)~(T)0 / 15 * 3) + ((v >> 2) & (T)~(T)0 / 15 * 3);      // temp
-        v = (v + (v >> 4)) & (T)~(T)0 / 255 * 15;                  // temp
-        return ((T)(v * ((T)~(T)0 / 255)) >> (sizeof(v) - 1) * CHAR_BIT);
-    }
-    template<typename T>
-    static inline void interleave(T& v) {
-        unsigned int tmp1 = ((v >> 48) << 16);
-        tmp1 |= (v << 32) >> 48;
-        bits<32>::interleave(tmp1);
-        unsigned int tmp2 = ((v >> 16) & 0xFFFF0000);
-        tmp2 |= (v & 0xFFFF);
-        bits<32>::interleave(tmp2);
-        v = (T(tmp1) << 32 | T(tmp2));
-    }
-};
-
-template<> struct bits<128>
-{
-    template<typename T>
-    static inline unsigned int count(T v) {
-        v = v - ((v >> 1) & (T)~(T)0 / 3);                         // temp
-        v = (v & (T)~(T)0 / 15 * 3) + ((v >> 2) & (T)~(T)0 / 15 * 3);      // temp
-        v = (v + (v >> 4)) & (T)~(T)0 / 255 * 15;                  // temp
-        return ((T)(v * ((T)~(T)0 / 255)) >> (sizeof(v) - 1) * CHAR_BIT);
-    }
-};
 
 //! count_bits will work up to 128-bits
 template<typename T>
@@ -220,11 +147,6 @@ inline unsigned int integer_log2(size_t v)
     v |= v >> 16;
     v = (v >> 1) + 1;
     return MultiplyDeBruijnBitPosition[static_cast<uint32_t>(v * 0x077CB531UL) >> 27];
-}
-
-template<typename FloatT> FloatT log2(FloatT x)
-{
-    return std::log(x) / std::log(static_cast<FloatT>(2));
 }
 
 //! return the smaller exponent in base 2. 
@@ -329,7 +251,7 @@ Float clamp(Float x, Float l, Float u)
 //! useful for entropy
 template<typename FloatT> FloatT weighted_information(FloatT p)
 {
-    return p > PROB_EPSILON? -p * opencog::log2(p) : 0;
+    return p > PROB_EPSILON? -p * std::log2(p) : 0;
 }
 
 //! compute the binary entropy of probability p
