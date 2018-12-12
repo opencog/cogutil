@@ -276,21 +276,31 @@ template<typename FloatT> bool is_between(FloatT x, FloatT min_, FloatT max_)
     return x >= min_ && x <= max_;
 }
 
-// Compare floats with ULPS, because they are lexicographically
-// ordered. For technical explanation, see
-// http://www.cygnus-software.com/papers/comparingfloats/Comparing%20floating%20point%20numbers.htm
-bool is_approx_eq_ulp(double x,double y,long long int max_ulps)
+/// Compare floats with ULPS, because they are lexicographically
+/// ordered. For technical explanation, see
+/// http://www.cygnus-software.com/papers/comparingfloats/Comparing%20floating%20point%20numbers.htm
+/// and also it's new, improved variant:
+/// https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/
+///
+static inline bool is_approx_eq_ulp(double x, double y, long long int max_ulps)
 {
-	if ((x < 0) != (y < 0)) {
-		return x == y; //incase x==0 y==-0
+	if ((x < 0) != (y < 0))
+	{
+		return x == y; // in case x==0 and y==-0
 	}
-	long long int ulps = llabs(*(int64_t*) &(x) - *(int64_t*)&(y));
+
+	// Some compilers may need the __may_alias__ attribute ??
+	// int64_t* __attribute__((__may_alias__)) xbits = ...
+	int64_t* xbits = reinterpret_cast<int64_t*>(&x);
+	int64_t* ybits = reinterpret_cast<int64_t*>(&y);
+
+	long long int ulps = llabs(*xbits - *ybits);
 	return max_ulps > ulps;
 }
 
-bool is_approx_eq_ulp(double x,double y)
+static inline bool is_approx_eq_ulp(double x, double y)
 {
-	return is_approx_eq_ulp(x,y,MAX_ULPS);
+	return is_approx_eq_ulp(x, y, MAX_ULPS);
 }
 
 //! returns true iff abs(x - y) <= epsilon
