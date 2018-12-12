@@ -53,20 +53,6 @@
 namespace opencog
 {
 
-using std::numeric_limits;
-using std::isnan;
-using std::isfinite;
-using std::isinf;
-
-using std::iota;
-
-#ifndef WIN32
-// This needs to be changed for non-gcc. Note however that so far it
-// has been useless as most of the time you just need pow2 or sq
-// defined below in that header
-using __gnu_cxx::power;
-#endif
-
 // XXX FIXME; these should almost surely be replaced by
 // some version of std::numeric_limits<double>::epsilon
 const double EPSILON = 1e-6; // default error when comparing 2 floats
@@ -306,7 +292,7 @@ template<typename T> T sq(T x) { return x*x; }
 //! check if x isn't too high and return 2^x
 template<typename OutInt> OutInt pow2(unsigned int x)
 {
-    OC_ASSERT(8*sizeof(OutInt) - (numeric_limits<OutInt>::is_signed?1:0) > x,
+    OC_ASSERT(8*sizeof(OutInt) - (std::numeric_limits<OutInt>::is_signed?1:0) > x,
               "pow2: Amount to shift is out of range.");
     return static_cast<OutInt>(1) << x;
 }
@@ -444,6 +430,11 @@ Float angular_distance(const Vec& a, const Vec& b, bool pos_n_neg = true)
                "Cannot compare unequal-sized vectors!  %d %d\n",
                a.size(), b.size());
 
+    // XXX FIXME writing out the explicit loop will almost
+    // surely be faster than calling boost. Why? Because a single
+    // loop allows the compiler to insert instructions into the
+    // pipeline bubbles; whereas three different loops will be more
+    // than three times slower!
     Float ab = boost::inner_product(a, b, Float(0)),
         aa = boost::inner_product(a, a, Float(0)),
         bb = boost::inner_product(b, b, Float(0)),
