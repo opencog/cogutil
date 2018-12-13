@@ -72,7 +72,7 @@ void lazy_selector::reset_range(unsigned int new_u, unsigned int new_l) {
  *
  * It works by creating a mapping between already selected indices and
  * free indices (never selected yet).
- * 
+ *
  * To chose the free indices, we use an index _l, that
  * goes from the lower range to the upper range and only corresponds to
  * free indices. So every time _l corresponds to a non free index
@@ -84,7 +84,7 @@ unsigned int lazy_selector::operator()()
     OC_ASSERT(!empty(), "lazy_selector - selector is empty.");
 
     unsigned int sel_idx = select();
-    
+
     // If the selected index points to nothing then the result is
     // itself otherwise it is _l
     unsigned int res = is_free(sel_idx) ? sel_idx : _l;
