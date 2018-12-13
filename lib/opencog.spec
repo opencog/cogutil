@@ -110,7 +110,6 @@ by the Open Cognition Framework.
 /%{_libdir}/opencog/libbuiltinreqs.so
 /%{_libdir}/opencog/libserver.so
 /%{_libdir}/opencog/libxml.so
-%config(noreplace) /%{_sysconfdir}/opencog.conf
 
 
 %package server-devel
