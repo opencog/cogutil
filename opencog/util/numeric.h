@@ -137,7 +137,7 @@ inline unsigned int nbits_to_pack(size_t multy)
 //! returns true iff x >= min and x <= max
 template<typename FloatT> bool is_between(FloatT x, FloatT min_, FloatT max_)
 {
-    return x >= min_ && x <= max_;
+    return x >= min_ and x <= max_;
 }
 
 /// Compare floats with ULPS, because they are lexicographically
@@ -217,7 +217,7 @@ template<typename FloatT> FloatT weighted_information(FloatT p)
 //! compute the binary entropy of probability p
 template<typename FloatT> FloatT binary_entropy(FloatT p)
 {
-    OC_ASSERT(p >= 0 && p <= 1,
+    OC_ASSERT(p >= 0 and p <= 1,
               "binaryEntropy: probability %f is not between 0 and 1", p);
     return weighted_information(p) + weighted_information(1.0 - p);
 }
@@ -257,7 +257,7 @@ template<typename IntT> IntT smallest_divisor(IntT n)
     else {
         bool found_divisor = false;
         IntT i = 2;
-        for(; i*i <= n && !found_divisor; i++) {
+        for(; i*i <= n and !found_divisor; i++) {
             found_divisor = n%i==0;
         }
         if(found_divisor)
