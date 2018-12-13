@@ -24,55 +24,24 @@ IF (CMAKE_VERSION VERSION_GREATER 3.0.2)
 	CMAKE_POLICY(SET CMP0037 OLD)
 ENDIF (CMAKE_VERSION VERSION_GREATER 3.0.2)
 
-# Only list install files that have actually changed
-SET(CMAKE_INSTALL_MESSAGE "LAZY")
-
 PROJECT(cogutil)
 
-# Get cogutil version
-# NOTE: This is the official semantic-version, as it is derived from a
-# version-control independent means of declaring versioning.
-# TODO: Once CMAKE_MINIMUM_REQUIRED >= 3.0.2 check use of policy CMP0048.
-FILE(READ "${CMAKE_SOURCE_DIR}/opencog/util/cogutil.h" _CU_H_CONTENTS)
-STRING(REGEX MATCH
-	"#define COGUTIL_VERSION_STRING \"([0-9]+[.0-9]+[.0-9]+)\""
-	_ "${_CU_H_CONTENTS}")
-SET(SEMANTIC_VERSION ${CMAKE_MATCH_1})
-
-IF (WIN32) # Windows host but not cygwin
-	MESSAGE(FATAL_ERROR "You must use Cygwin if compiling under Windows.")
-
-	# Previous definitions used for win32 (non cygwin) compilation.
-	# For reference only
-
-	# ADD_DEFINITIONS(-DWIN32_NOT_UNIX)
-	# FIND_PACKAGE(PThreads REQUIRED)
-	# FIND_PACKAGE(STLPort REQUIRED)
-	# INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include/win32" ${PTHREADS_INCLUDE_DIR} ${STLPORT_INCLUDE_DIR})
-	# LINK_LIBRARIES(${PTHREADS_LIBRARY} ${STLPORT_LIBRARIES})
-	# ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE)
-ENDIF (WIN32)
-
-IF (NOT CMAKE_COMPILER_IS_GNUCXX) # Compiler is not gcc
-	MESSAGE(FATAL_ERROR "Only the gcc compiler is supported at this time")
-ENDIF (NOT CMAKE_COMPILER_IS_GNUCXX)
-
-# uncomment to be in Release mode [default]
+# Uncomment to be in Release mode [default].
 # SET(CMAKE_BUILD_TYPE Release)
 
-# uncomment to build in debug mode
+# Uncomment to build in debug mode.
 # SET(CMAKE_BUILD_TYPE Debug)
 
-# uncomment to be in coverage testing mode
+# Uncomment to be in coverage testing mode.
 # SET(CMAKE_BUILD_TYPE Coverage)
 
-# uncomment to build in profile mode
+# Uncomment to build in profile mode.
 # SET(CMAKE_BUILD_TYPE Profile)
 
-# uncomment to build in release mode with debug information
+# Uncomment to build in release mode with debug information.
 # SET(CMAKE_BUILD_TYPE RelWithDebInfo)
 
-# default build type
+# Default build type.
 IF (CMAKE_BUILD_TYPE STREQUAL "")
 	SET(CMAKE_BUILD_TYPE Release)
 ENDIF (CMAKE_BUILD_TYPE STREQUAL "")
@@ -82,21 +51,32 @@ MESSAGE(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 ADD_DEFINITIONS(-DPROJECT_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
 	            -DPROJECT_BINARY_DIR="${CMAKE_BINARY_DIR}")
 
-# add the 'cmake' dir to cmake's module search path
+# Add the 'cmake' dir to cmake's module search path.
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/")
+
+# Only list install files that have actually changed.
+SET(CMAKE_INSTALL_MESSAGE "LAZY")
+
+# Get cogutil version.
+# NOTE: This is the official semantic-version, as it is derived from
+# a version-control independent means of declaring versioning.
+#
+# TODO: Once CMAKE_MINIMUM_REQUIRED >= 3.0.2 check use of policy CMP0048.
+#
+FILE(READ "${CMAKE_SOURCE_DIR}/opencog/util/cogutil.h" _CU_H_CONTENTS)
+STRING(REGEX MATCH
+	"#define COGUTIL_VERSION_STRING \"([0-9]+[.0-9]+[.0-9]+)\""
+	_ "${_CU_H_CONTENTS}")
+SET(SEMANTIC_VERSION ${CMAKE_MATCH_1})
 
 # ===============================================================
 # Detect different compilers and OS'es, tweak flags as necessary.
 
-IF (CMAKE_COMPILER_IS_GNUCXX)  # Compiler is GCC
-	#
-	# The variadic templates in the atomspace require something
-	# newer than gcc-4.9.0. See issue opencog/atomspace#1916
-	#
-	# IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.4.0)
-	#	MESSAGE(FATAL_ERROR "GCC version must be at least 5.4.0!")
-	# ENDIF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.4.0)
+IF (NOT CMAKE_COMPILER_IS_GNUCXX) # Compiler is not gcc
+	MESSAGE(FATAL_ERROR "Only the gcc compiler is supported at this time")
+ENDIF (NOT CMAKE_COMPILER_IS_GNUCXX)
 
+IF (CMAKE_COMPILER_IS_GNUCXX)  # Compiler is GCC
 	IF (APPLE)
 		SET(CMAKE_C_FLAGS "-Wall -Wno-long-long -Wno-conversion")
 		SET(CMAKE_C_FLAGS_DEBUG "-O0 -g")
@@ -135,6 +115,20 @@ IF (CMAKE_COMPILER_IS_GNUCXX)  # Compiler is GCC
 	ENDIF (CMAKE_BUILD_TYPE STREQUAL "Coverage")
 ENDIF (CMAKE_COMPILER_IS_GNUCXX)
 
+# ------------------------------------------------------
+IF (WIN32) # Windows host but not cygwin
+	MESSAGE(FATAL_ERROR "You must use Cygwin if compiling under Windows.")
+
+	# Previous definitions used for win32 (non cygwin) compilation.
+	# For reference only
+
+	# ADD_DEFINITIONS(-DWIN32_NOT_UNIX)
+	# FIND_PACKAGE(PThreads REQUIRED)
+	# FIND_PACKAGE(STLPort REQUIRED)
+	# INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include/win32" ${PTHREADS_INCLUDE_DIR} ${STLPORT_INCLUDE_DIR})
+	# LINK_LIBRARIES(${PTHREADS_LIBRARY} ${STLPORT_LIBRARIES})
+	# ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE)
+ENDIF (WIN32)
 
 # Do the cygwin build
 IF (CYGWIN)
