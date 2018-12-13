@@ -139,16 +139,6 @@ ENDIF (CYGWIN)
 # ===================================================================
 # Check for existance of various required, optional packages.
 
-# Look for binutils-dev. Needed for pretty stack printing.
-FIND_PACKAGE(BFD)
-IF (BFD_FOUND)
-	MESSAGE(STATUS "Binutils found.")
-	ADD_DEFINITIONS(-DHAVE_BFD)
-	SET(HAVE_BFD 1)
-ELSE (BFD_FOUND)
-	MESSAGE(STATUS "Binutils-dev missing: No pretty stack-trace printing.")
-ENDIF (BFD_FOUND)
-
 # Check for boost. We need dynamic-linked, threaded libs by default.
 SET(Boost_USE_STATIC_LIBS OFF)
 SET(Boost_USE_MULTITHREADED ON)
@@ -156,8 +146,6 @@ SET(Boost_USE_MULTITHREADED ON)
 SET(MIN_BOOST 1.46)
 
 # Required boost packages
-# hypertable requires boost iostreams
-# boost-1.49 no longer has a libboost_iostreams
 # 1.46 is minimum for required filesystem support
 # program_options needed by some combo utilities
 FIND_PACKAGE(Boost ${MIN_BOOST} COMPONENTS date_time filesystem program_options regex serialization system thread REQUIRED)
@@ -165,20 +153,10 @@ FIND_PACKAGE(Boost ${MIN_BOOST} COMPONENTS date_time filesystem program_options 
 IF (Boost_FOUND)
 	SET(Boost_FOUND_SAVE 1)
 
-	# Boost.Signals2 requires this in signal_type.hpp
-	# XXX FIXME, except we no longer use signals2 anywhere. right?
-	SET(BOOST_PARAMETER_MAX_ARITY 7)
 	ADD_DEFINITIONS(-DBOOST_PARAMETER_MAX_ARITY=${BOOST_PARAMETER_MAX_ARITY})
 ELSE(Boost_FOUND)
-	MESSAGE(FATAL_ERROR "Boost ${MIN_BOOST} or newer (package libboost-all-dev if using Ubuntu) is needed to build OpenCog!")
+	MESSAGE(FATAL_ERROR "Boost ${MIN_BOOST} or newer (package libboost-all-dev if using Ubuntu) is needed to build!")
 ENDIF (Boost_FOUND)
-
-# Opencog won't compile with Boost 1.51, some kind of conflict with
-# hash functions, see github bugs 1 and 36
-IF (105100 EQUAL ${Boost_VERSION})
-	MESSAGE(FATAL_ERROR "Boost version 1.51 will not work with OpenCog.  Please use a different version.")
-ENDIF (105100 EQUAL ${Boost_VERSION})
-MESSAGE(STATUS "Boost version ${Boost_VERSION} found.")
 
 # Optional boost packages; can build without these.
 FIND_PACKAGE(Boost ${MIN_BOOST} COMPONENTS python program_options QUIET)
@@ -189,11 +167,22 @@ IF (Boost_FOUND_SAVE)
 	SET(Boost_FOUND 1)
 ENDIF (Boost_FOUND_SAVE)
 
+# -------------------------------------------------------------
 FIND_PACKAGE(Cxxtest)
 IF (NOT CXXTEST_FOUND)
 	MESSAGE(STATUS "CxxTest missing: needed for unit tests.")
 ENDIF (NOT CXXTEST_FOUND)
 
+# -------------------------------------------------------------
+# Look for binutils-dev. Needed for pretty stack printing.
+FIND_PACKAGE(BFD)
+IF (BFD_FOUND)
+	MESSAGE(STATUS "Binutils found.")
+	ADD_DEFINITIONS(-DHAVE_BFD)
+	SET(HAVE_BFD 1)
+ELSE (BFD_FOUND)
+	MESSAGE(STATUS "Binutils-dev missing: No pretty stack-trace printing.")
+ENDIF (BFD_FOUND)
 
 # Look for libiberty-dev. Needed for pretty stack printing.
 FIND_PACKAGE(Iberty)
@@ -204,7 +193,6 @@ IF (IBERTY_FOUND)
 ELSE (IBERTY_FOUND)
 	MESSAGE(STATUS "Libiberty-dev missing: No pretty stack-trace printing.")
 ENDIF (IBERTY_FOUND)
-
 
 # ===================================================================
 # Decide what to build, based on the packages found.
