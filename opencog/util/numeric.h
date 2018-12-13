@@ -40,21 +40,12 @@
  *  @{
  */
 
-// These and many other constants are in <math.h>
-#define PI          M_PI  // 3.1415926535897932384626433832795029L
-#define EXPONENTIAL M_E   // 2.7182818284590452353602874713526625L
-
-#ifdef WIN32
-#include <numeric>
-#else
-#include <ext/numeric>
-#endif
-
 namespace opencog
 {
 
 // Maximum acceptable difference when comparing probabilities.
 #define PROB_EPSILON 1e-127
+
 // Maximum acceptable difference when comparing distances.
 #define DISTANCE_EPSILON 1e-32
 
@@ -68,19 +59,14 @@ struct absolute_value_order
     }
 };
 
-/** @name Bithacks
- */
-///@{
-
 /// Return the index of the first non-zero bit in the integer value,
 /// minus one.
 inline unsigned int integer_log2(size_t v)
 {
 #ifdef __GNUC__
-    // On x86_64, this uses the BSR (Bit scane Reverse) insn or
+    // On x86_64, this uses the BSR (Bit Scan Reverse) insn or
     // the LZCNT (Leading Zero Count) insn.
-    // This should also work on ARM, according to the interwebs.
-    // And other arches, including POWER (?!)
+    // This should work on all arches; its part of GIL/gimple.
     if (0 == v) return 0;
     return (8*sizeof(size_t) - 1) - __builtin_clzl(v);
 #else
@@ -307,9 +293,6 @@ Float generalized_mean(const C& c, Float p = 1.0)
     return generalized_mean(c.begin(), c.end(), p);
 }
 
-///@}
-
-
 /// Compute the distance between two vectors, using the p-norm.  For
 /// p=2, this is the usual Eucliden distance, and for p=1, this is the
 /// Manhattan distance, and for p=0 or negative, this is the maximum
@@ -437,7 +420,7 @@ Float angular_distance(const Vec& a, const Vec& b, bool pos_n_neg = true)
     if (numerator >= Float(DISTANCE_EPSILON)) {
         // in case of rounding error
         Float r = clamp(ab / numerator, Float(-1), Float(1));
-        return (pos_n_neg ? 1 : 2) * acos(r) / PI;
+        return (pos_n_neg ? 1 : 2) * acos(r) / M_PI;
     }
     else
         return 0;

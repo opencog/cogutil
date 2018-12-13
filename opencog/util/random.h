@@ -102,8 +102,8 @@ template<typename T>
 T gaussian_rand(T mean, T std_dev, RandGen& rng=randGen())
 {
     double val = mean + std_dev *
-        std::sqrt(-2 * std::log(rng.randdouble_one_excluded())) * 
-        std::cos(2 * PI * rng.randdouble_one_excluded());
+        std::sqrt(-2.0 * std::log(rng.randdouble_one_excluded())) *
+        std::cos(2.0 * M_PI * rng.randdouble_one_excluded());
     T res;
     try {
         res = boost::numeric_cast<T>(val);
