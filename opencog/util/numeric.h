@@ -191,13 +191,6 @@ template<typename FloatT> bool is_approx_eq(FloatT x, FloatT y, FloatT epsilon)
     return diff <= epsilon * amp;
 }
 
-//! compare 2 FloatT with precision EPSILON
-/// note that, unlike isWithin, the precision adapts with the scale of x and y
-template<typename FloatT> bool is_approx_eq(FloatT x, FloatT y)
-{
-    return is_approx_eq(x, y, std::numeric_limits<FloatT>::epsilon());
-}
-
 // TODO: replace the following by C++17 std::clamp
 /**
  * Return x clamped to [l, u], that is it returns max(l, min(u, x))
