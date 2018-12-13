@@ -167,8 +167,8 @@ static inline bool is_approx_eq_ulp(double x, double y, long int max_ulps)
 	// available:
 	// labs(std::bit_cast<std::int64_t>(x) - std::bit_cast<std::int64_t>(y))
 
-	static_assert(sizeof(int64_t) == sizeof(double));
-	static_assert(sizeof(int64_t) == sizeof(long int));
+	static_assert(sizeof(int64_t) == sizeof(double), "Unexpected sizeof(double)");
+	static_assert(sizeof(int64_t) == sizeof(long int), "Unexpected sizeof(long int)");
 
 	long int ulps = labs(*xbits - *ybits);
 	return max_ulps > ulps;
