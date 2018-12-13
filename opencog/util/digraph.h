@@ -70,7 +70,7 @@ struct digraph {
     //! return the set of all direct predecessor nodes of x
     const value_set& incoming(value_type x) const {
         return _incoming[x];
-    }    
+    }
     //! return the set of all direct successor nodes of x
     const value_set& outgoing(value_type x) const {
         return _outgoing[x];

@@ -1,4 +1,4 @@
-/** jaccard_index.h --- 
+/** jaccard_index.h ---
  *
  * Copyright (C) 2014 OpenCog Foundation
  *

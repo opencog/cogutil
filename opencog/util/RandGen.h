@@ -37,7 +37,7 @@ namespace opencog
  */
 
 //! interface for random generators
-    
+
 // RandGen inherits std::mt19937. This may seem like a hack because
 // there is no point having that abstract class inherit a concrete
 // random generator. But it's clear we don't need that home made

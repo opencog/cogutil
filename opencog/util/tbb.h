@@ -3,15 +3,15 @@
 
 /*
  * Helper function for tbb::task::enqueue
- * 
+ *
  * Enqueue a task for execution by the TBB task scheduler using lambda expressions
- * 
+ *
  * Usage:
- * 
- *   tbb_enqueue_lambda( []{ 
+ *
+ *   tbb_enqueue_lambda( []{
  *       // put code here
  *   } );
- * 
+ *
  * More information:
  *   http://www.threadingbuildingblocks.org/docs/help/index.htm#reference/task_scheduler/task_cls.htm
  */

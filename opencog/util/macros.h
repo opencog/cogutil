@@ -39,7 +39,7 @@
 #define TRACE_INFO " (" __FILE__ ":" TOSTRING(__LINE__) ")"
 //! supress compiler warnings about unused variables
 #define OC_UNUSED(varname)	(void)varname;
-//! check the return value of a fread; sets b_read local variable 
+//! check the return value of a fread; sets b_read local variable
 //! to false for failure; b_read must have beed declared before:
 //! bool b_read = true;
 #define FREAD_CK(ptr,size,count,stream) \

@@ -1,4 +1,4 @@
-/* iostreamContainer.h --- 
+/* iostreamContainer.h ---
  *
  * Copyright (C) 2010 OpenCog Foundation
  *
@@ -8,12 +8,12 @@
  * it under the terms of the GNU Affero General Public License v3 as
  * published by the Free Software Foundation and including the exceptions
  * at http://opencog.org/wiki/Licenses
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program; if not, write to:
  * Free Software Foundation, Inc.,
@@ -42,8 +42,8 @@ namespace opencog {
      * functions to read, write, print or convert to string generic containers
      */
     ///@{
-    
-    
+
+
     /**
      * stream out all elements in [from, to( with delimiter
      * 'delimiter', opening with 'left' and closing with 'right'.
@@ -87,7 +87,7 @@ namespace opencog {
     Out& ostream_container(Out& out,
                            const Con& container,
                            const std::string& delimiter = " ",
-                           const std::string& left = "", 
+                           const std::string& left = "",
                            const std::string& right = "",
                            bool empty_lr = true)
     {
@@ -95,7 +95,7 @@ namespace opencog {
                                  delimiter, left, right, empty_lr);
     }
 
-    
+
     /**
      * like ostream_container but adding a new line at the end
      */
@@ -120,7 +120,7 @@ namespace opencog {
     Out& ostreamln_container(Out& out,
                              const Con& container,
                              const std::string& delimiter = " ",
-                             const std::string& left = "", 
+                             const std::string& left = "",
                              const std::string& right = "",
                              bool empty_lr = true)
     {
@@ -147,7 +147,7 @@ namespace opencog {
     template<class Con>
     void print_container(const Con& container,
                          const std::string& delimiter = " ",
-                         const std::string& left = "", 
+                         const std::string& left = "",
                          const std::string& right = "",
                          bool empty_lr = true)
     {
@@ -172,7 +172,7 @@ namespace opencog {
     template<class Con>
     void println_container(const Con& container,
                            const std::string& delimiter = " ",
-                           const std::string& left = "", 
+                           const std::string& left = "",
                            const std::string& right = "",
                            bool empty_lr = true)
     {
@@ -198,7 +198,7 @@ namespace opencog {
     template<class Con>
     std::string container_to_str(const Con& container,
                                  const std::string& delimiter = " ",
-                                 const std::string& left = "", 
+                                 const std::string& left = "",
                                  const std::string& right = "",
                                  bool empty_lr = true)
     {
@@ -230,7 +230,7 @@ namespace opencog {
 
     /**
      * stream all elements in 'in' and put them in the container.
-     * For instance 
+     * For instance
      * std::stringstream ss("[1 2 3 4] 5");
      * std::vector<int> nums;
      * istreamContainer(ss, back_inserter(nums), "[", "]");
@@ -289,7 +289,7 @@ namespace opencog {
         }
         return in;
     }
-    
+
     ///@}
 
 /** @}*/

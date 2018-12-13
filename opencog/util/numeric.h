@@ -228,8 +228,8 @@ template<typename FloatT> FloatT binary_entropy(FloatT p)
  * Specifically it computes
  *
  * - Sum_i p_i log_2(p_i)
- * 
- * where the p_i are values pointed by (from, to[, 
+ *
+ * where the p_i are values pointed by (from, to[,
  * It is assumed that Sum_i p_i == 1.0
  * That is, std::accumulate(from, to, 0) == 1.0
  */
@@ -416,7 +416,7 @@ Float angular_distance(const Vec& a, const Vec& b, bool pos_n_neg = true)
         aa = boost::inner_product(a, a, Float(0)),
         bb = boost::inner_product(b, b, Float(0)),
         numerator = sqrt(aa * bb);
-    
+
     if (numerator >= Float(DISTANCE_EPSILON)) {
         // in case of rounding error
         Float r = clamp(ab / numerator, Float(-1), Float(1));

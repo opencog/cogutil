@@ -1,4 +1,4 @@
-/* ranking.h --- 
+/* ranking.h ---
  *
  * Copyright (C) 2012 Nil Geisweiller
  *
@@ -8,12 +8,12 @@
  * it under the terms of the GNU Affero General Public License v3 as
  * published by the Free Software Foundation and including the exceptions
  * at http://opencog.org/wiki/Licenses
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program; if not, write to:
  * Free Software Foundation, Inc.,
@@ -33,7 +33,7 @@ namespace opencog {
 
 //! Return a rank given a counter. Ties ranks are averaged.
 /**
- * Given a Counter {'blue': 3, 'red': 2, 'green': 1}, it will produce a 
+ * Given a Counter {'blue': 3, 'red': 2, 'green': 1}, it will produce a
  * new Counter {'blue': 3, 'red': 4.5, 'green': 6}
  */
 template<typename Key, typename FloatT>
