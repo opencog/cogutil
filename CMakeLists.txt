@@ -54,9 +54,6 @@ ADD_DEFINITIONS(-DPROJECT_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
 # Add the 'cmake' dir to cmake's module search path.
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/")
 
-# Only list install files that have actually changed.
-SET(CMAKE_INSTALL_MESSAGE "LAZY")
-
 # Get cogutil version.
 # NOTE: This is the official semantic-version, as it is derived from
 # a version-control independent means of declaring versioning.
@@ -195,14 +192,41 @@ ELSE (IBERTY_FOUND)
 ENDIF (IBERTY_FOUND)
 
 # ===================================================================
-# Decide what to build, based on the packages found.
-
-IF (Boost_FOUND)
-	SET(HAVE_UTIL 1)
-ENDIF (Boost_FOUND)
-
-# ===================================================================
 # Global includes
+
+# -------------------------------------------------
+# Include configuration.
+
+# Set default include paths.
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR} ${Boost_INCLUDE_DIRS})
+
+# -------------------------------------------------
+# Library configuration
+# Small hack to handle unixes that use "/usr/lib64" instead of
+# "/usr/lib" as the default lib path on 64 bit archs.
+IF (NOT DEFINED LIB_DIR_SUFFIX)
+	EXECUTE_PROCESS(COMMAND ${CMAKE_CXX_COMPILER} -print-search-dirs OUTPUT_VARIABLE PRINT_SEARCH_DIRS_OUTPUT)
+	STRING(REGEX MATCH "\r?\nlibraries:.*\r?\n" COMPILER_LIB_SEARCH_DIRS ${PRINT_SEARCH_DIRS_OUTPUT})
+	IF (NOT ${COMPILER_LIB_SEARCH_DIRS} STREQUAL "")
+		STRING(REGEX MATCH "/lib64/:|/lib64:|/lib64\n" HAS_LIB64 ${COMPILER_LIB_SEARCH_DIRS})
+		IF (NOT ${HAS_LIB64} STREQUAL "")
+			SET(LIB_DIR_SUFFIX "64")
+		ENDIF (NOT ${HAS_LIB64} STREQUAL "")
+	ENDIF (NOT ${COMPILER_LIB_SEARCH_DIRS} STREQUAL "")
+ENDIF (NOT DEFINED LIB_DIR_SUFFIX)
+
+# RPATH handling (see https://cmake.org/Wiki/CMake_RPATH_handling)
+# Note: RPATH only supported under Linux!
+SET(CMAKE_SKIP_BUILD_RPATH	FALSE)
+SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib/opencog")
+SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+# -------------------------------------------------
+# Install configuration
+
+# Only list install files that have actually changed.
+SET(CMAKE_INSTALL_MESSAGE "LAZY")
 
 # set confdir and datadir
 IF (NOT DEFINED CONFDIR)
@@ -217,28 +241,12 @@ ADD_DEFINITIONS(-DDATADIR="${DATADIR}")
 # (re?)define MAN_INSTALL_DIR
 SET (MAN_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/share/man")
 
-# Small hack to handle unixes that use "/usr/lib64" instead of
-# "/usr/lib" as the default lib path on 64 bit archs.
-IF (NOT DEFINED LIB_DIR_SUFFIX)
-	EXECUTE_PROCESS(COMMAND ${CMAKE_CXX_COMPILER} -print-search-dirs OUTPUT_VARIABLE PRINT_SEARCH_DIRS_OUTPUT)
-	STRING(REGEX MATCH "\r?\nlibraries:.*\r?\n" COMPILER_LIB_SEARCH_DIRS ${PRINT_SEARCH_DIRS_OUTPUT})
-	IF (NOT ${COMPILER_LIB_SEARCH_DIRS} STREQUAL "")
-		STRING(REGEX MATCH "/lib64/:|/lib64:|/lib64\n" HAS_LIB64 ${COMPILER_LIB_SEARCH_DIRS})
-		IF (NOT ${HAS_LIB64} STREQUAL "")
-			SET(LIB_DIR_SUFFIX "64")
-		ENDIF (NOT ${HAS_LIB64} STREQUAL "")
-	ENDIF (NOT ${COMPILER_LIB_SEARCH_DIRS} STREQUAL "")
-ENDIF (NOT DEFINED LIB_DIR_SUFFIX)
+# ===================================================================
+# Decide what to build, based on the packages found.
 
-# set default include paths
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR} ${Boost_INCLUDE_DIRS})
-
-# RPATH handling (see https://cmake.org/Wiki/CMake_RPATH_handling)
-# Note: RPATH only supported under Linux!
-SET(CMAKE_SKIP_BUILD_RPATH	FALSE)
-SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib/opencog")
-SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+IF (Boost_FOUND)
+	SET(HAVE_UTIL 1)
+ENDIF (Boost_FOUND)
 
 ADD_SUBDIRECTORY(cmake)
 ADD_SUBDIRECTORY(opencog)
@@ -280,6 +288,7 @@ ADD_CUSTOM_TARGET(cscope
 	COMMENT "Generating CScope database"
 )
 
+# ===================================================================
 # Packaging
 # For what architecture the package is for
 # TODO: Will give error on non debian distros, fix it.
@@ -324,11 +333,14 @@ SET(CPACK_DEBIAN_PACKAGE_SECTION "libdevel")
 SET(CPACK_DEBIAN_PACKAGE_HOMEPAGE "http://opencog.org")
 INCLUDE(CPack)
 
-# documentation
+# ===================================================================
+# Documentation.
 FIND_PACKAGE(Doxygen)
 ADD_SUBDIRECTORY(doc EXCLUDE_FROM_ALL)
 
-# Show a summary of what we got
+# ===================================================================
+# Show a summary of what we found, what we will do.
+
 SUMMARY_ADD("Doxygen" "Code documentation" DOXYGEN_FOUND)
 SUMMARY_ADD("StackPrint" "Pretty printing of stack traces" HAVE_BFD AND HAVE_IBERTY)
 SUMMARY_ADD("Unit tests" "Unit tests" CXXTEST_FOUND)
