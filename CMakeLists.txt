@@ -149,8 +149,6 @@ FIND_PACKAGE(Boost ${MIN_BOOST} COMPONENTS date_time filesystem program_options 
 
 IF (Boost_FOUND)
 	SET(Boost_FOUND_SAVE 1)
-
-	ADD_DEFINITIONS(-DBOOST_PARAMETER_MAX_ARITY=${BOOST_PARAMETER_MAX_ARITY})
 ELSE(Boost_FOUND)
 	MESSAGE(FATAL_ERROR "Boost ${MIN_BOOST} or newer (package libboost-all-dev if using Ubuntu) is needed to build!")
 ENDIF (Boost_FOUND)
