@@ -33,46 +33,21 @@
 
 #include <boost/range/numeric.hpp>
 
-#include <opencog/util/exceptions.h>
-#include <opencog/util/oc_assert.h>
-
 #include <opencog/util/iostreamContainer.h>
+#include <opencog/util/oc_assert.h>
 
 /** \addtogroup grp_cogutil
  *  @{
  */
 
-// These and many other constants are in <math.h>
-#define PI          M_PI  // 3.1415926535897932384626433832795029L
-#define EXPONENTIAL M_E   // 2.7182818284590452353602874713526625L
-
-#ifdef WIN32
-#include <numeric>
-#else
-#include <ext/numeric>
-#endif
-
 namespace opencog
 {
 
-using std::numeric_limits;
-using std::isnan;
-using std::isfinite;
-using std::isinf;
+// Maximum acceptable difference when comparing probabilities.
+#define PROB_EPSILON 1e-127
 
-using std::iota;
-
-#ifndef WIN32
-// This needs to be changed for non-gcc. Note however that so far it
-// has been useless as most of the time you just need pow2 or sq
-// defined below in that header
-using __gnu_cxx::power;
-#endif
-
-const double EPSILON = 1e-6; // default error when comparing 2 floats
-const double SMALL_EPSILON = 1e-32;
-const double PROB_EPSILON = 1e-127; // error when comparing 2 probabilities
-const int MAX_ULPS = 24;
+// Maximum acceptable difference when comparing distances.
+#define DISTANCE_EPSILON 1e-32
 
 //! absolute_value_order
 //!   codes the following order, for T == int, -1,1,-2,2,-3,3,...
@@ -84,131 +59,17 @@ struct absolute_value_order
     }
 };
 
-template<typename T>
-struct absolute_value_equality
-{
-    bool operator()(T a,T b) const {
-        return (a == b || a == -b);
-    }
-};
-
-/** @name Bithacks
- *
- * The following functions are adapted from the bit twiddling hacks page:
- * http://graphics.stanford.edu/~seander/bithacks.html
- * 32-bit version is faster, than the others
- * but beware, you need to check the number of bits yourself
- * awkward phrasing cuz c++ doesn't allow partial specialization of functions
- *
- * a few possibilities were tried; gcc has a built-in function called
- * __builtin_popcount which is somewhat slower. Using a lookup table might
- * be somwhat faster under some circumstances, but was avoided because it
- * might hog the fast memory ...
- */
-///@{
-
-template<int> struct bits
-{
-    template<typename T>
-    static inline unsigned int count(T v);
-};
-
-template<> struct bits<32>
-{
-    template<typename T>
-    static inline unsigned int count(T v) {
-        v = v - ((v >> 1) & 0x55555555);                       // reuse v as temp
-        v = (v & 0x33333333) + ((v >> 2) & 0x33333333);        // temp
-        return ((v + (v >> 4) & 0xF0F0F0F) * 0x1010101) >> 24; // count
-    }
-    template<typename T>
-    static inline void interleave(T& v) {
-        static const unsigned int B[] = {0x55555555, 0x33333333, 0x0F0F0F0F, 0x00FF00FF};
-        static const unsigned int S[] = {1, 2, 4, 8};
-
-        T upperbits = (v >> 16);
-        upperbits = (upperbits | (upperbits << S[3])) & B[3];
-        upperbits = (upperbits | (upperbits << S[2])) & B[2];
-        upperbits = (upperbits | (upperbits << S[1])) & B[1];
-        upperbits = (upperbits | (upperbits << S[0])) & B[0];
-        v &= 0xFFFF; //take the lower 16 bits
-        v = (v | (v << S[3])) & B[3];
-        v = (v | (v << S[2])) & B[2];
-        v = (v | (v << S[1])) & B[1];
-        v = (v | (v << S[0])) & B[0];
-        v = v | (upperbits << 1);
-    }
-};
-
-template<> struct bits<64>
-{
-    template<typename T>
-    static inline unsigned int count(T v) {
-        v = v - ((v >> 1) & (T)~(T)0 / 3);                         // temp
-        v = (v & (T)~(T)0 / 15 * 3) + ((v >> 2) & (T)~(T)0 / 15 * 3);      // temp
-        v = (v + (v >> 4)) & (T)~(T)0 / 255 * 15;                  // temp
-        return ((T)(v * ((T)~(T)0 / 255)) >> (sizeof(v) - 1) * CHAR_BIT);
-    }
-    template<typename T>
-    static inline void interleave(T& v) {
-        unsigned int tmp1 = ((v >> 48) << 16);
-        tmp1 |= (v << 32) >> 48;
-        bits<32>::interleave(tmp1);
-        unsigned int tmp2 = ((v >> 16) & 0xFFFF0000);
-        tmp2 |= (v & 0xFFFF);
-        bits<32>::interleave(tmp2);
-        v = (T(tmp1) << 32 | T(tmp2));
-    }
-};
-
-template<> struct bits<128>
-{
-    template<typename T>
-    static inline unsigned int count(T v) {
-        v = v - ((v >> 1) & (T)~(T)0 / 3);                         // temp
-        v = (v & (T)~(T)0 / 15 * 3) + ((v >> 2) & (T)~(T)0 / 15 * 3);      // temp
-        v = (v + (v >> 4)) & (T)~(T)0 / 255 * 15;                  // temp
-        return ((T)(v * ((T)~(T)0 / 255)) >> (sizeof(v) - 1) * CHAR_BIT);
-    }
-};
-
-//! count_bits will work up to 128-bits
-template<typename T>
-inline unsigned int count_bits32(T v)
-{
-    v = v - ((v >> 1) & 0x55555555);                    // reuse input as temp
-    v = (v & 0x33333333) + ((v >> 2) & 0x33333333);     // temp
-    return ((v + (v >> 4) & 0xF0F0F0F) * 0x1010101) >> 24; // count
-}
-template<typename T>
-inline unsigned int count_bits(T v)
-{
-    v = v - ((v >> 1) & (T)~(T)0 / 3);                         // temp
-    v = (v & (T)~(T)0 / 15 * 3) + ((v >> 2) & (T)~(T)0 / 15 * 3);      // temp
-    v = (v + (v >> 4)) & (T)~(T)0 / 255 * 15;                  // temp
-    return ((T)(v * ((T)~(T)0 / 255)) >> (sizeof(v) - 1) * CHAR_BIT);
-}
-
-//! return p the smallest power of 2 so that p >= x
-/// So for instance:
-///   - next_power_of_two(1) = 1
-///   - next_power_of_two(2) = 2
-///   - next_power_of_two(3) = 4
-inline size_t next_power_of_two(size_t x)
-{
-    OC_ASSERT(x > 0);
-    x--;
-    x |= x >> 1;
-    x |= x >> 2;
-    x |= x >> 4;
-    x |= x >> 8;
-    x |= x >> 16;
-    x++;
-    return x;
-}
-
+/// Return the index of the first non-zero bit in the integer value,
+/// minus one.
 inline unsigned int integer_log2(size_t v)
 {
+#ifdef __GNUC__
+    // On x86_64, this uses the BSR (Bit Scan Reverse) insn or
+    // the LZCNT (Leading Zero Count) insn.
+    // This should work on all arches; its part of GIL/gimple.
+    if (0 == v) return 0;
+    return (8*sizeof(size_t) - 1) - __builtin_clzl(v);
+#else
     static const int MultiplyDeBruijnBitPosition[32] = {
         0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
         31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
@@ -221,59 +82,62 @@ inline unsigned int integer_log2(size_t v)
     v |= v >> 16;
     v = (v >> 1) + 1;
     return MultiplyDeBruijnBitPosition[static_cast<uint32_t>(v * 0x077CB531UL) >> 27];
+#endif
 }
 
-template<typename FloatT> FloatT log2(FloatT x)
+//! return p the smallest power of 2 so that p >= x
+/// So for instance:
+///   - next_power_of_two(1) = 1
+///   - next_power_of_two(2) = 2
+///   - next_power_of_two(3) = 4
+inline size_t next_power_of_two(size_t x)
 {
-    return std::log(x) / std::log(static_cast<FloatT>(2));
+    OC_ASSERT(x > 0);
+#ifdef __GNUC__
+    if (1==x) return 1;  // because __builtin_clzl(0) is -MAX_INT
+    return 1UL << (8*sizeof(size_t) - __builtin_clzl(x-1));
+#else
+    x--;
+    x |= x >> 1;
+    x |= x >> 2;
+    x |= x >> 4;
+    x |= x >> 8;
+    x |= x >> 16;
+    x++;
+    return x;
+#endif
 }
 
-//! return the smaller exponent in base 2. 
-/// This is used to know how
-/// many bits should be used to pack a certain number of values. So
-/// for instance
+/// Return the number of bits needed to hold the value, aligned to
+/// the next power of two. This is used by moses, to pack int values
+/// into bits.  It is asking for a power-of-two alignment, presumably
+/// with the idea that the compiler generates faster code!? However,
+/// the unit tests don't seem to actually require this; it works
+/// just fine, (and not any slower) if alignment is discarded.
+/// That is, the moses unit tests run equally fast, and pass, when
+/// #define ALIGNED_NOT_ACTUALLY_REQUIRED 1 is set.
+///
+/// Examples of alignment:
 ///    - nbits_to_pack(2) = 1,
 ///    - nbits_to_pack(3) = 2,
-///    - nbits_to_pack(50) = 8
+///    - nbits_to_pack(50) = 8  (not 6)
+///    - nbits_to_pack(257) = 16  (not 9)
+///
 inline unsigned int nbits_to_pack(size_t multy)
 {
     OC_ASSERT(multy > 0);
+// #define ALIGNED_NOT_ACTUALLY_REQUIRED 1
+#ifdef ALIGNED_NOT_ACTUALLY_REQUIRED
+    return integer_log2(multy -1) + 1;
+#else
     return next_power_of_two(integer_log2(multy -1) + 1);
-}
-
-//! sums of natural logarithms (for a particular floating-point type)
-template<typename FloatT>
-FloatT logsum(size_t n)
-{
-    static std::vector<FloatT> sums;
-    if (n >= sums.size()) {
-        int to = next_power_of_two(n) + 2;
-        sums.reserve(to);
-        if (sums.empty()) {
-            sums.push_back(0);
-            sums.push_back(0);
-        }
-
-        FloatT v = sums.back();
-        for (int i = sums.size();i < to;++i) {
-            v += log(FloatT(i - 1));
-            sums.push_back(v);
-        }
-    }
-    return sums[n];
-}
-
-//! return the number of digits (in base 10 by default) of an integer
-template<typename Int> Int ndigits(Int x, Int base = 10) {
-    Int nd = 0;
-    while (x != 0) { x /= base; nd++; }
-    return nd;
+#endif
 }
 
 //! returns true iff x >= min and x <= max
 template<typename FloatT> bool is_between(FloatT x, FloatT min_, FloatT max_)
 {
-    return x >= min_ && x <= max_;
+    return x >= min_ and x <= max_;
 }
 
 /// Compare floats with ULPS, because they are lexicographically
@@ -303,16 +167,11 @@ static inline bool is_approx_eq_ulp(double x, double y, long int max_ulps)
 	// available:
 	// labs(std::bit_cast<std::int64_t>(x) - std::bit_cast<std::int64_t>(y))
 
-	static_assert(sizeof(int64_t) == sizeof(double));
-	static_assert(sizeof(int64_t) == sizeof(long int));
+	static_assert(sizeof(int64_t) == sizeof(double), "Unexpected sizeof(double)");
+	static_assert(sizeof(int64_t) == sizeof(long int), "Unexpected sizeof(long int)");
 
 	long int ulps = labs(*xbits - *ybits);
 	return max_ulps > ulps;
-}
-
-static inline bool is_approx_eq_ulp(double x, double y)
-{
-	return is_approx_eq_ulp(x, y, MAX_ULPS);
 }
 
 //! returns true iff abs(x - y) <= epsilon
@@ -326,17 +185,17 @@ template<typename FloatT> bool is_within(FloatT x, FloatT y, FloatT epsilon)
 template<typename FloatT> bool is_approx_eq(FloatT x, FloatT y, FloatT epsilon)
 {
     FloatT diff = std::fabs(x - y);
+    if (diff < epsilon) return true;
+
     FloatT amp = std::fabs(x + y);
-    if (amp*amp > epsilon)
-        return diff <= epsilon * amp;
-    else return diff <= epsilon;
+    return diff <= epsilon * amp;
 }
 
 //! compare 2 FloatT with precision EPSILON
 /// note that, unlike isWithin, the precision adapts with the scale of x and y
 template<typename FloatT> bool is_approx_eq(FloatT x, FloatT y)
 {
-    return is_approx_eq(x, y, static_cast<FloatT>(EPSILON));
+    return is_approx_eq(x, y, std::numeric_limits<FloatT>::epsilon());
 }
 
 // TODO: replace the following by C++17 std::clamp
@@ -352,13 +211,13 @@ Float clamp(Float x, Float l, Float u)
 //! useful for entropy
 template<typename FloatT> FloatT weighted_information(FloatT p)
 {
-    return p > PROB_EPSILON? -p * opencog::log2(p) : 0;
+    return p > PROB_EPSILON? -p * std::log2(p) : 0;
 }
 
 //! compute the binary entropy of probability p
 template<typename FloatT> FloatT binary_entropy(FloatT p)
 {
-    OC_ASSERT(p >= 0 && p <= 1,
+    OC_ASSERT(p >= 0 and p <= 1,
               "binaryEntropy: probability %f is not between 0 and 1", p);
     return weighted_information(p) + weighted_information(1.0 - p);
 }
@@ -369,8 +228,8 @@ template<typename FloatT> FloatT binary_entropy(FloatT p)
  * Specifically it computes
  *
  * - Sum_i p_i log_2(p_i)
- * 
- * where the p_i are values pointed by (from, to[, 
+ *
+ * where the p_i are values pointed by (from, to[,
  * It is assumed that Sum_i p_i == 1.0
  * That is, std::accumulate(from, to, 0) == 1.0
  */
@@ -398,7 +257,7 @@ template<typename IntT> IntT smallest_divisor(IntT n)
     else {
         bool found_divisor = false;
         IntT i = 2;
-        for(; i*i <= n && !found_divisor; i++) {
+        for(; i*i <= n and !found_divisor; i++) {
             found_divisor = n%i==0;
         }
         if(found_divisor)
@@ -413,7 +272,7 @@ template<typename T> T sq(T x) { return x*x; }
 //! check if x isn't too high and return 2^x
 template<typename OutInt> OutInt pow2(unsigned int x)
 {
-    OC_ASSERT(8*sizeof(OutInt) - (numeric_limits<OutInt>::is_signed?1:0) > x,
+    OC_ASSERT(8*sizeof(OutInt) - (std::numeric_limits<OutInt>::is_signed?1:0) > x,
               "pow2: Amount to shift is out of range.");
     return static_cast<OutInt>(1) << x;
 }
@@ -433,9 +292,6 @@ Float generalized_mean(const C& c, Float p = 1.0)
 {
     return generalized_mean(c.begin(), c.end(), p);
 }
-
-///@}
-
 
 /// Compute the distance between two vectors, using the p-norm.  For
 /// p=2, this is the usual Eucliden distance, and for p=1, this is the
@@ -520,7 +376,7 @@ Float tanimoto_distance(const Vec& a, const Vec& b)
         bb = boost::inner_product(b, b, Float(0)),
         numerator = aa + bb - ab;
 
-    if (numerator >= Float(SMALL_EPSILON))
+    if (numerator >= Float(DISTANCE_EPSILON))
         return 1 - (ab / numerator);
     else
         return 0;
@@ -551,19 +407,28 @@ Float angular_distance(const Vec& a, const Vec& b, bool pos_n_neg = true)
                "Cannot compare unequal-sized vectors!  %d %d\n",
                a.size(), b.size());
 
+    // XXX FIXME writing out the explicit loop will almost
+    // surely be faster than calling boost. Why? Because a single
+    // loop allows the compiler to insert instructions into the
+    // pipeline bubbles; whereas three different loops will be more
+    // than three times slower!
     Float ab = boost::inner_product(a, b, Float(0)),
         aa = boost::inner_product(a, a, Float(0)),
         bb = boost::inner_product(b, b, Float(0)),
         numerator = sqrt(aa * bb);
-    
-    if (numerator >= Float(SMALL_EPSILON)) {
+
+    if (numerator >= Float(DISTANCE_EPSILON)) {
         // in case of rounding error
         Float r = clamp(ab / numerator, Float(-1), Float(1));
-        return (pos_n_neg ? 1 : 2) * acos(r) / PI;
+        return (pos_n_neg ? 1 : 2) * acos(r) / M_PI;
     }
     else
         return 0;
 }
+
+// Avoid spewing garbage into the namespace!
+#undef PROB_EPSILON
+#undef DISTANCE_EPSILON
 
 } // ~namespace opencog
 /** @}*/

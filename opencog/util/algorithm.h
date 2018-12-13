@@ -172,16 +172,16 @@ bool has_empty_intersection(const Set& ls, const Set& rs) {
  * Noob, taken from stackoverflow. WARNING: it doesn't check whether
  * the 2 containers are sorted.
  */
-template<class Set1, class Set2> 
+template<class Set1, class Set2>
 bool is_disjoint(const Set1 &set1, const Set2 &set2)
 {
     if (set1.empty() || set2.empty()) return true;
 
-    typename Set1::const_iterator 
-        from1 = set1.begin(), 
+    typename Set1::const_iterator
+        from1 = set1.begin(),
         to1 = set1.end();
-    typename Set2::const_iterator 
-        from2 = set2.begin(), 
+    typename Set2::const_iterator
+        from2 = set2.begin(),
         to2 = set2.end();
 
     if (*set2.rbegin() < *from1 || *set1.rbegin() < *from2) return true;
@@ -195,7 +195,7 @@ bool is_disjoint(const Set1 &set1, const Set2 &set2)
         else
             ++from2;
     }
-    
+
     return true;
 }
 

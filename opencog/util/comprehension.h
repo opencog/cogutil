@@ -1,4 +1,4 @@
-/* comprehension.h --- 
+/* comprehension.h ---
  *
  * Copyright (C) 2012 Nil Geisweiller
  *
@@ -8,12 +8,12 @@
  * it under the terms of the GNU Affero General Public License v3 as
  * published by the Free Software Foundation and including the exceptions
  * at http://opencog.org/wiki/Licenses
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program; if not, write to:
  * Free Software Foundation, Inc.,
@@ -65,7 +65,7 @@ namespace opencog {
 typedef const_function<bool> const_bool;
 static const const_bool default_filter(true);
 
-    
+
 //! vector comprehension (STL functor version)
 template<typename Container, typename Function, typename Filter=const_bool>
 auto vector_comp(const Container& c, const Function& func,
@@ -128,7 +128,7 @@ auto list_comp(const Container& c, const Function& func,
 //                                                                                                                        //
 // Anyway it's weird enough that I'd rather not even try to attempt fix that for now, I think it might well be a gcc bug. //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
+
 /// @todo set comprehension (STL functor version)
 // template<typename Container, typename Function, typename Filter = const_bool>
 // auto set_comp(const Container& c, const Function& func,

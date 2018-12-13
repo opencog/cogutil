@@ -3257,7 +3257,7 @@ unsigned int pre_order_index(const tree<T>& tr,
         ++i;
     }
     return i;
-}                                
+}
 
 template<typename iter>
 std::string subtree_to_string(iter it)

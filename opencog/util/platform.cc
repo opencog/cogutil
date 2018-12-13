@@ -28,7 +28,7 @@
 
 namespace opencog {
 
-const char* getUserName() { 
+const char* getUserName() {
     const char* username = getenv("LOGNAME");
     if (username == NULL)
         username = getenv("USER");
@@ -177,7 +177,7 @@ size_t opencog::getMemUsage()
 {
     static void *old_sbrk = 0;
     void *p = sbrk(0);
-    if (old_sbrk == 0 || old_sbrk > p) 
+    if (old_sbrk == 0 || old_sbrk > p)
     {
         old_sbrk = p;
         return 0;
@@ -201,10 +201,10 @@ uint64_t opencog::getTotalRAM()
    len = sizeof(physmem);
    sysctl(mib, 2, &physmem, &len, NULL, 0);
    return physmem;
-    
 }
 
-uint64_t opencog::getFreeRAM() {
+uint64_t opencog::getFreeRAM()
+{
     return getTotalRAM() - getMemUsage();
 }
 

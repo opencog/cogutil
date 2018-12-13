@@ -1,4 +1,4 @@
-/** KLD.h --- 
+/** KLD.h ---
  *
  * Copyright (C) 2011 OpenCog Foundation
  *
@@ -8,12 +8,12 @@
  * it under the terms of the GNU Affero General Public License v3 as
  * published by the Free Software Foundation and including the exceptions
  * at http://opencog.org/wiki/Licenses
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program; if not, write to:
  * Free Software Foundation, Inc.,
@@ -84,7 +84,7 @@ struct KLDS {
      * operator()
      */
     KLDS() : margin(1.0) {}
-    
+
     /**
      * @param p sorted sequence of values representing the distribution of P
      *
@@ -115,7 +115,7 @@ struct KLDS {
         return p_s;
     }
 
-    //! size of the pdf of p 
+    //! size of the pdf of p
     /**
      * (that is duplicate values are ignored).
      * This useful when one wants to know till when next can
@@ -124,7 +124,7 @@ struct KLDS {
     size_t p_pdf_size() const {
         return p_pdf.size();
     }
-    
+
     //! computes the components log(delta_p / delta_q) once at a time.
     /**
      * This is useful when one want to treat each component as a
@@ -151,7 +151,7 @@ struct KLDS {
         ++cit_p;
         return std::log(delta_p / delta_q);
     }
-    
+
     //! @return estimate of KL(P||Q)
     FloatT operator()(const pdf_t& q_counter) {
         FloatT q_s = boost::accumulate(q_counter | map_values, 0),
@@ -188,7 +188,7 @@ private:
             p_x_pre = p_x;
         }
     }
-    
+
     FloatT p_s,            // sizes of p used in
                            // the computation of LKD
         margin;
@@ -204,7 +204,7 @@ typename SortedSeq::value_type KLD(const SortedSeq& p, const SortedSeq& q) {
     KLDS<FloatT> klds(p);
     return klds(Counter<FloatT, FloatT>(q));
 }
-    
+
 ///@}
 /** @}*/
 } // ~namespace opencog

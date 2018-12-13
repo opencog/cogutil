@@ -70,7 +70,7 @@ std::size_t hash_value(const tree<T>& tr)
     return boost::hash_range(tr.begin(), tr.end());
 }
 
-//! Functor comparing the addresses of objects pointed by 
+//! Functor comparing the addresses of objects pointed by
 //! tree iterators.
 /**
  * Useful for storing iterators in a std::map.
