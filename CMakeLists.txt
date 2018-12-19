@@ -294,6 +294,11 @@ EXECUTE_PROCESS(COMMAND  dpkg --print-architecture
 	OUTPUT_VARIABLE PACKAGE_ARCHITECTURE
 	OUTPUT_STRIP_TRAILING_WHITESPACE)
 STRING(TIMESTAMP UTC_DATE %Y%m%d UTC)
+# If 'sudo make install' is run before 'make package', then install_manifest.txt
+# will be owned by root. Creating the file during configuration stage ensures
+# that is owned by the builder thus avoiding 'Permission denied' error when
+# packaging.
+FILE(WRITE "${PROJECT_BINARY_DIR}/install_manifest.txt")
 
 ## Cpack configuration
 SET(CPACK_GENERATOR "DEB")
