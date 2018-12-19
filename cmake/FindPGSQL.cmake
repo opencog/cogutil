@@ -15,10 +15,23 @@ FIND_PATH(PGSQL_INCLUDE_DIR libpq-fe.h
 	/usr/local/include
 	/usr/include/postgresql
 	/usr/local/include/postgresql
+	DOC "Set the PGSQL_INCLUDE_DIR cmake cache entry to the directory containing libpq-fe.h."
 )
 
 # Look for the library
-FIND_LIBRARY(PGSQL_LIBRARY NAMES pq)
+FIND_LIBRARY(PGSQL_LIBRARY NAMES pq
+	DOC "Set the PGSQL_LIBRARY_DIR cmake cache entry to the directory containing libpq.so."
+)
+
+# Get the version number
+IF (PGSQL_INCLUDE_DIR)
+	FILE(STRINGS "${PGSQL_INCLUDE_DIR}/pg_config.h" PGVERSTR
+		REGEX "^#define[\t ]+PG_VERSION[\t ]+\".*\"")
+	IF(PGVERSTR)
+		STRING(REGEX REPLACE "^#define[\t ]+PG_VERSION[\t ]+\"([^\"]*)\".*"
+			"\\1" PGSQL_VERSION_STRING "${PGVERSTR}")
+	ENDIF(PGVERSTR)
+ENDIF (PGSQL_INCLUDE_DIR)
 
 # Copy the results to the output variables.
 IF (PGSQL_INCLUDE_DIR AND PGSQL_LIBRARY)
