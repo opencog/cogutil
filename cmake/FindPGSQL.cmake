@@ -33,6 +33,12 @@ IF (PGSQL_INCLUDE_DIR)
 	ENDIF(PGVERSTR)
 ENDIF (PGSQL_INCLUDE_DIR)
 
+# Check for required minimum version number.
+find_package_handle_standard_args(PGSQL
+	REQUIRED_VARS PGSQL_LIBRARY PGSQL_INCLUDE_DIR
+	VERSION_VAR PGSQL_VERSION_STRING
+)
+
 # Copy the results to the output variables.
 IF (PGSQL_INCLUDE_DIR AND PGSQL_LIBRARY)
 
