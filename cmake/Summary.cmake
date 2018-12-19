@@ -5,7 +5,7 @@ set(summary_willnotbuild_d "")
 set(max_name_length "0")
 
 file(READ "/etc/os-release" _OSR)
-string(REGEX MATCH "PRETTY_NAME=\"([a-xA-Z0-9 /()]*)" _BARF ${_OSR})
+string(REGEX MATCH "PRETTY_NAME=\"([a-xA-Z0-9 \\.,:;!@%#/()]*)" _BARF ${_OSR})
 set(OS_RELEASE ${CMAKE_MATCH_1})
 
 macro(summary_add name description test)
