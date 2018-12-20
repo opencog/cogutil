@@ -131,5 +131,5 @@ IF (CYGWIN)
         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/opencog/util/cygcogutil.dll ${CMAKE_BINARY_DIR}/tests/util/ 
         MAIN_DEPENDENCY cogutil)
 ELSE (CYGWIN) #Linux
-    INSTALL(TARGETS cogutil LIBRARY DESTINATION "lib${LIB_DIR_SUFFIX}")
+    INSTALL(TARGETS cogutil LIBRARY DESTINATION "lib${LIB_DIR_SUFFIX}/opencog")
 ENDIF (CYGWIN)
