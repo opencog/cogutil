@@ -11,7 +11,7 @@ tree<string>::iterator at = tr.begin();
 
 void begin_internal(const char* from, const char* to)
 {
-    at = tr.empty() 
+    at = tr.empty()
         ? tr.insert(at,string(from, to-1))
         : tr.append_child(at,string(from, to-1));
 }
@@ -38,11 +38,11 @@ struct TreeGrammar : public grammar<TreeGrammar>
     {
         definition(const TreeGrammar&)
         {
-            term = 
+            term =
                 lexeme_d[// or a message M with the syntax message:"M"
                          // added this to parse correctly has_said perceptions
                          // XXX THIS IS A HACK -- FIXME
-                         ( str_p("message:") >> ch_p('"') 
+                         ( str_p("message:") >> ch_p('"')
                            >> *(anychar_p - ch_p('"')) >> ch_p('"'))
                          | (+( anychar_p - ch_p('(') - ch_p(')') - space_p))]
                 [&add_leaf];
@@ -54,7 +54,7 @@ struct TreeGrammar : public grammar<TreeGrammar>
             //expr=term | (term >> '(' >> +expr >> ')');
         }
         rule<ScannerT> expr, beg, term;
-  
+
         const rule<ScannerT>& start() const { return expr; }
     };
 };
@@ -85,7 +85,7 @@ std::istream& operator>>(std::istream& in,opencog::tree<std::string>& t)
         // replaced by "yo man" (where a space is missing)
         // This assumes that there are no '(' and ')' in the quoted string.
         std::getline(in, tmp);
-        nparen += count(tmp.begin(), tmp.end(), '(') 
+        nparen += count(tmp.begin(), tmp.end(), '(')
                  - count(tmp.begin(), tmp.end(), ')');
         str += tmp + ' ';
     } while (in.good() && nparen>0);
@@ -127,7 +127,7 @@ std::istream& operator>>(std::istream& in,opencog::tree<std::string>& t)
        i++; j++;
     }
     str[j] = 0x0; // null terminate
-    
+
     t = parse_string_tree(str);
     return in;
 }

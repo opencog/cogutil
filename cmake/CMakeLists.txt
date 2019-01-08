@@ -1,8 +1,3 @@
-CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/lib/opencog.conf
-    ${PROJECT_BINARY_DIR}/lib/opencog.conf)
-# Create a test configuration file by copying the default configuration file
-CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/lib/opencog-test.conf
-    ${PROJECT_BINARY_DIR}/lib/opencog-test.conf)
 
 # install Find* cmake files to the DATADIR
 INSTALL(FILES
@@ -33,9 +28,6 @@ INSTALL(FILES
         FindUUID.cmake
         Findcpprest.cmake
         Summary.cmake
-        OpenCogFunctions.cmake
-        OpenCogAtomTypes.cmake
-        OpenCogMacros.cmake
         COPYING-CMAKE-SCRIPTS
         DESTINATION
         ${DATADIR}/cmake/)

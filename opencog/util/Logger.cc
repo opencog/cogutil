@@ -150,6 +150,7 @@ Logger::~Logger()
 std::map<std::string, Logger::LogWriter*> Logger::_loggers;
 
 Logger::LogWriter::LogWriter(void)
+	: printToStdout(false)
 {
     writingLoopActive = false;
 #ifdef HAVE_VALGRIND

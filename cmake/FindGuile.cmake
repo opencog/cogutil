@@ -11,9 +11,13 @@
 
 
 # Look for the header file
-# Look for guile-2.2 first, then 2.0, then 1.8
+# Look for guile-3.0 first, then 2.2
 # Macports for OSX puts things in /opt/local
-FIND_PATH(GUILE_INCLUDE_DIR libguile.h 
+FIND_PATH(GUILE_INCLUDE_DIR libguile.h
+	/usr/include/guile/3.0
+	/usr/local/include/guile/3.0
+	/opt/local/include/guile/3.0
+
 	/usr/include/guile/2.2
 	/usr/local/include/guile/2.2
 	/opt/local/include/guile/2.2
@@ -31,7 +35,7 @@ FIND_PATH(GUILE_INCLUDE_DIR libguile.h
 )
 
 # Look for the library
-FIND_LIBRARY(GUILE_LIBRARY NAMES guile-2.2 guile-2.0 guile PATHS 
+FIND_LIBRARY(GUILE_LIBRARY NAMES guile-3.0 guile-2.2 guile-2.0 guile PATHS
 	/usr/lib
 	/usr/local/lib
 	/opt/local/lib
@@ -80,6 +84,10 @@ IF(GUILE_INCLUDE_DIR)
 	ENDIF ()
 
 ENDIF(GUILE_INCLUDE_DIR)
+
+IF (GUILE_FOUND AND GUILE_VERSION_MAJOR EQUAL 3)
+	ADD_DEFINITIONS(-DHAVE_GUILE3)
+ENDIF (GUILE_FOUND AND GUILE_VERSION_MAJOR EQUAL 3)
 
 IF (GUILE_FOUND AND GUILE_VERSION_MAJOR EQUAL 2)
 	ADD_DEFINITIONS(-DHAVE_GUILE2)

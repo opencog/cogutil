@@ -6,7 +6,7 @@
  * Human Genome Center, Institute of Medical Science, University of Tokyo,
  * 4-6-1 Shirokanedai, Minato-ku, Tokyo 108-8639, Japan.
  * Contact: mdehoon 'AT' gsc.riken.jp
- * 
+ *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation with or without modifications and for any purpose and
  * without fee is hereby granted, provided that any copyright notices
@@ -15,7 +15,7 @@
  * names of the contributors or copyright holders not be used in
  * advertising or publicity pertaining to distribution of the software
  * without specific prior permission.
- * 
+ *
  * THE CONTRIBUTORS AND COPYRIGHT HOLDERS OF THIS SOFTWARE DISCLAIM ALL
  * WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL THE
@@ -24,7 +24,7 @@
  * OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
  * OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE
  * OR PERFORMANCE OF THIS SOFTWARE.
- * 
+ *
  */
 
 #ifndef	_C_CLUSTERING_LIBRARY_H
@@ -238,7 +238,7 @@ returns 0. If successful, getclustercentroids returns 1.
 int getclustercentroids(int nclusters, int nrows, int ncolumns,
   double** data, int** mask, int clusterid[], double** cdata, int** cmask,
   int transpose, char method);
-  
+
 /**
 The getclustermedoids routine calculates the cluster centroids, given to which
 cluster each element belongs. The centroid is defined as the element with the
@@ -301,7 +301,7 @@ of the matrix are clustered.
 
 \param npass      (input) int
 The number of times clustering is performed. Clustering is performed npass
-times, each time starting from a different (random) initial assignment of 
+times, each time starting from a different (random) initial assignment of
 genes to clusters. The clustering solution with the lowest within-cluster sum
 of distances is chosen.
 If npass==0, then the clustering algorithm will be run once, where the initial

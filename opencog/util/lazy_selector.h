@@ -74,7 +74,7 @@ private:
 
     //! an index is free if it has never been chosen before
     //! that is if no links are going out of it
-    inline bool is_free(unsigned int idx) const; 
+    inline bool is_free(unsigned int idx) const;
 
     //! increase _l until it is located on a free index
     inline void increase_l_till_free();

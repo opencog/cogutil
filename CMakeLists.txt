@@ -18,84 +18,62 @@ include(cmake/Summary.cmake)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12.2)
 IF (COMMAND CMAKE_POLICY)
 	CMAKE_POLICY(SET CMP0003 NEW)
-	CMAKE_POLICY(SET CMP0005 OLD)
 ENDIF (COMMAND CMAKE_POLICY)
 
 IF (CMAKE_VERSION VERSION_GREATER 3.0.2)
 	CMAKE_POLICY(SET CMP0037 OLD)
 ENDIF (CMAKE_VERSION VERSION_GREATER 3.0.2)
 
-# Only list install files that have actually changed
-SET(CMAKE_INSTALL_MESSAGE "LAZY")
-
 PROJECT(cogutil)
 
-# Get cogutil version
-# NOTE: This is the official semantic-version, as it is derived from a
-# version-control independent means of declaring versioning.
-# TODO: Once CMAKE_MINIMUM_REQUIRED >= 3.0.2 check use of policy CMP0048.
-FILE(READ "${CMAKE_SOURCE_DIR}/opencog/util/cogutil.h" _CU_H_CONTENTS)
-STRING(REGEX MATCH
-	"#define COGUTIL_VERSION_STRING \"([0-9]+[.0-9]+[.0-9]+)\""
-	_ "${_CU_H_CONTENTS}")
-SET(SEMANTIC_VERSION ${CMAKE_MATCH_1})
-
-IF (WIN32) # Windows host but not cygwin
-	MESSAGE(FATAL_ERROR "You must use Cygwin if compiling under Windows.")
-
-	# Previous definitions used for win32 (non cygwin) compilation.
-	# For reference only
-
-	# ADD_DEFINITIONS(-DWIN32_NOT_UNIX)
-	# FIND_PACKAGE(PThreads REQUIRED)
-	# FIND_PACKAGE(STLPort REQUIRED)
-	# INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include/win32" ${PTHREADS_INCLUDE_DIR} ${STLPORT_INCLUDE_DIR})
-	# LINK_LIBRARIES(${PTHREADS_LIBRARY} ${STLPORT_LIBRARIES})
-	# ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE)
-ENDIF (WIN32)
-
-IF (NOT CMAKE_COMPILER_IS_GNUCXX) # Compiler is not gcc
-	MESSAGE(FATAL_ERROR "Only the gcc compiler is supported at this time")
-ENDIF (NOT CMAKE_COMPILER_IS_GNUCXX)
-
-# uncomment to be in Release mode [default]
+# Uncomment to be in Release mode [default].
 # SET(CMAKE_BUILD_TYPE Release)
 
-# uncomment to build in debug mode
+# Uncomment to build in debug mode.
 # SET(CMAKE_BUILD_TYPE Debug)
 
-# uncomment to be in coverage testing mode
+# Uncomment to be in coverage testing mode.
 # SET(CMAKE_BUILD_TYPE Coverage)
 
-# uncomment to build in profile mode
+# Uncomment to build in profile mode.
 # SET(CMAKE_BUILD_TYPE Profile)
 
-# uncomment to build in release mode with debug information
+# Uncomment to build in release mode with debug information.
 # SET(CMAKE_BUILD_TYPE RelWithDebInfo)
 
-# default build type
+# Default build type.
 IF (CMAKE_BUILD_TYPE STREQUAL "")
 	SET(CMAKE_BUILD_TYPE Release)
 ENDIF (CMAKE_BUILD_TYPE STREQUAL "")
 
 MESSAGE(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
-ADD_DEFINITIONS(-DPROJECT_SOURCE_DIR=\\"${CMAKE_SOURCE_DIR}\\"
-	            -DPROJECT_BINARY_DIR=\\"${CMAKE_BINARY_DIR}\\")
+ADD_DEFINITIONS(-DPROJECT_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+	            -DPROJECT_BINARY_DIR="${CMAKE_BINARY_DIR}")
 
-# add the 'cmake' dir to cmake's module search path
+# Add the 'cmake' dir to cmake's module search path.
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/")
+
+# Get cogutil version.
+# NOTE: This is the official semantic-version, as it is derived from
+# a version-control independent means of declaring versioning.
+#
+# TODO: Once CMAKE_MINIMUM_REQUIRED >= 3.0.2 check use of policy CMP0048.
+#
+FILE(READ "${CMAKE_SOURCE_DIR}/opencog/util/cogutil.h" _CU_H_CONTENTS)
+STRING(REGEX MATCH
+	"#define COGUTIL_VERSION_STRING \"([0-9]+[.0-9]+[.0-9]+)\""
+	_ "${_CU_H_CONTENTS}")
+SET(SEMANTIC_VERSION ${CMAKE_MATCH_1})
 
 # ===============================================================
 # Detect different compilers and OS'es, tweak flags as necessary.
 
-IF (CMAKE_COMPILER_IS_GNUCXX)  # Compiler is GCC
-	# aiiee cmake version 2.8.8 or newer is needed for below to
-	# work...
-	# IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.6.4)
-	#	MESSAGE(FATAL_ERROR "GCC version must be at least 4.6.4!")
-	# ENDIF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.6.4)
+IF (NOT CMAKE_COMPILER_IS_GNUCXX) # Compiler is not gcc
+	MESSAGE(FATAL_ERROR "Only the gcc compiler is supported at this time")
+ENDIF (NOT CMAKE_COMPILER_IS_GNUCXX)
 
+IF (CMAKE_COMPILER_IS_GNUCXX)  # Compiler is GCC
 	IF (APPLE)
 		SET(CMAKE_C_FLAGS "-Wall -Wno-long-long -Wno-conversion")
 		SET(CMAKE_C_FLAGS_DEBUG "-O0 -g")
@@ -117,7 +95,8 @@ IF (CMAKE_COMPILER_IS_GNUCXX)  # Compiler is GCC
 	#
 	# 2) -fopenmp for multithreading support
 	#
-	# 3) -std=gnu++0x for C++0x and GNU extensions support
+	# 3) -std=gnu++11 for C++11 and GNU extensions support
+	#    XXX maybe we can move to a newer C++ standard, now?
 	SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wno-variadic-macros -fopenmp -std=gnu++11")
 
 	SET(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
@@ -133,6 +112,20 @@ IF (CMAKE_COMPILER_IS_GNUCXX)  # Compiler is GCC
 	ENDIF (CMAKE_BUILD_TYPE STREQUAL "Coverage")
 ENDIF (CMAKE_COMPILER_IS_GNUCXX)
 
+# ------------------------------------------------------
+IF (WIN32) # Windows host but not cygwin
+	MESSAGE(FATAL_ERROR "You must use Cygwin if compiling under Windows.")
+
+	# Previous definitions used for win32 (non cygwin) compilation.
+	# For reference only
+
+	# ADD_DEFINITIONS(-DWIN32_NOT_UNIX)
+	# FIND_PACKAGE(PThreads REQUIRED)
+	# FIND_PACKAGE(STLPort REQUIRED)
+	# INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include/win32" ${PTHREADS_INCLUDE_DIR} ${STLPORT_INCLUDE_DIR})
+	# LINK_LIBRARIES(${PTHREADS_LIBRARY} ${STLPORT_LIBRARIES})
+	# ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE)
+ENDIF (WIN32)
 
 # Do the cygwin build
 IF (CYGWIN)
@@ -143,16 +136,6 @@ ENDIF (CYGWIN)
 # ===================================================================
 # Check for existance of various required, optional packages.
 
-# Look for binutils-dev. Needed for pretty stack printing.
-FIND_PACKAGE(BFD)
-IF (BFD_FOUND)
-	MESSAGE(STATUS "Binutils found.")
-	ADD_DEFINITIONS(-DHAVE_BFD)
-	SET(HAVE_BFD 1)
-ELSE (BFD_FOUND)
-	MESSAGE(STATUS "Binutils-dev missing: No pretty stack-trace printing.")
-ENDIF (BFD_FOUND)
-
 # Check for boost. We need dynamic-linked, threaded libs by default.
 SET(Boost_USE_STATIC_LIBS OFF)
 SET(Boost_USE_MULTITHREADED ON)
@@ -160,28 +143,15 @@ SET(Boost_USE_MULTITHREADED ON)
 SET(MIN_BOOST 1.46)
 
 # Required boost packages
-# hypertable requires boost iostreams
-# boost-1.49 no longer has a libboost_iostreams
 # 1.46 is minimum for required filesystem support
 # program_options needed by some combo utilities
 FIND_PACKAGE(Boost ${MIN_BOOST} COMPONENTS date_time filesystem program_options regex serialization system thread REQUIRED)
 
 IF (Boost_FOUND)
 	SET(Boost_FOUND_SAVE 1)
-
-	# Boost.Signals2 requires this in signal_type.hpp
-	SET(BOOST_PARAMETER_MAX_ARITY 7)
-	ADD_DEFINITIONS(-DBOOST_PARAMETER_MAX_ARITY=${BOOST_PARAMETER_MAX_ARITY})
 ELSE(Boost_FOUND)
-	MESSAGE(FATAL_ERROR "Boost ${MIN_BOOST} or newer (package libboost-all-dev if using Ubuntu) is needed to build OpenCog!")
+	MESSAGE(FATAL_ERROR "Boost ${MIN_BOOST} or newer (package libboost-all-dev if using Ubuntu) is needed to build!")
 ENDIF (Boost_FOUND)
-
-# Opencog won't compile with Boost 1.51, some kind of conflict with
-# hash functions, see github bugs 1 and 36
-IF (105100 EQUAL ${Boost_VERSION})
-	MESSAGE(FATAL_ERROR "Boost version 1.51 will not work with OpenCog.  Please use a different version.")
-ENDIF (105100 EQUAL ${Boost_VERSION})
-MESSAGE(STATUS "Boost version ${Boost_VERSION} found.")
 
 # Optional boost packages; can build without these.
 FIND_PACKAGE(Boost ${MIN_BOOST} COMPONENTS python program_options QUIET)
@@ -192,11 +162,22 @@ IF (Boost_FOUND_SAVE)
 	SET(Boost_FOUND 1)
 ENDIF (Boost_FOUND_SAVE)
 
+# -------------------------------------------------------------
 FIND_PACKAGE(Cxxtest)
 IF (NOT CXXTEST_FOUND)
 	MESSAGE(STATUS "CxxTest missing: needed for unit tests.")
 ENDIF (NOT CXXTEST_FOUND)
 
+# -------------------------------------------------------------
+# Look for binutils-dev. Needed for pretty stack printing.
+FIND_PACKAGE(BFD)
+IF (BFD_FOUND)
+	MESSAGE(STATUS "Binutils found.")
+	ADD_DEFINITIONS(-DHAVE_BFD)
+	SET(HAVE_BFD 1)
+ELSE (BFD_FOUND)
+	MESSAGE(STATUS "Binutils-dev missing: No pretty stack-trace printing.")
+ENDIF (BFD_FOUND)
 
 # Look for libiberty-dev. Needed for pretty stack printing.
 FIND_PACKAGE(Iberty)
@@ -208,35 +189,19 @@ ELSE (IBERTY_FOUND)
 	MESSAGE(STATUS "Libiberty-dev missing: No pretty stack-trace printing.")
 ENDIF (IBERTY_FOUND)
 
-
-# ==========================================================
-# Decide what to build, based on the packages found.
-
-IF (Boost_FOUND)
-	SET(HAVE_UTIL 1)
-ENDIF (Boost_FOUND)
-
 # ===================================================================
-# global includes
+# Global includes
 
-# set confdir and datadir
-IF (NOT DEFINED CONFDIR)
-	SET (CONFDIR "${CMAKE_INSTALL_PREFIX}/etc")
-ENDIF (NOT DEFINED CONFDIR)
-IF (NOT DEFINED DATADIR)
-	SET (DATADIR "${CMAKE_INSTALL_PREFIX}/share/opencog")
-ENDIF (NOT DEFINED DATADIR)
-ADD_DEFINITIONS(-DCONFDIR=\\"${CONFDIR}\\")
-ADD_DEFINITIONS(-DDATADIR=\\"${DATADIR}\\")
+# -------------------------------------------------
+# Include configuration.
 
-# (re?)define MAN_INSTALL_DIR
-SET (MAN_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/share/man")
+# Set default include paths.
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR} ${Boost_INCLUDE_DIRS})
 
-# include custom opencog cmake macros
-INCLUDE("${CMAKE_SOURCE_DIR}/cmake/OpenCogMacros.cmake")
-
-# small hack to handle unixes that use "/usr/lib64" instead of "/usr/lib" as the
-# default lib path on 64 bit archs
+# -------------------------------------------------
+# Library configuration
+# Small hack to handle unixes that use "/usr/lib64" instead of
+# "/usr/lib" as the default lib path on 64 bit archs.
 IF (NOT DEFINED LIB_DIR_SUFFIX)
 	EXECUTE_PROCESS(COMMAND ${CMAKE_CXX_COMPILER} -print-search-dirs OUTPUT_VARIABLE PRINT_SEARCH_DIRS_OUTPUT)
 	STRING(REGEX MATCH "\r?\nlibraries:.*\r?\n" COMPILER_LIB_SEARCH_DIRS ${PRINT_SEARCH_DIRS_OUTPUT})
@@ -248,15 +213,38 @@ IF (NOT DEFINED LIB_DIR_SUFFIX)
 	ENDIF (NOT ${COMPILER_LIB_SEARCH_DIRS} STREQUAL "")
 ENDIF (NOT DEFINED LIB_DIR_SUFFIX)
 
-# set default include paths
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR} ${Boost_INCLUDE_DIRS})
-
 # RPATH handling (see https://cmake.org/Wiki/CMake_RPATH_handling)
 # Note: RPATH only supported under Linux!
 SET(CMAKE_SKIP_BUILD_RPATH	FALSE)
 SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib/opencog")
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+# -------------------------------------------------
+# Install configuration
+
+# Only list install files that have actually changed.
+SET(CMAKE_INSTALL_MESSAGE "LAZY")
+
+# set confdir and datadir
+IF (NOT DEFINED CONFDIR)
+	SET (CONFDIR "${CMAKE_INSTALL_PREFIX}/etc")
+ENDIF (NOT DEFINED CONFDIR)
+IF (NOT DEFINED DATADIR)
+	SET (DATADIR "${CMAKE_INSTALL_PREFIX}/share/opencog")
+ENDIF (NOT DEFINED DATADIR)
+ADD_DEFINITIONS(-DCONFDIR="${CONFDIR}")
+ADD_DEFINITIONS(-DDATADIR="${DATADIR}")
+
+# (re?)define MAN_INSTALL_DIR
+SET (MAN_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/share/man")
+
+# ===================================================================
+# Decide what to build, based on the packages found.
+
+IF (Boost_FOUND)
+	SET(HAVE_UTIL 1)
+ENDIF (Boost_FOUND)
 
 ADD_SUBDIRECTORY(cmake)
 ADD_SUBDIRECTORY(opencog)
@@ -298,6 +286,7 @@ ADD_CUSTOM_TARGET(cscope
 	COMMENT "Generating CScope database"
 )
 
+# ===================================================================
 # Packaging
 # For what architecture the package is for
 # TODO: Will give error on non debian distros, fix it.
@@ -305,6 +294,11 @@ EXECUTE_PROCESS(COMMAND  dpkg --print-architecture
 	OUTPUT_VARIABLE PACKAGE_ARCHITECTURE
 	OUTPUT_STRIP_TRAILING_WHITESPACE)
 STRING(TIMESTAMP UTC_DATE %Y%m%d UTC)
+# If 'sudo make install' is run before 'make package', then install_manifest.txt
+# will be owned by root. Creating the file during configuration stage ensures
+# that is owned by the builder thus avoiding 'Permission denied' error when
+# packaging.
+FILE(WRITE "${PROJECT_BINARY_DIR}/install_manifest.txt")
 
 ## Cpack configuration
 SET(CPACK_GENERATOR "DEB")
@@ -342,11 +336,14 @@ SET(CPACK_DEBIAN_PACKAGE_SECTION "libdevel")
 SET(CPACK_DEBIAN_PACKAGE_HOMEPAGE "http://opencog.org")
 INCLUDE(CPack)
 
-# documentation
+# ===================================================================
+# Documentation.
 FIND_PACKAGE(Doxygen)
 ADD_SUBDIRECTORY(doc EXCLUDE_FROM_ALL)
 
-# Show a summary of what we got
+# ===================================================================
+# Show a summary of what we found, what we will do.
+
 SUMMARY_ADD("Doxygen" "Code documentation" DOXYGEN_FOUND)
 SUMMARY_ADD("StackPrint" "Pretty printing of stack traces" HAVE_BFD AND HAVE_IBERTY)
 SUMMARY_ADD("Unit tests" "Unit tests" CXXTEST_FOUND)

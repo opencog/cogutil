@@ -93,14 +93,14 @@ bool append_file_content(const char* filename, std::string &s);
 bool load_text_file(const std::string &fname, std::string& dest);
 
 /**
- * Get the file name (including absolute path) of current executing file 
+ * Get the file name (including absolute path) of current executing file
  */
 std::string get_exe_name();
 
 /**
  * Get the absolute path (including "/" at the end) where the current executing file runs
  */
-std::string get_exe_dir(); 
+std::string get_exe_dir();
 
 /** @}*/
 } // namespace opencog

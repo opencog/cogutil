@@ -8,12 +8,12 @@
  * it under the terms of the GNU Affero General Public License v3 as
  * published by the Free Software Foundation and including the exceptions
  * at http://opencog.org/wiki/Licenses
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program; if not, write to:
  * Free Software Foundation, Inc.,
@@ -102,8 +102,8 @@ template<typename T>
 T gaussian_rand(T mean, T std_dev, RandGen& rng=randGen())
 {
     double val = mean + std_dev *
-        std::sqrt(-2 * std::log(rng.randdouble_one_excluded())) * 
-        std::cos(2 * PI * rng.randdouble_one_excluded());
+        std::sqrt(-2.0 * std::log(rng.randdouble_one_excluded())) *
+        std::cos(2.0 * M_PI * rng.randdouble_one_excluded());
     T res;
     try {
         res = boost::numeric_cast<T>(val);
