@@ -28,6 +28,7 @@ INSTALL(FILES
         FindUUID.cmake
         Findcpprest.cmake
         Summary.cmake
+        OpenCogGccOptions.cmake
         COPYING-CMAKE-SCRIPTS
         DESTINATION
         ${DATADIR}/cmake/)
