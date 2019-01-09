@@ -66,51 +66,7 @@ STRING(REGEX MATCH
 	_ "${_CU_H_CONTENTS}")
 SET(SEMANTIC_VERSION ${CMAKE_MATCH_1})
 
-# ===============================================================
-# Detect different compilers and OS'es, tweak flags as necessary.
-
-IF (NOT CMAKE_COMPILER_IS_GNUCXX) # Compiler is not gcc
-	MESSAGE(FATAL_ERROR "Only the gcc compiler is supported at this time")
-ENDIF (NOT CMAKE_COMPILER_IS_GNUCXX)
-
-IF (CMAKE_COMPILER_IS_GNUCXX)  # Compiler is GCC
-	IF (APPLE)
-		SET(CMAKE_C_FLAGS "-Wall -Wno-long-long -Wno-conversion")
-		SET(CMAKE_C_FLAGS_DEBUG "-O0 -g")
-		SET(CMAKE_C_FLAGS_PROFILE "-O0 -pg")
-		SET(CMAKE_C_FLAGS_RELEASE "-O2 -g0")
-		# Vital to do this otherwise unresolved symbols everywhere:
-		SET(CMAKE_SHARED_LINKER_FLAGS "-Wl,-flat_namespace,-undefined,dynamic_lookup")
-		SET(CMAKE_EXE_LINKER_FLAGS "-Wl,-flat_namespace,-undefined,dynamic_lookup")
-	ELSE (APPLE)
-		SET(CMAKE_C_FLAGS "-Wall -fPIC -Wl,--copy-dt-needed-entries")
-		SET(CMAKE_C_FLAGS_DEBUG "-ggdb3 -fstack-protector")
-		SET(CMAKE_C_FLAGS_PROFILE "-O2 -g3 -fstack-protector -pg")
-		SET(CMAKE_C_FLAGS_RELEASE "-O2 -g -fstack-protector")
-	ENDIF (APPLE)
-
-	# 1) -Wno-variadic-macros is to avoid warnings regarding using
-	# variadic in macro OC_ASSERT (the warning warns that this is only
-	# available from C99, lol!)
-	#
-	# 2) -fopenmp for multithreading support
-	#
-	# 3) -std=gnu++11 for C++11 and GNU extensions support
-	#    XXX maybe we can move to a newer C++ standard, now?
-	SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wno-variadic-macros -fopenmp -std=gnu++11")
-
-	SET(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
-	SET(CMAKE_CXX_FLAGS_PROFILE ${CMAKE_C_FLAGS_PROFILE})
-	SET(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_C_FLAGS_RELEASE})
-
-	# Options for generating gcov code coverage output
-	SET(CMAKE_C_FLAGS_COVERAGE "-O0 -g -fprofile-arcs -ftest-coverage -fno-inline")
-	SET(CMAKE_CXX_FLAGS_COVERAGE "${CMAKE_C_FLAGS_COVERAGE} -fno-default-inline")
-	# Might be needed for some combinations of ln and gcc
-	IF (CMAKE_BUILD_TYPE STREQUAL "Coverage")
-		LINK_LIBRARIES(gcov)
-	ENDIF (CMAKE_BUILD_TYPE STREQUAL "Coverage")
-ENDIF (CMAKE_COMPILER_IS_GNUCXX)
+include(cmake/OpenCogGccOptions.cmake)
 
 # ------------------------------------------------------
 IF (WIN32) # Windows host but not cygwin
