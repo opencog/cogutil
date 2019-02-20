@@ -287,7 +287,7 @@ Out n_way_partition(It begin, It end, const Pred p, int n, Out out)
  * @return        the power set of s with subsets up to size n
  */
 template<typename Set> std::set<Set> powerset(const Set& s, size_t n,
-                                              bool exact = false)
+                                              bool exact=false)
 {
     std::set<Set> res;
     if (n > 0) {
