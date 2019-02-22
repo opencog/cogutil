@@ -121,4 +121,10 @@ public:
 			expected_c = {{"a", 0.5}, {"b", 1}};
 		TS_ASSERT_EQUALS(c3, expected_c);
 	}
+
+	void test_keys() {
+		set<string> ks = c1.keys(),
+			expected_ks = {"a", "b"};
+		TS_ASSERT_EQUALS(ks, expected_ks);
+	}
 };
