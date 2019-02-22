@@ -218,6 +218,19 @@ public:
 			v.second /= num;
 		return *this;
 	}
+
+	/**
+	 * Return all keys.
+	 *
+	 * For instance:
+	 * c1.keys() = {'a', 'b'}
+	 */
+	std::set<T> keys() const {
+		std::set<T> ks;
+		for (auto& v : *this)
+			ks.insert(v.first);
+		return ks;
+	}
 };
 
 template<typename T, typename CT, typename CMP = std::less<T>>
