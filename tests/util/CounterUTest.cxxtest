@@ -21,6 +21,7 @@
  */
 
 #include <opencog/util/Counter.h>
+#include <opencog/util/Logger.h>
 
 using namespace opencog;
 using namespace std;
@@ -31,8 +32,8 @@ class CounterUTest : public CxxTest::TestSuite
 	Counter<string, float> c2;
 public:
 	CounterUTest() {
-		// logger().setPrintToStdoutFlag(true);
-		// logger().setLevel(Logger::FINE);
+		logger().set_print_to_stdout_flag(true);
+		logger().set_level(Logger::DEBUG);
 	}
 
 	void setUp() {
@@ -83,8 +84,15 @@ public:
 	void test_multiplication() {
 		Counter<string, float>
 			c3 = c1 * c2,
-			expected_c = {{"a", 1}, {"b", 4}, {"c", 0}};
+			c4 = c2 * c1,
+			expected_c = {{"a", 0}, {"b", 4}, {"c", 0}};
+
+		logger().debug() << "c3 = " << c3;
+		logger().debug() << "c4 = " << c3;
+		logger().debug() << "expected_c = " << expected_c;
+
 		TS_ASSERT_EQUALS(c3, expected_c);
+		TS_ASSERT_EQUALS(c4, expected_c);
 	}
 
 	void test_division() {
