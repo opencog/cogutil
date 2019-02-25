@@ -150,15 +150,32 @@ public:
 		return *this;
 	}
 
-	//! multiply 2 counters,
+	//! multiply (inner product of) 2 counters,
 	/**
 	 * c1 *= c2
 	 * =>
-	 * c1 = {'a':1, 'b':4, 'c':0}
+	 * c1 = {'a':0, 'b':4, 'c':0}
 	 */
 	Counter& operator*=(const Counter& other) {
-		for (const auto& v : other)
-			this->operator[](v.first) *= v.second;
+		auto it = this->begin();
+		auto other_it = other.begin();
+		while (it != this->end() and other_it != other.end()) {
+			if (this->key_comp()(it->first, other_it->first)) {
+				it->second = CT();
+				++it;
+			} else if (this->key_comp()(other_it->first, it->first)) {
+				this->emplace_hint(it, other_it->first, CT());
+				++other_it;
+			} else {
+				it->second *= other_it->second;
+				++it;
+				++other_it;
+			}
+		}
+		for (; it != this->end(); ++it)
+			it->second = CT();
+		for (; other_it != other.end(); ++other_it)
+			this->emplace_hint(it, other_it->first, CT());
 		return *this;
 	}
 
