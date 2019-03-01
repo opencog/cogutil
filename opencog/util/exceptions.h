@@ -103,6 +103,7 @@ public:
      * @param Exception message in printf standard format.
      */
     RuntimeException(const char*, const char*, ...);
+    RuntimeException(const char*, const char*, va_list);
 
     /**
      * Default constructor used for inheritance
@@ -125,6 +126,7 @@ public:
      * @param Exception message in printf standard format.
      */
     SyntaxException(const char*, const char*, ...);
+    SyntaxException(const char*, const char*, va_list);
 
 }; // SyntaxException
 
@@ -143,6 +145,7 @@ public:
      * @param Exception message in printf standard format.
      */
     IOException(const char*, const char*, ...);
+    IOException(const char*, const char*, va_list);
 
 }; // IOException
 
@@ -161,6 +164,7 @@ public:
      * @param Exception message in printf standard format.
      */
     ComboException(const char*, const char*, ...);
+    ComboException(const char*, const char*, va_list);
 
 }; // ComboException
 
@@ -179,6 +183,7 @@ public:
      * @param Exception message in printf standard format.
      */
     IndexErrorException(const char*, const char*, ...);
+    IndexErrorException(const char*, const char*, va_list);
 
 }; // IndexErrorException
 
@@ -200,6 +205,7 @@ public:
      * @param Exception message in printf standard format.
      */
     InvalidParamException(const char*, const char*, ...);
+    InvalidParamException(const char*, const char*, va_list);
 
 }; // InvalidParamException
 
@@ -218,6 +224,7 @@ public:
      * @param Exception message in printf standard format.
      */
     InconsistenceException(const char*, const char*, ...);
+    InconsistenceException(const char*, const char*, va_list);
 
 }; // InconsistenceException
 
@@ -237,6 +244,7 @@ public:
      * @param Exception message in printf standard format.
      */
     FatalErrorException(const char*, const char*, ...);
+    FatalErrorException(const char*, const char*, va_list);
 
 }; // FatalErrorException
 
@@ -256,6 +264,7 @@ public:
      * @param Exception message in printf standard format.
      */
     NetworkException(const char*, const char*, ...);
+    NetworkException(const char*, const char*, va_list);
 
 }; // NetworkException
 
@@ -269,7 +278,7 @@ class AssertionException : public StandardException
 {
 public:
     AssertionException(const char*, ...);
-    AssertionException(const char* fmt, va_list ap);
+    AssertionException(const char*, va_list);
 };
 
 /* ---------------------------------------------------------------- */
@@ -350,6 +359,7 @@ public:
  */
 class NotFoundException : public SilentException
 {
+    void init(const char*, const char*, va_list);
 public:
     /**
      * Constructor
@@ -360,6 +370,7 @@ public:
      */
     NotFoundException(void) {}
     NotFoundException(const char*, const char*, ...);
+    NotFoundException(const char*, const char*, va_list);
 
 }; // NotFoundException
 
