@@ -24,6 +24,7 @@
 #ifndef _OPENCOG_COUNTER_H
 #define _OPENCOG_COUNTER_H
 
+#include <set>
 #include <map>
 #include <initializer_list>
 #include <boost/operators.hpp>
