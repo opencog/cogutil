@@ -15,8 +15,8 @@ jobs:
           command: date +%d-%m-%Y > /tmp/date
       - restore_cache:
           keys:
-            - ccache-{{ checksum "/tmp/date" }}
-            - ccache-
+            - v1-ccache-{{ checksum "/tmp/date" }}
+            - v1-ccache-
       - run:
           name: CMake Configure
           command: mkdir build && cd build && cmake ..
