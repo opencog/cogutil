@@ -21,6 +21,7 @@
  */
 
 #include <opencog/util/Counter.h>
+#include <opencog/util/Logger.h>
 
 using namespace opencog;
 using namespace std;
@@ -30,19 +31,19 @@ class CounterUTest : public CxxTest::TestSuite
 	Counter<string, float> c1;
 	Counter<string, float> c2;
 public:
-    CounterUTest() {
-        // logger().setPrintToStdoutFlag(true);
-        // logger().setLevel(Logger::FINE);
-    }
-
-	void setUp() {
-        c1 = {{"a", 1}, {"b", 2}};
-        c2 = {{"b", 2}, {"c", 3}};
+	CounterUTest() {
+		logger().set_print_to_stdout_flag(true);
+		logger().set_level(Logger::DEBUG);
 	}
 
-    void test_total_count() {
-        TS_ASSERT_EQUALS(c2.total_count(), 5);
-    }
+	void setUp() {
+		c1 = {{"a", 1}, {"b", 2}};
+		c2 = {{"b", 2}, {"c", 3}};
+	}
+
+	void test_total_count() {
+		TS_ASSERT_EQUALS(c2.total_count(), 5);
+	}
 
 	template<typename T>
 	struct cmpByContent {
@@ -57,9 +58,9 @@ public:
 		int * key1 = &one;
 		int * key2 = &otherone;
 		Counter<int*, float> c1 = {{key1,1}},
-							 c2 = {{key1,1},{key2,1}};
+			c2 = {{key1,1},{key2,1}};
 		Counter<int*, float, cmpByContent<int*>> cc1 = {{key1,1}},
-												 cc2 = {{key1,2}};
+			cc2 = {{key1,2}};
 		c1[key2] += 1;
 		cc1[key2] += 1;
 		TS_ASSERT_EQUALS(c1,c2);
@@ -67,58 +68,71 @@ public:
 	}
 
 	void test_addition() {
-        Counter<string, float>
-            c3 = c1 + c2,
-            expected_c = {{"a", 1}, {"b", 4}, {"c", 3}};
-        TS_ASSERT_EQUALS(c3, expected_c);
-    }
+		Counter<string, float>
+			c3 = c1 + c2,
+			expected_c = {{"a", 1}, {"b", 4}, {"c", 3}};
+		TS_ASSERT_EQUALS(c3, expected_c);
+	}
 
-    void test_subtraction() {
-        Counter<string, float>
-            c3 = c1 - c2,
-            expected_c = {{"a", 1}, {"b", 0}, {"c", -3}};
-        TS_ASSERT_EQUALS(c3, expected_c);
-    }
+	void test_subtraction() {
+		Counter<string, float>
+			c3 = c1 - c2,
+			expected_c = {{"a", 1}, {"b", 0}, {"c", -3}};
+		TS_ASSERT_EQUALS(c3, expected_c);
+	}
 
 	void test_multiplication() {
-        Counter<string, float>
-            c3 = c1 * c2,
-            expected_c = {{"a", 1}, {"b", 4}, {"c", 0}};
-        TS_ASSERT_EQUALS(c3, expected_c);
-    }
+		Counter<string, float>
+			c3 = c1 * c2,
+			c4 = c2 * c1,
+			expected_c = {{"a", 0}, {"b", 4}, {"c", 0}};
 
-    void test_division() {
-        Counter<string, float>
-            c3 = c1 / c2,
-            expected_c = {{"a", 1}, {"b", 1}, {"c", 0}};
-        TS_ASSERT_EQUALS(c3, expected_c);
-    }
+		logger().debug() << "c3 = " << c3;
+		logger().debug() << "c4 = " << c3;
+		logger().debug() << "expected_c = " << expected_c;
+
+		TS_ASSERT_EQUALS(c3, expected_c);
+		TS_ASSERT_EQUALS(c4, expected_c);
+	}
+
+	void test_division() {
+		Counter<string, float>
+			c3 = c1 / c2,
+			expected_c = {{"a", 1}, {"b", 1}, {"c", 0}};
+		TS_ASSERT_EQUALS(c3, expected_c);
+	}
 
 	void test_addition2() {
-        Counter<string, float>
-            c3 = c1 + 2,
-            expected_c = {{"a", 3}, {"b", 4}};
-        TS_ASSERT_EQUALS(c3, expected_c);
-    }
+		Counter<string, float>
+			c3 = c1 + 2,
+			expected_c = {{"a", 3}, {"b", 4}};
+		TS_ASSERT_EQUALS(c3, expected_c);
+	}
 
-    void test_subtraction2() {
-        Counter<string, float>
-            c3 = c1 - 2,
-            expected_c = {{"a", -1}, {"b", 0}};
-        TS_ASSERT_EQUALS(c3, expected_c);
-    }
+	void test_subtraction2() {
+		Counter<string, float>
+			c3 = c1 - 2,
+			expected_c = {{"a", -1}, {"b", 0}};
+		TS_ASSERT_EQUALS(c3, expected_c);
+	}
 
 	void test_multiplication2() {
-        Counter<string, float>
-            c3 = c1 * 2,
-            expected_c = {{"a", 2}, {"b", 4}};
-        TS_ASSERT_EQUALS(c3, expected_c);
-    }
+		Counter<string, float>
+			c3 = c1 * 2,
+			expected_c = {{"a", 2}, {"b", 4}};
+		TS_ASSERT_EQUALS(c3, expected_c);
+	}
 
-    void test_division2() {
-        Counter<string, float>
-            c3 = c1 / 2,
-            expected_c = {{"a", 0.5}, {"b", 1}};
-        TS_ASSERT_EQUALS(c3, expected_c);
-    }
+	void test_division2() {
+		Counter<string, float>
+			c3 = c1 / 2,
+			expected_c = {{"a", 0.5}, {"b", 1}};
+		TS_ASSERT_EQUALS(c3, expected_c);
+	}
+
+	void test_keys() {
+		set<string> ks = c1.keys(),
+			expected_ks = {"a", "b"};
+		TS_ASSERT_EQUALS(ks, expected_ks);
+	}
 };

@@ -73,6 +73,7 @@
 #include <bfd.h>
 #include <dlfcn.h>
 #include <link.h>
+#include <pthread.h>
 
 /* 150 isn't special; it's just an arbitrary non-ASCII char value.  */
 #define OPTION_DEMANGLER      (150)
@@ -268,6 +269,8 @@ static int find_matching_file(struct dl_phdr_info *info,
 
 char **oc_backtrace_symbols(void *const *buffer, int size)
 {
+      static pthread_mutex_t bfd_mutex = PTHREAD_MUTEX_INITIALIZER;
+
       int stack_depth = size - 1;
       int x,y;
       /* discard calling function */
@@ -279,6 +282,7 @@ char **oc_backtrace_symbols(void *const *buffer, int size)
 
       locations = malloc(sizeof(char**) * (stack_depth+1));
 
+      pthread_mutex_lock(&bfd_mutex);
       bfd_init();
       for (x=stack_depth, y=0; x>=0; x--, y++) {
             struct file_match match = { .address = buffer[x] };
@@ -293,6 +297,7 @@ char **oc_backtrace_symbols(void *const *buffer, int size)
             locations[x] = ret_buf;
             total += strlen(ret_buf[0]) + 1;
       }
+      pthread_mutex_unlock(&bfd_mutex);
 
       /* allocate the array of char* we are going to return and extra space for
        * all of the strings */
