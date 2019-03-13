@@ -141,6 +141,11 @@ RuntimeException::RuntimeException(const char *trace, const char* fmt, ...)
     va_end(ap);
 }
 
+RuntimeException::RuntimeException(const char *trace, const char* fmt, va_list ap)
+{
+    parse_error_message(trace, fmt, ap);
+}
+
 RuntimeException::RuntimeException()
 {
 }
@@ -158,6 +163,11 @@ SyntaxException::SyntaxException(const char * trace, const char * fmt, ...)
     va_end(ap);
 }
 
+SyntaxException::SyntaxException(const char * trace, const char * fmt, va_list ap)
+{
+    parse_error_message(trace, fmt, ap);
+}
+
 /*
  * ----------------------------------------------------------------------
  * IOException class
@@ -169,6 +179,11 @@ IOException::IOException(const char * trace, const char * fmt, ...)
     va_start(ap, fmt);
     parse_error_message(trace, fmt, ap);
     va_end(ap);
+}
+
+IOException::IOException(const char * trace, const char * fmt, va_list ap)
+{
+    parse_error_message(trace, fmt, ap);
 }
 
 /*
@@ -184,6 +199,11 @@ ComboException::ComboException(const char * trace, const char * fmt, ...)
     va_end(ap);
 }
 
+ComboException::ComboException(const char* trace, const char* fmt, va_list ap)
+{
+    parse_error_message(trace, fmt, ap);
+}
+
 /*
  * ----------------------------------------------------------------------
  * IndexErrorException class
@@ -195,6 +215,11 @@ IndexErrorException::IndexErrorException(const char * trace, const char * fmt, .
     va_start(ap, fmt);
     parse_error_message(trace, fmt, ap);
     va_end(ap);
+}
+
+IndexErrorException::IndexErrorException(const char* trace, const char* fmt, va_list ap)
+{
+    parse_error_message(trace, fmt, ap);
 }
 
 /*
@@ -210,6 +235,11 @@ InvalidParamException::InvalidParamException(const char * trace, const char * fm
     va_end(ap);
 }
 
+InvalidParamException::InvalidParamException(const char* trace, const char* fmt, va_list ap)
+{
+    parse_error_message(trace, fmt, ap, false);
+}
+
 /*
  * ----------------------------------------------------------------------
  * InconsistenceException class
@@ -221,6 +251,11 @@ InconsistenceException::InconsistenceException(const char * trace, const char * 
     va_start(ap, fmt);
     parse_error_message(trace, fmt, ap);
     va_end(ap);
+}
+
+InconsistenceException::InconsistenceException(const char* trace, const char* fmt, va_list ap)
+{
+    parse_error_message(trace, fmt, ap);
 }
 
 /*
@@ -236,6 +271,11 @@ FatalErrorException::FatalErrorException(const char * trace, const char * fmt, .
     va_end(ap);
 }
 
+FatalErrorException::FatalErrorException(const char* trace, const char* fmt, va_list ap)
+{
+    parse_error_message(trace, fmt, ap);
+}
+
 /*
  * ----------------------------------------------------------------------
  * NetworkException class
@@ -249,16 +289,18 @@ NetworkException::NetworkException(const char * trace, const char * fmt, ...)
     va_end(ap);
 }
 
+NetworkException::NetworkException(const char* trace, const char* fmt, va_list ap)
+{
+    parse_error_message(trace, fmt, ap);
+}
+
 /*
  * ----------------------------------------------------------------------
  * NotFoundException class
  * ----------------------------------------------------------------------
  */
-NotFoundException::NotFoundException(const char * trace, const char * fmt, ...)
+void NotFoundException::init(const char* trace, const char* fmt, va_list ap)
 {
-    va_list  ap;
-    va_start(ap, fmt);
-
     char * concatMsg = new char[strlen(get_message()) + strlen(trace) + 1];
     *concatMsg = '\0'; // empty c-string
 
@@ -269,9 +311,20 @@ NotFoundException::NotFoundException(const char * trace, const char * fmt, ...)
     vsnprintf(buf, MAX_MSG_LENGTH, concatMsg, ap);
     set_message(buf);
 
-    va_end(ap);
-
     delete [] concatMsg;
+}
+
+NotFoundException::NotFoundException(const char * trace, const char * fmt, ...)
+{
+    va_list  ap;
+    va_start(ap, fmt);
+    init(trace, fmt, ap);
+    va_end(ap);
+}
+
+NotFoundException::NotFoundException(const char* trace, const char* fmt, va_list ap)
+{
+    init(trace, fmt, ap);
 }
 
 /*

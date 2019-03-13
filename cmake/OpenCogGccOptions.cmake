@@ -31,12 +31,13 @@ IF (CMAKE_COMPILER_IS_GNUCXX)
 		# -flto is good for performance, but wow is it slow to link...
 		# XXX disable for now ... its just to painful, in daily life.
 		# ... except that the buildbot needs this, to pass unit tests.
-		# Current failure is in libatomcore, which depends on atomutils
-		# (ldd -r libatomcore.so shows unresolved symbols.)
 		SET(CMAKE_C_FLAGS_RELEASE "-O3 -g -fstack-protector")
 		# SET(CMAKE_C_FLAGS_RELEASE "-O3 -g -fstack-protector -flto")
 		# SET(CMAKE_C_FLAGS_RELEASE "-O3 -g -fstack-protector -flto=8")
 
+		# NO_AS_NEEDED is used to resolve circular dependency problems.
+		# Current failure is in libquery, which depends on libexecution
+		# (ldd -r libquery.so shows unresolved symbols.)
 		SET(NO_AS_NEEDED "-Wl,--no-as-needed")
 		LINK_LIBRARIES(pthread)
 
