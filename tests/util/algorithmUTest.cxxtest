@@ -1,4 +1,4 @@
-/** functionalUTest.cxxtest --- 
+/** algorithmUTest.cxxtest ---
  *
  * Copyright (C) 2010 OpenCog Foundation
  *
@@ -20,14 +20,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <boost/assign/list_of.hpp>
 #include <opencog/util/algorithm.h>
 
-using namespace boost::assign;
 using namespace opencog;
 using namespace std;
 
-class functionalUTest : public CxxTest::TestSuite
+class algorithmUTest : public CxxTest::TestSuite
 {
 public:
     void test_powerset() {
@@ -39,6 +37,7 @@ public:
         
         TS_ASSERT_EQUALS(ps, expect_set);
     }
+
     void test_powerset_exact() {
         set<int> s = {1, 3, 5};
         set<set<int> > ps = powerset(s, 2, true);
