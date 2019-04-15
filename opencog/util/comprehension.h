@@ -24,6 +24,10 @@
 #ifndef _OPENCOG_COMPREHENSION_H
 #define _OPENCOG_COMPREHENSION_H
 
+#include <vector>
+#include <list>
+#include <set>
+
 #include <boost/range/algorithm/transform.hpp>
 #include <boost/range/adaptor/filtered.hpp>
 
