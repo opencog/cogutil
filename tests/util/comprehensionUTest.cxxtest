@@ -53,13 +53,6 @@ public:
         std::vector<int> evec = {2,4};
         TS_ASSERT_EQUALS(ovec, evec);
     }
-    // void test_vector_comp_phoenix() {
-    //     std::vector<int> ivec = {1,2,3,4};
-    //     auto f = arg1 + 1;
-    //     auto ovec = list_comp(ivec, arg1);
-    //     std::vector<int> evec = {2,3,4,5};
-    //     TS_ASSERT_EQUALS(ovec, evec);
-    // }
     void test_vector_comp_lambda() {
         std::vector<int> ivec = {1,2,3,4};
         auto ovec = vector_comp(ivec, [](int x) { return x + 1; },
@@ -82,13 +75,6 @@ public:
         std::list<int> evec = {2,3,4,5};
         TS_ASSERT_EQUALS(ovec, evec);
     }
-    // void test_list_comp_phoenix() {
-    //     std::list<int> ivec = {1,2,3,4};
-    //     auto f = arg1 + 1;
-    //     auto ovec = list_comp(ivec, arg1);
-    //     std::list<int> evec = {2,3,4,5};
-    //     TS_ASSERT_EQUALS(ovec, evec);
-    // }
     void test_list_comp_lambda() {
         std::list<int> ivec = {1,2,3,4};
         auto ovec = list_comp(ivec, [](int x) { return x + 1; });
@@ -110,13 +96,6 @@ public:
         std::set<int> evec = {2,3,4,5};
         TS_ASSERT_EQUALS(ovec, evec);
     }
-    // void test_set_comp_phoenix() {
-    //     std::set<int> ivec = {1,2,3,4};
-    //     auto f = arg1 + 1;
-    //     auto ovec = set_comp(ivec, arg1);
-    //     std::set<int> evec = {2,3,4,5};
-    //     TS_ASSERT_EQUALS(ovec, evec);
-    // }
     void test_set_comp_lambda() {
         std::set<int> ivec = {1,2,3,4};
         auto ovec = set_comp(ivec, [](int x) { return x + 1; });
