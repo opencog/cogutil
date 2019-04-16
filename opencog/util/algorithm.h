@@ -360,6 +360,10 @@ void clear_by_swap(C& c)
 
 // Crappy range versions of std::any_of, std::all_of and std::none_of,
 // till it makes into the boost library
+//
+// TODO: remove those as they are implemented in boost
+// https://www.boost.org/doc/libs/1_69_0/libs/algorithm/doc/html/algorithm/CXX11.html
+// will soon be part of the standard.
 template<typename C, typename P>
 bool any_of(const C& c, const P& p)
 {
