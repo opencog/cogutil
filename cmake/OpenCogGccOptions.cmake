@@ -2,8 +2,8 @@
 # Detect different compilers and OS'es, tweak flags as necessary.
 
 IF (CMAKE_COMPILER_IS_GNUCXX)
-	# version 5.0 of gcc is required for passing non-trivially
-	# copyable class via C varargs
+	# Version 5.0 of gcc is required for passing non-trivially
+	# copyable class via C varargs.
 
 	IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0)
 		MESSAGE(FATAL_ERROR "GCC version must be at least 5.0!")
@@ -55,8 +55,8 @@ IF (CMAKE_COMPILER_IS_GNUCXX)
 	#
 	# 2) -fopenmp for multithreading support
 	#
-	# 3) -std=gnu++11 for C++11 and GNU extensions support
-	SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wno-variadic-macros -fopenmp -std=gnu++11")
+	# 3) -std=gnu++14 for C++14 and GNU extensions support
+	SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wno-variadic-macros -fopenmp -std=gnu++14")
 
 	SET(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
 	SET(CMAKE_CXX_FLAGS_PROFILE ${CMAKE_C_FLAGS_PROFILE})
