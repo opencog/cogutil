@@ -344,7 +344,7 @@ int Config::get_int(const string &name, int dfl) const
     if (not has(name)) return dfl;
     try {
         return boost::lexical_cast<int>(get(name));
-    } catch (boost::bad_lexical_cast) {
+    } catch (boost::bad_lexical_cast&) {
         throw InvalidParamException(TRACE_INFO,
                "[ERROR] invalid integer parameter (%s)",
                name.c_str());
@@ -356,7 +356,7 @@ long Config::get_long(const string &name, long dfl) const
     if (not has(name)) return dfl;
     try {
         return boost::lexical_cast<long>(get(name));
-    } catch (boost::bad_lexical_cast) {
+    } catch (boost::bad_lexical_cast&) {
         throw InvalidParamException(TRACE_INFO,
                "[ERROR] invalid long integer parameter (%s)",
                name.c_str());
@@ -368,7 +368,7 @@ double Config::get_double(const string &name, double dfl) const
     if (not has(name)) return dfl;
     try {
         return boost::lexical_cast<double>(get(name));
-    } catch (boost::bad_lexical_cast) {
+    } catch (boost::bad_lexical_cast&) {
         throw InvalidParamException(TRACE_INFO,
                "[ERROR] invalid double parameter (%s)",
                name.c_str());

@@ -2,8 +2,8 @@
 # Detect different compilers and OS'es, tweak flags as necessary.
 
 IF (CMAKE_COMPILER_IS_GNUCXX)
-	# version 5.0 of gcc is required for passing non-trivially
-	# copyable class via C varargs
+	# Version 5.0 of gcc is required for passing non-trivially
+	# copyable class via C varargs.
 
 	IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0)
 		MESSAGE(FATAL_ERROR "GCC version must be at least 5.0!")
@@ -24,16 +24,16 @@ IF (CMAKE_COMPILER_IS_GNUCXX)
 		SET(NO_AS_NEEDED "")
 
 	ELSE (APPLE)
-		SET(CMAKE_C_FLAGS "-Wall -fPIC")
+		SET(CMAKE_C_FLAGS "-Wall -fPIC -fstack-protector")
 		# SET(CMAKE_C_FLAGS "-Wl,--copy-dt-needed-entries")
-		SET(CMAKE_C_FLAGS_DEBUG "-O0 -ggdb3 -fstack-protector")
-		SET(CMAKE_C_FLAGS_PROFILE "-O2 -g3 -fstack-protector -pg")
+		SET(CMAKE_C_FLAGS_DEBUG "-O0 -ggdb3")
+		SET(CMAKE_C_FLAGS_PROFILE "-O2 -g3 -pg")
+
 		# -flto is good for performance, but wow is it slow to link...
 		# XXX disable for now ... its just to painful, in daily life.
-		# ... except that the buildbot needs this, to pass unit tests.
-		SET(CMAKE_C_FLAGS_RELEASE "-O3 -g -fstack-protector")
-		# SET(CMAKE_C_FLAGS_RELEASE "-O3 -g -fstack-protector -flto")
-		# SET(CMAKE_C_FLAGS_RELEASE "-O3 -g -fstack-protector -flto=8")
+		SET(CMAKE_C_FLAGS_RELEASE "-O3 -g")
+		# SET(CMAKE_C_FLAGS_RELEASE "-O3 -g -flto")
+		# SET(CMAKE_C_FLAGS_RELEASE "-O3 -g -flto=8")
 
 		# NO_AS_NEEDED is used to resolve circular dependency problems.
 		# Current failure is in libquery, which depends on libexecution
@@ -55,8 +55,8 @@ IF (CMAKE_COMPILER_IS_GNUCXX)
 	#
 	# 2) -fopenmp for multithreading support
 	#
-	# 3) -std=gnu++11 for C++11 and GNU extensions support
-	SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wno-variadic-macros -fopenmp -std=gnu++11")
+	# 3) -std=gnu++14 for C++14 and GNU extensions support
+	SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wno-variadic-macros -fopenmp -std=gnu++14")
 
 	SET(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
 	SET(CMAKE_CXX_FLAGS_PROFILE ${CMAKE_C_FLAGS_PROFILE})
@@ -70,3 +70,9 @@ IF (CMAKE_COMPILER_IS_GNUCXX)
 		LINK_LIBRARIES(gcov)
 	ENDIF (CMAKE_BUILD_TYPE STREQUAL "Coverage")
 ENDIF (CMAKE_COMPILER_IS_GNUCXX)
+
+IF (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+	SET(CMAKE_SHARED_LINKER_FLAGS "-undefined dynamic_lookup")
+	SET(CMAKE_EXE_LINKER_FLAGS "-lstdc++")
+	SET(CMAKE_CXX_FLAGS "-std=c++14")
+ENDIF (CMAKE_CXX_COMPILER_ID MATCHES "Clang")

@@ -122,10 +122,9 @@ public:
     NodeT select(int arity) const {
         return roulette_select
                (boost::make_transform_iterator
-                (_byArity[arity].begin(),
-                 select2nd<typename PSeq::value_type>()),
+                (_byArity[arity].begin(), select2nd<NodeT, int>),
                 boost::make_transform_iterator
-                (_byArity[arity].end(), select2nd<typename PSeq::value_type>()),
+                (_byArity[arity].end(), select2nd<NodeT, int>),
                 _aritySums[arity], rng).base()->first;
     }
     int select_arity(int from) const {
