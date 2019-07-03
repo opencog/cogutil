@@ -30,6 +30,7 @@
 
 #include <iterator>
 #include <functional>
+#include <string>
 
 #ifndef WIN32
 #include <cxxabi.h>

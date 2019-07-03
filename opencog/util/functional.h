@@ -14,7 +14,7 @@
 
 #include <vector>
 
-#include <ext/functional>
+#include <functional>
 
 namespace opencog
 {
@@ -22,10 +22,8 @@ namespace opencog
  *  @{
  */
 
-using __gnu_cxx::select1st;
-using __gnu_cxx::select2nd;
-using __gnu_cxx::identity;
-
+template<typename U, typename V> constexpr const V& select2nd(const std::pair<U, V>& p) { return p.second; }
+template<typename U, typename V> constexpr const U& select1st(const std::pair<U, V>& p) { return p.first; }
 
 template<typename T>
 T* addressof(T& v)
