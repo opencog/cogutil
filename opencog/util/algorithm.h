@@ -6,7 +6,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/bind.hpp>
 
-#include <ext/algorithm>
+#include <algorithm>
 
 #include <opencog/util/numeric.h>
 #include <opencog/util/exceptions.h>
@@ -18,12 +18,12 @@ namespace opencog
  */
 
 /// @todo these needs to be changed for non-gcc
-using __gnu_cxx::copy_n;
-using __gnu_cxx::lexicographical_compare_3way;
-using __gnu_cxx::random_sample_n;
-using __gnu_cxx::random_sample;
-using __gnu_cxx::is_heap;
-using __gnu_cxx::is_sorted;
+// using std::copy_n;
+// using std::lexicographical_compare_3way;
+// using std::random_sample_n;
+// using std::random_sample;
+// using std::is_heap;
+using std::is_sorted;
 
 //! binary for_each
 template<typename It1, typename It2, typename F>
@@ -71,9 +71,9 @@ template<typename Erase, typename It1, typename It2, typename Comp>
 void erase_set_intersection(Erase erase, It1 from1, It1 to1,
                             It2 from2, It2 to2, Comp comp)
 {
-    OC_ASSERT(__gnu_cxx::is_sorted(from1, to1, comp),
+    OC_ASSERT(std::is_sorted(from1, to1, comp),
               "algorithm - from1 -> to1 aren't sorted (erase_set_intersection).");
-    OC_ASSERT(__gnu_cxx::is_sorted(from2, to2, comp),
+    OC_ASSERT(std::is_sorted(from2, to2, comp),
               "algorithm - from2 -> to2 aren't sorted (erase_set_intersection).");
 
     while (from1 != to1 && from2 != to2)
@@ -93,9 +93,9 @@ template<typename Erase, typename It1, typename It2, typename Comp>
 void erase_set_difference(Erase erase, It1 from1, It1 to1,
                           It2 from2, It2 to2, Comp comp)
 {
-    OC_ASSERT(__gnu_cxx::is_sorted(from1, to1, comp),
+    OC_ASSERT(std::is_sorted(from1, to1, comp),
               "algorithm - from1 -> to1 aren't sorted (erase_set_difference).");
-    OC_ASSERT(__gnu_cxx::is_sorted(from2, to2, comp),
+    OC_ASSERT(std::is_sorted(from2, to2, comp),
               "algorithm - from2 -> to2 aren't sorted (erase_set_difference).");
 
     while (from1 != to1 && from2 != to2)
@@ -118,9 +118,9 @@ template<typename Insert, typename It1, typename It2, typename Comp>
 void insert_set_complement(Insert insert, It1 from1, It1 to1,
                            It2 from2, It2 to2, Comp comp)
 {
-    cassert(TRACE_INFO, __gnu_cxx::is_sorted(from1, to1, comp),
+    cassert(TRACE_INFO, std::is_sorted(from1, to1, comp),
             "algorithm - from1 -> to1 aren't sorted (insert_set_complement).");
-    cassert(TRACE_INFO, __gnu_cxx::is_sorted(from2, to2, comp),
+    cassert(TRACE_INFO, std::is_sorted(from2, to2, comp),
             "algorithm - from2 -> to2 aren't sorted (insert_set_complement).");
 
     while (from1 != to1 && from2 != to2)
@@ -144,9 +144,9 @@ template<typename It1, typename It2, typename Comp>
 bool has_empty_intersection(It1 from1, It1 to1,
                             It2 from2, It2 to2, Comp comp)
 {
-    cassert(TRACE_INFO, __gnu_cxx::is_sorted(from1, to1, comp),
+    cassert(TRACE_INFO, std::is_sorted(from1, to1, comp),
             "algorithm - from1 -> to1 aren't sorted (has_empty_intersection).");
-    cassert(TRACE_INFO, __gnu_cxx::is_sorted(from2, to2, comp),
+    cassert(TRACE_INFO, std::is_sorted(from2, to2, comp),
             "algorithm - from2 -> to2 aren't sorted (has_empty_intersection).");
 
     while (from1 != to1 && from2 != to2)

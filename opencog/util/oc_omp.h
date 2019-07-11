@@ -44,7 +44,9 @@
 ///@{
 
 //! compile with multithread support (!)
-#ifndef CYGWIN
+#if defined(CYGWIN)
+#elif defined(__APPLE__)
+#else
 #define OC_OMP
 #endif
 
