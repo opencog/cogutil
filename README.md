@@ -1,7 +1,7 @@
 OpenCog Utilities
 =================
 
-[![CircleCI](https://circleci.com/gh/opencog/cogutil.svg?style=svg)](https://circleci.com/gh/opencog/cogutil)
+[![CircleCI](https://circleci.com/gh/singnet/cogutil/tree/master.svg?style=svg)](https://circleci.com/gh/singnet/cogutil/tree/master)
 
 The OpenCog utilities is a miscellaneous collection of C++ utilities
 use for typical programming tasks in multiple OpenCog projects.
