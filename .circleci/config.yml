@@ -9,7 +9,6 @@ jobs:
           CCACHE_DIR: /ws/ccache
     working_directory: /ws/cogutil
     steps:
-      - checkout
       - run:
           name: Start restoring ccache
           command: date +%d-%m-%Y > /tmp/date
@@ -17,6 +16,9 @@ jobs:
           keys:
             - ccache-{{ checksum "/tmp/date" }}
             - ccache-
+      - run:
+          name: Checkout CogUtil
+          command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/cogutil .
       - run:
           name: CMake Configure
           command: mkdir build && cd build && cmake ..
@@ -66,7 +68,7 @@ jobs:
           keys:
             - haskelldeps-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{checksum "/ws/atomspace/opencog/haskell/opencog-atomspace.cabal"}}-{{ arch }}
       - run:
-          name: Clone AtomSpace
+          name: Checkout AtomSpace
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/atomspace .
       - run:
           name: CMake Configure
@@ -120,7 +122,7 @@ jobs:
           name: Install AtomSpace
           command: cd /ws/atomspace/build && make -j4 install && ldconfig
       - run:
-          name: Clone URE
+          name: Checkout URE
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/ure .
       - run:
           name: CMake Configure
@@ -161,7 +163,7 @@ jobs:
           name: Install cogutil
           command: cd /ws/cogutil/build && make -j4 install && ldconfig
       - run:
-          name: Clone MOSES
+          name: Checkout MOSES
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/moses .
       - run:
           name: CMake Configure
@@ -197,7 +199,7 @@ jobs:
           name: Install AtomSpace
           command: cd /ws/atomspace/build && make -j4 install && ldconfig
       - run:
-          name: Clone AS-MOSES
+          name: Checkout AS-MOSES
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/as-moses .
       - run:
           name: CMake Configure
@@ -244,7 +246,7 @@ jobs:
           keys:
             - haskelldeps-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{checksum "/ws/atomspace/opencog/haskell/opencog-atomspace.cabal"}}-{{ arch }}
       - run:
-          name: Clone OpenCog
+          name: Checkout OpenCog
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/opencog .
       - run:
           name: CMake Configure
