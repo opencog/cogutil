@@ -106,7 +106,7 @@ jobs:
           command: mkdir build && cd build && cmake ..
       - run:
           name: Build
-          command: cd build && make -j4
+          command: cd build && make -j2
       - run:
           name: Build tests
           command: cd build && make -j4 tests
@@ -142,7 +142,7 @@ jobs:
           command: mkdir build && cd build && cmake ..
       - run:
           name: Build
-          command: cd build && make -j4
+          command: cd build && make -j2
       - run:
           name: Build tests
           command: cd build && make -j4 tests
