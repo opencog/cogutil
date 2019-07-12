@@ -9,7 +9,6 @@ jobs:
           CCACHE_DIR: /ws/ccache
     working_directory: /ws/cogutil
     steps:
-      - checkout
       - run:
           name: Start restoring ccache
           command: date +%d-%m-%Y > /tmp/date
@@ -17,6 +16,9 @@ jobs:
           keys:
             - ccache-{{ checksum "/tmp/date" }}
             - ccache-
+      - run:
+          name: Checkout CogUtil
+          command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/cogutil .
       - run:
           name: CMake Configure
           command: mkdir build && cd build && cmake ..
@@ -58,8 +60,16 @@ jobs:
           name: Install cogutil
           command: cd /ws/cogutil/build && make -j4 install && ldconfig
       - run:
-          name: Clone AtomSpace
+          name: Checkout AtomSpace
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/atomspace .
+      - restore_cache:
+          name: Restore GHC Cache
+          keys:
+            - ghc-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{ arch }}
+      - restore_cache:
+          name: Restore Haskell Deps Cache
+          keys:
+            - haskelldeps-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{checksum "/ws/atomspace/opencog/haskell/opencog-atomspace.cabal"}}-{{ arch }}
       - run:
           name: CMake Configure
           command: mkdir build && cd build && cmake ..
@@ -67,18 +77,28 @@ jobs:
           name: Build
           command: cd build && make -j4
       - run:
-          name: Install AtomSpace
-          command: cd build && make -j4 install && ldconfig
-      - run:
           name: Build tests
           command: cd build && make -j4 tests
       - run:
           name: Run tests
           command: cd build && make -j4 test
       - run:
+          name: Install AtomSpace
+          command: cd build && make -j4 install && ldconfig
+      - run:
           name: Print test log
           command: cat build/tests/Testing/Temporary/LastTest.log
           when: always
+      - save_cache:
+          name: Save GHC Cache
+          key: ghc-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{ arch }}
+          paths:
+            - /root/.stack
+      - save_cache:
+          name: Save Haskell Deps Cache
+          key: haskelldeps-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{checksum "/ws/atomspace/opencog/haskell/opencog-atomspace.cabal"}}-{{ arch }}
+          paths:
+            - /ws/atomspace/opencog/haskell/.stack-work
       - persist_to_workspace:
           root: /ws/
           paths:
@@ -98,11 +118,19 @@ jobs:
       - run:
           name: Install cogutil
           command: cd /ws/cogutil/build && make -j4 install && ldconfig
+      - restore_cache:
+          name: Restore GHC Cache
+          keys:
+            - ghc-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{ arch }}
+      - restore_cache:
+          name: Restore Haskell Deps Cache
+          keys:
+            - haskelldeps-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{checksum "/ws/atomspace/opencog/haskell/opencog-atomspace.cabal"}}-{{ arch }}
       - run:
           name: Install AtomSpace
           command: cd /ws/atomspace/build && make -j4 install && ldconfig
       - run:
-          name: Clone URE
+          name: Checkout URE
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/ure .
       - run:
           name: CMake Configure
@@ -143,7 +171,7 @@ jobs:
           name: Install cogutil
           command: cd /ws/cogutil/build && make -j4 install && ldconfig
       - run:
-          name: Clone MOSES
+          name: Checkout MOSES
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/moses .
       - run:
           name: CMake Configure
@@ -179,7 +207,7 @@ jobs:
           name: Install AtomSpace
           command: cd /ws/atomspace/build && make -j4 install && ldconfig
       - run:
-          name: Clone AS-MOSES
+          name: Checkout AS-MOSES
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/as-moses .
       - run:
           name: CMake Configure
@@ -208,6 +236,14 @@ jobs:
     steps:
       - attach_workspace:
           at: /ws
+      - restore_cache:
+          name: Restore GHC Cache
+          keys:
+            - ghc-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{ arch }}
+      - restore_cache:
+          name: Restore Haskell Deps Cache
+          keys:
+            - haskelldeps-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{checksum "/ws/atomspace/opencog/haskell/opencog-atomspace.cabal"}}-{{ arch }}
       - run:
           name: Install cogutil
           command: cd /ws/cogutil/build && make -j4 install && ldconfig
@@ -218,7 +254,7 @@ jobs:
           name: Install URE
           command: cd /ws/ure/build && make -j4 install && ldconfig
       - run:
-          name: Clone OpenCog
+          name: Checkout OpenCog
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/opencog .
       - run:
           name: CMake Configure
@@ -227,14 +263,14 @@ jobs:
           name: Build
           command: cd build && make -j4
       - run:
-          name: Install OpenCog
-          command: cd build && make -j4 install && ldconfig
-      - run:
           name: Build tests
           command: cd build && make -j4 tests
       - run:
           name: Run tests
           command: cd build && make -j4 test
+      - run:
+          name: Install OpenCog
+          command: cd build && make -j4 install && ldconfig
       - run:
           name: Print test log
           command: cat build/tests/Testing/Temporary/LastTest.log
