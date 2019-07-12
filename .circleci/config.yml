@@ -118,6 +118,14 @@ jobs:
       - run:
           name: Install cogutil
           command: cd /ws/cogutil/build && make -j4 install && ldconfig
+      - restore_cache:
+          name: Restore GHC Cache
+          keys:
+            - ghc-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{ arch }}
+      - restore_cache:
+          name: Restore Haskell Deps Cache
+          keys:
+            - haskelldeps-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{checksum "/ws/atomspace/opencog/haskell/opencog-atomspace.cabal"}}-{{ arch }}
       - run:
           name: Install AtomSpace
           command: cd /ws/atomspace/build && make -j4 install && ldconfig
