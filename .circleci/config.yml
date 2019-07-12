@@ -77,14 +77,14 @@ jobs:
           name: Build
           command: cd build && make -j4
       - run:
-          name: Install AtomSpace
-          command: cd build && make -j4 install && ldconfig
-      - run:
           name: Build tests
           command: cd build && make -j4 tests
       - run:
           name: Run tests
           command: cd build && make -j4 test
+      - run:
+          name: Install AtomSpace
+          command: cd build && make -j4 install && ldconfig
       - run:
           name: Print test log
           command: cat build/tests/Testing/Temporary/LastTest.log
