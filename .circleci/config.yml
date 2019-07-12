@@ -59,6 +59,9 @@ jobs:
       - run:
           name: Install cogutil
           command: cd /ws/cogutil/build && make -j4 install && ldconfig
+      - run:
+          name: Checkout AtomSpace
+          command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/atomspace .
       - restore_cache:
           name: Restore GHC Cache
           keys:
@@ -67,9 +70,6 @@ jobs:
           name: Restore Haskell Deps Cache
           keys:
             - haskelldeps-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{checksum "/ws/atomspace/opencog/haskell/opencog-atomspace.cabal"}}-{{ arch }}
-      - run:
-          name: Checkout AtomSpace
-          command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/atomspace .
       - run:
           name: CMake Configure
           command: mkdir build && cd build && cmake ..
