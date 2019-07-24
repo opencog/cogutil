@@ -16,9 +16,7 @@ jobs:
           keys:
             - ccache-{{ checksum "/tmp/date" }}
             - ccache-
-      - run:
-          name: Checkout CogUtil
-          command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/cogutil .
+      - checkout
       - run:
           name: CMake Configure
           command: mkdir build && cd build && cmake ..
