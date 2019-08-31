@@ -149,6 +149,12 @@ ELSE (IBERTY_FOUND)
 	MESSAGE(STATUS "Libiberty-dev missing: No pretty stack-trace printing.")
 ENDIF (IBERTY_FOUND)
 
+# Look for standardized C++ parallelism
+FIND_PACKAGE(ParallelSTL)
+IF (PARALLEL_STL_FOUND)
+	ADD_DEFINITIONS(-DHAVE_PARALLEL_STL)
+ENDIF (PARALLEL_STL_FOUND)
+
 # ===================================================================
 # Global includes
 
