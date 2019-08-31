@@ -27,7 +27,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef CYGWIN
+#if defined(HAVE_GNU_BACKTRACE)
 #include <cxxabi.h>
 #include <execinfo.h>
 #endif
@@ -68,8 +68,8 @@ using namespace opencog;
 #define MAX_PRINTF_STYLE_MESSAGE_SIZE (1<<15)
 const char* levelStrings[] = {"NONE", "ERROR", "WARN", "INFO", "DEBUG", "FINE"};
 
-#ifndef CYGWIN /// @todo backtrace and backtrace_symbols is UNIX, we
-              /// may need a WIN32 version
+#if defined(HAVE_GNU_BACKTRACE) /// @todo backtrace and backtrace_symbols
+                                /// is LINUX, we may need a WIN32 version
 static void prt_backtrace(std::ostringstream& oss)
 {
 #define BT_BUFSZ 50
@@ -461,7 +461,7 @@ void Logger::log(Logger::Level level, const std::string &txt)
 
     oss << txt << std::endl;
 
-#ifndef CYGWIN
+#if defined(HAVE_GNU_BACKTRACE)
     if (level <= backTraceLevel)
     {
         prt_backtrace(oss);
@@ -490,7 +490,7 @@ void Logger::backtrace()
     static const unsigned int max_queue_size_allowed = 1024;
     std::ostringstream oss;
 
-    #ifndef CYGWIN
+    #if defined(HAVE_GNU_BACKTRACE)
     prt_backtrace(oss);
     #endif
 

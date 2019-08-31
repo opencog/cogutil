@@ -9,14 +9,12 @@ extern "C" {
 #if defined(HAVE_BFD) && defined(HAVE_IBERTY)
 char **oc_backtrace_symbols(void *const *buffer, int size);
 void oc_backtrace_symbols_fd(void *const *buffer, int size, int fd);
-#else
-#ifndef CYGWIN
+#elif defined(HAVE_GNU_BACKTRACE)
 #include <execinfo.h>
 char **oc_backtrace_symbols(void *const *buffer, int size) {
 	return backtrace_symbols(buffer, size); }
 void oc_backtrace_symbols_fd(void *const *buffer, int size, int fd) {
 	backtrace_symbols_fd(buffer, size, fd); }
-#endif
 #endif
 
 #ifdef __cplusplus
