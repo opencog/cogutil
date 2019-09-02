@@ -46,7 +46,7 @@
 //! compile with multithread support (!)
 #if defined(CYGWIN)
 #elif defined(__APPLE__)
-#else
+#elif HAVE_PARALLEL_STL
 #define OC_OMP
 #endif
 
