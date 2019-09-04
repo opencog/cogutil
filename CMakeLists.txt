@@ -129,6 +129,15 @@ IF (NOT CXXTEST_FOUND)
 ENDIF (NOT CXXTEST_FOUND)
 
 # -------------------------------------------------------------
+# Look for GNU C++ backtrace. Needed for basic stack printing.
+FIND_PACKAGE(GNUBacktrace)
+IF (GNU_BACKTRACE_FOUND)
+	ADD_DEFINITIONS(-DHAVE_GNU_BACKTRACE)
+ELSE (GNU_BACKTRACE_FOUND)
+	MESSAGE(STATUS "GNU backtrace missing: No basic stack-trace printing.")
+ENDIF (GNU_BACKTRACE_FOUND)
+
+# -------------------------------------------------------------
 # Look for binutils-dev. Needed for pretty stack printing.
 FIND_PACKAGE(BFD)
 IF (BFD_FOUND)
