@@ -129,6 +129,15 @@ IF (NOT CXXTEST_FOUND)
 ENDIF (NOT CXXTEST_FOUND)
 
 # -------------------------------------------------------------
+# Look for GNU C++ backtrace. Needed for basic stack printing.
+FIND_PACKAGE(GNUBacktrace)
+IF (GNU_BACKTRACE_FOUND)
+	ADD_DEFINITIONS(-DHAVE_GNU_BACKTRACE)
+ELSE (GNU_BACKTRACE_FOUND)
+	MESSAGE(STATUS "GNU backtrace missing: No basic stack-trace printing.")
+ENDIF (GNU_BACKTRACE_FOUND)
+
+# -------------------------------------------------------------
 # Look for binutils-dev. Needed for pretty stack printing.
 FIND_PACKAGE(BFD)
 IF (BFD_FOUND)
@@ -148,6 +157,12 @@ IF (IBERTY_FOUND)
 ELSE (IBERTY_FOUND)
 	MESSAGE(STATUS "Libiberty-dev missing: No pretty stack-trace printing.")
 ENDIF (IBERTY_FOUND)
+
+# Look for standardized C++ parallelism
+FIND_PACKAGE(ParallelSTL)
+IF (PARALLEL_STL_FOUND)
+	ADD_DEFINITIONS(-DHAVE_PARALLEL_STL)
+ENDIF (PARALLEL_STL_FOUND)
 
 # ===================================================================
 # Global includes

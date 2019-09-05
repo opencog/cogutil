@@ -41,13 +41,13 @@ endmacro(summary_show_part)
 
 macro(summary_show)
   message("")
-  if (APPLE OR WIN32)
+  if (NOT EXISTS "/etc/os-release")
     message("Building for ${CMAKE_SYSTEM_NAME} ${CMAKE_SYSTEM_VERSION}")
-  else (APPLE OR WIN32)
+  else (NOT EXISTS "/etc/os-release")
     file(READ "/etc/os-release" _OSR)
     string(REGEX MATCH "PRETTY_NAME=\"([a-xA-Z0-9 \\.,:;!@%#/()]*)" _BARF ${_OSR})
     message("Building for ${CMAKE_MATCH_1}")
-  endif (APPLE OR WIN32)
+  endif (NOT EXISTS "/etc/os-release")
   summary_show_part(summary_willbuild summary_willbuild_d
       "The following components will be built:")
   summary_show_part(summary_willnotbuild summary_willnotbuild_d

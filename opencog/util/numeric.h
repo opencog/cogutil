@@ -146,7 +146,7 @@ template<typename FloatT> bool is_between(FloatT x, FloatT min_, FloatT max_)
 /// and also it's new, improved variant:
 /// https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/
 ///
-static inline bool is_approx_eq_ulp(double x, double y, long int max_ulps)
+static inline bool is_approx_eq_ulp(double x, double y, int64_t max_ulps)
 {
 	if ((x < 0) != (y < 0))
 	{
@@ -165,12 +165,11 @@ static inline bool is_approx_eq_ulp(double x, double y, long int max_ulps)
 	// "undefined behavior" by the C++ spec.  However, the spec
 	// also tells us how to do with correcly, when C++20 becomes
 	// available:
-	// labs(std::bit_cast<std::int64_t>(x) - std::bit_cast<std::int64_t>(y))
+	// std::abs(std::bit_cast<std::int64_t>(x) - std::bit_cast<std::int64_t>(y))
 
 	static_assert(sizeof(int64_t) == sizeof(double), "Unexpected sizeof(double)");
-	static_assert(sizeof(int64_t) == sizeof(long int), "Unexpected sizeof(long int)");
 
-	long int ulps = labs(*xbits - *ybits);
+	int64_t ulps = std::abs(*xbits - *ybits);
 	return max_ulps > ulps;
 }
 
