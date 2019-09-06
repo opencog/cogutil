@@ -27,6 +27,7 @@
 #include <unistd.h>
 
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -72,11 +73,18 @@ public:
 
     void testLog()
     {
+        char const * tmpdir;
         char baselineFile[256];
         char logFile[256];
 
-        strcpy(baselineFile, "/tmp/testLogBaseline.txt");
-        strcpy(logFile, "/tmp/testLog.txt");
+	tmpdir = getenv("TMPDIR");
+	if (tmpdir == nullptr) tmpdir = "/tmp";
+
+	strcpy(baselineFile, tmpdir);
+	strcpy(logFile, tmpdir);
+
+        strcat(baselineFile, "/testLogBaseline.txt");
+        strcat(logFile, "/testLog.txt");
 
         Logger baseline(baselineFile, Logger::FINE, false);
         Logger _logger(logFile, Logger::DEBUG, false);
@@ -100,7 +108,7 @@ public:
         TS_ASSERT(f1 != NULL);
         TS_ASSERT(f2 != NULL);
 
-        char c1 = fgetc(f1);
+        int c1 = fgetc(f1);
         while (c1 != EOF)
         {
             char c2 = fgetc(f2);
