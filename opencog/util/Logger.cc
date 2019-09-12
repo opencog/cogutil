@@ -398,6 +398,11 @@ void Logger::set_print_to_stdout_flag(bool flag)
     if (_log_writer) _log_writer->printToStdout = flag;
 }
 
+bool Logger::get_print_to_stdout_flag() const
+{
+    return _log_writer and _log_writer->printToStdout;
+}
+
 void Logger::set_print_level_flag(bool flag)
 {
     printLevel = flag;
