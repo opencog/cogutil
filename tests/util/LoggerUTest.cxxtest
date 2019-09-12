@@ -251,7 +251,8 @@ public:
     // Define a second logger, write some massive message on the first
     // one, a small message on the second, and see if the message of
     // the second scrumbles the first message or appears after it.
-    void testLoggerInteraction() {
+    void testLoggerInteraction()
+    {
         logger().set_level(Logger::DEBUG);
         logger().set_timestamp_flag(false);
         Logger my_logger;
@@ -283,7 +284,8 @@ public:
     // whether the stdout in the other logger is left unchanged.
     //
     // TODO: re-enabled once fixed
-    void xtestLoggerStdoutFlagInteraction() {
+    void xtestLoggerStdoutFlagInteraction()
+    {
         Logger my_logger;
 
         // Set different stdout flags for my_logger and the default logger
