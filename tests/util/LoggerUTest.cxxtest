@@ -279,4 +279,20 @@ public:
         TS_ASSERT(resline == prefix + message);
     }
 
+    // Define a second logger, enable stdout in one logger, and check
+    // whether the stdout in the other logger is left unchanged.
+    //
+    // TODO: re-enabled once fixed
+    void xtestLoggerStdoutFlagInteraction() {
+        Logger my_logger;
+
+        // Set different stdout flags for my_logger and the default logger
+        logger().set_print_to_stdout_flag(false);
+        my_logger.set_print_to_stdout_flag(true);
+
+        // Make sure their flags differ
+        TS_ASSERT_DIFFERS(logger().get_print_to_stdout_flag(),
+                          my_logger.get_print_to_stdout_flag());
+    }
+
 }; // class

@@ -147,6 +147,11 @@ public:
     void set_print_to_stdout_flag(bool);
 
     /**
+     * Get the value of the current print to stdout flag.
+     */
+    bool get_print_to_stdout_flag() const;
+
+    /**
      * If set, the logging level is printed as a part
      * of the message,
      */
