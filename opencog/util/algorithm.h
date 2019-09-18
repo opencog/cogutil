@@ -332,7 +332,7 @@ std::set<std::vector<typename C::value_type>> cartesian_product(const C& c,
                                                                 size_t nfold=2)
 {
 	typedef typename C::value_type T;
-   // Recursive case
+	// Recursive case
 	if (nfold > 0) {
 		std::set<std::vector<T>> res;
 		std::set<std::vector<T>> cp = cartesian_product(c, nfold - 1);
@@ -346,7 +346,7 @@ std::set<std::vector<typename C::value_type>> cartesian_product(const C& c,
 		return res;
 	}
 
-   // Base case
+	// Base case
 	return {{}};
 }
 
