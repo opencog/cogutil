@@ -316,6 +316,41 @@ template<typename Set> std::set<Set> powerset(const Set& s)
 }
 
 /**
+ * Return the n-fold Cartesian product of a given container with
+ * itself. For instance if
+ *
+ * c = {1, 2, 3}, nfold = 2
+ *
+ * the result is
+ *
+ * { [1, 1], [1, 2], [1, 3],
+     [2, 1], [2, 2], [2, 3],
+     [3, 1], [3, 2], [3, 3] }
+ */
+template<typename C>
+std::set<std::vector<typename C::value_type>> cartesian_product(const C& c,
+                                                                size_t nfold=2)
+{
+	typedef typename C::value_type T;
+	// Recursive case
+	if (nfold > 0) {
+		std::set<std::vector<T>> res;
+		std::set<std::vector<T>> cp = cartesian_product(c, nfold - 1);
+		for (const std::vector<T>& t : cp) {
+			for (const auto& el : c) {
+				std::vector<T> tel(t);
+				tel.push_back(el);
+				res.insert(tel);
+			}
+		}
+		return res;
+	}
+
+	// Base case
+	return {{}};
+}
+
+/**
  * Given a sequence of indexes, and a sequence of elements, return a
  * sequence of all elements corresponding to the indexes (in the order
  * of the indexes).
