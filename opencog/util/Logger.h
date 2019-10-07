@@ -314,6 +314,7 @@ private:
     bool timestampEnabled;
     bool threadIdEnabled;
     bool logEnabled;
+    bool printToStdout;
     bool printLevel;
     bool syncEnabled;
 
@@ -348,8 +349,6 @@ private:
         void write_msg(const std::string&);
 
     public:
-        bool printToStdout;
-
         LogWriter(void);
         ~LogWriter();
 

@@ -77,11 +77,11 @@ public:
         char baselineFile[256];
         char logFile[256];
 
-	tmpdir = getenv("TMPDIR");
-	if (tmpdir == nullptr) tmpdir = "/tmp";
+        tmpdir = getenv("TMPDIR");
+        if (tmpdir == nullptr) tmpdir = "/tmp";
 
-	strcpy(baselineFile, tmpdir);
-	strcpy(logFile, tmpdir);
+        strcpy(baselineFile, tmpdir);
+        strcpy(logFile, tmpdir);
 
         strcat(baselineFile, "/testLogBaseline.txt");
         strcat(logFile, "/testLog.txt");
@@ -284,7 +284,7 @@ public:
     // whether the stdout in the other logger is left unchanged.
     //
     // TODO: re-enabled once fixed
-    void xtestLoggerStdoutFlagInteraction()
+    void testLoggerStdoutFlagInteraction()
     {
         Logger my_logger;
 
