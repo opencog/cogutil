@@ -258,9 +258,6 @@ void Logger::LogWriter::write_msg(const std::string &msg)
     // Flush, because log messages are important, especially if we
     // are about to crash. So we don't want to have these buffered up.
     fflush(logfile);
-
-    // Stdout writing must be unlocked.
-    lock.unlock();
 }
 
 Logger::Logger(const std::string &fname, Logger::Level level, bool tsEnabled)
