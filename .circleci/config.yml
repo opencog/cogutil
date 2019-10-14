@@ -28,7 +28,7 @@ jobs:
           command: cd build && make -j4 tests
       - run:
           name: Run tests
-          command:  cd build && make -j4 test
+          command: cd build && make -j4 test
       - run:
           name: Print test log
           command: cat build/tests/Testing/Temporary/LastTest.log
