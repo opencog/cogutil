@@ -473,36 +473,36 @@ workflows:
   build-test-package:
     jobs:
       - cogutil
-      - atomspace:
-          requires:
-            - cogutil
-      - cogserver:
-          requires:
-            - atomspace
-      - attention:
-          requires:
-            - cogserver
-      - ure:
-          requires:
-            - atomspace
-      - miner:
-          requires:
-            - ure
-      - moses:
-          requires:
-            - cogutil
-      - asmoses:
-          requires:
-            - cogutil
-            - atomspace
-      - opencog:
-          requires:
-            - attention
-            - ure
-            - atomspace
-      - package:
-          requires:
-            - opencog
-          filters:
-            branches:
-              only: master
+      # - atomspace:
+      #     requires:
+      #       - cogutil
+      # - cogserver:
+      #     requires:
+      #       - atomspace
+      # - attention:
+      #     requires:
+      #       - cogserver
+      # - ure:
+      #     requires:
+      #       - atomspace
+      # - miner:
+      #     requires:
+      #       - ure
+      # - moses:
+      #     requires:
+      #       - cogutil
+      # - asmoses:
+      #     requires:
+      #       - cogutil
+      #       - atomspace
+      # - opencog:
+      #     requires:
+      #       - attention
+      #       - ure
+      #       - atomspace
+      # - package:
+      #     requires:
+      #       - opencog
+      #     filters:
+      #       branches:
+      #         only: master
