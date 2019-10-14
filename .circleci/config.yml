@@ -416,9 +416,9 @@ jobs:
       # - run:
       #     name: Install Attention
       #     command: cd /ws/attention/build && make -j4 install && ldconfig
-      # - run:
-      #     name: Install URE
-      #     command: cd /ws/ure/build && make -j4 install && ldconfig
+      - run:
+          name: Install URE
+          command: cd /ws/ure/build && make -j4 install && ldconfig
       - run:
           name: Checkout OpenCog
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/opencog .
@@ -482,9 +482,9 @@ workflows:
       # - attention:
       #     requires:
       #       - cogserver
-      # - ure:
-      #     requires:
-      #       - atomspace
+      - ure:
+          requires:
+            - atomspace
       # - miner:
       #     requires:
       #       - ure
@@ -498,7 +498,7 @@ workflows:
       - opencog:
           requires:
             - atomspace
-            # - ure
+            - ure
             # - attention
       # - package:
       #     requires:
