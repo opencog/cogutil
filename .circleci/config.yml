@@ -410,15 +410,15 @@ jobs:
       - run:
           name: Install AtomSpace
           command: cd /ws/atomspace/build && make -j4 install && ldconfig
-      - run:
-          name: Install CogServer
-          command: cd /ws/cogserver/build && make -j4 install && ldconfig
-      - run:
-          name: Install Attention
-          command: cd /ws/attention/build && make -j4 install && ldconfig
-      - run:
-          name: Install URE
-          command: cd /ws/ure/build && make -j4 install && ldconfig
+      # - run:
+      #     name: Install CogServer
+      #     command: cd /ws/cogserver/build && make -j4 install && ldconfig
+      # - run:
+      #     name: Install Attention
+      #     command: cd /ws/attention/build && make -j4 install && ldconfig
+      # - run:
+      #     name: Install URE
+      #     command: cd /ws/ure/build && make -j4 install && ldconfig
       - run:
           name: Checkout OpenCog
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/opencog .
