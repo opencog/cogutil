@@ -150,7 +150,7 @@ jobs:
           root: /ws/
           paths:
             - cogserver
-            - ccache
+              #- ccache
 
   attention:
     docker:
@@ -202,7 +202,7 @@ jobs:
           root: /ws/
           paths:
             - attention
-            - ccache
+              #- ccache
 
   ure:
     docker:
