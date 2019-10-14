@@ -473,9 +473,9 @@ workflows:
   build-test-package:
     jobs:
       - cogutil
-      # - atomspace:
-      #     requires:
-      #       - cogutil
+      - atomspace:
+          requires:
+            - cogutil
       # - cogserver:
       #     requires:
       #       - atomspace
