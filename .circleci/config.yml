@@ -495,11 +495,11 @@ workflows:
       #     requires:
       #       - cogutil
       #       - atomspace
-      # - opencog:
-      #     requires:
-      #       - attention
-      #       - ure
-      #       - atomspace
+      - opencog:
+          requires:
+            - atomspace
+            # - ure
+            # - attention
       # - package:
       #     requires:
       #       - opencog
