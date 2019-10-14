@@ -476,9 +476,9 @@ workflows:
       - atomspace:
           requires:
             - cogutil
-      # - cogserver:
-      #     requires:
-      #       - atomspace
+      - cogserver:
+          requires:
+            - atomspace
       # - attention:
       #     requires:
       #       - cogserver
