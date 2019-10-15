@@ -261,7 +261,7 @@ jobs:
           root: /ws/
           paths:
             - ure
-            - ccache
+            # - ccache
 
   miner:
     docker:
