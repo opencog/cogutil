@@ -79,7 +79,8 @@ jobs:
           command: cd build && make -j4 tests
       - run:
           name: Run tests
-          command: cd build && make -j4 test
+          # Run single-threaded to not sporadically fail ParallelUTest
+          command: cd build && make test
       - run:
           name: Install AtomSpace
           command: cd build && make -j4 install && ldconfig
