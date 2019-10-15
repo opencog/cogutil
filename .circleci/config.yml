@@ -18,17 +18,20 @@ jobs:
             - ccache-
       - checkout
       - run:
+          name: Set number of make jobs
+          command: echo "export MAKEFLAGS=-j2" >> $BASH_ENV
+      - run:
           name: CMake Configure
           command: mkdir build && cd build && cmake ..
       - run:
           name: Build
-          command: cd build && make -j4
+          command: cd build && make
       - run:
           name: Build tests
-          command: cd build && make -j4 tests
+          command: cd build && make tests
       - run:
           name: Run tests
-          command:  cd build && make -j4 test
+          command: cd build && make test ARGS="$MAKEFLAGS"
       - run:
           name: Print test log
           command: cat build/tests/Testing/Temporary/LastTest.log
@@ -55,8 +58,11 @@ jobs:
       - attach_workspace:
           at: /ws
       - run:
+          name: Set number of make jobs
+          command: echo "export MAKEFLAGS=-j2" >> $BASH_ENV
+      - run:
           name: Install CogUtil
-          command: cd /ws/cogutil/build && make -j4 install && ldconfig
+          command: cd /ws/cogutil/build && make install && ldconfig
       - run:
           name: Checkout AtomSpace
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/atomspace .
@@ -73,16 +79,17 @@ jobs:
           command: mkdir build && cd build && cmake ..
       - run:
           name: Build
-          command: cd build && make -j4
+          command: cd build && make
       - run:
           name: Build tests
-          command: cd build && make -j4 tests
+          command: cd build && make tests
       - run:
           name: Run tests
-          command: cd build && make -j4 test
+          # Run single-threaded to *maybe* help ParallelUTest not fail
+          command: cd build && make test
       - run:
           name: Install AtomSpace
-          command: cd build && make -j4 install && ldconfig
+          command: cd build && make install && ldconfig
       - run:
           name: Print test log
           command: cat build/tests/Testing/Temporary/LastTest.log
@@ -103,6 +110,119 @@ jobs:
             - atomspace
             - ccache
 
+  cogserver:
+    docker:
+      - image: opencog/opencog-deps
+        user: root
+        environment:
+          CCACHE_DIR: /ws/ccache
+    working_directory: /ws/cogserver
+    steps:
+      - attach_workspace:
+          at: /ws
+      - run:
+          name: Set number of make jobs
+          command: echo "export MAKEFLAGS=-j2" >> $BASH_ENV
+      - run:
+          name: Install CogUtil
+          command: cd /ws/cogutil/build && make -j2 install && ldconfig
+      - restore_cache:
+          name: Restore GHC Cache
+          keys:
+            - ghc-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{ arch }}
+      - restore_cache:
+          name: Restore Haskell Deps Cache
+          keys:
+            - haskelldeps-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{checksum "/ws/atomspace/opencog/haskell/opencog-atomspace.cabal"}}-{{ arch }}
+      - run:
+          name: Install AtomSpace
+          command: cd /ws/atomspace/build && make install && ldconfig
+      - run:
+          name: Checkout CogServer
+          command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/cogserver .
+      - run:
+          name: CMake Configure
+          command: mkdir build && cd build && cmake ..
+      - run:
+          name: Build
+          command: cd build && make
+      - run:
+          name: Build tests
+          command: cd build && make tests
+      - run:
+          name: Run tests
+          command: cd build && make test ARGS="$MAKEFLAGS"
+      - run:
+          name: Install CogServer
+          command: cd build && make install && ldconfig
+      - run:
+          name: Print test log
+          command: cat build/tests/Testing/Temporary/LastTest.log
+          when: always
+      - persist_to_workspace:
+          root: /ws/
+          paths:
+            - cogserver
+            - ccache
+
+  attention:
+    docker:
+      - image: opencog/opencog-deps
+        user: root
+        environment:
+          CCACHE_DIR: /ws/ccache
+    working_directory: /ws/attention
+    steps:
+      - attach_workspace:
+          at: /ws
+      - run:
+          name: Set number of make jobs
+          command: echo "export MAKEFLAGS=-j2" >> $BASH_ENV
+      - run:
+          name: Install CogUtil
+          command: cd /ws/cogutil/build && make install && ldconfig
+      - restore_cache:
+          name: Restore GHC Cache
+          keys:
+            - ghc-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{ arch }}
+      - restore_cache:
+          name: Restore Haskell Deps Cache
+          keys:
+            - haskelldeps-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{checksum "/ws/atomspace/opencog/haskell/opencog-atomspace.cabal"}}-{{ arch }}
+      - run:
+          name: Install AtomSpace
+          command: cd /ws/atomspace/build && make install && ldconfig
+      - run:
+          name: Install CogServer
+          command: cd /ws/cogserver/build && make install && ldconfig
+      - run:
+          name: Checkout Attention
+          command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/attention .
+      - run:
+          name: CMake Configure
+          command: mkdir build && cd build && cmake ..
+      - run:
+          name: Build
+          command: cd build && make
+      - run:
+          name: Build tests
+          command: cd build && make tests
+      - run:
+          name: Run tests
+          command: cd build && make test ARGS="$MAKEFLAGS"
+      - run:
+          name: Install Attention
+          command: cd build && make install && ldconfig
+      - run:
+          name: Print test log
+          command: cat build/tests/Testing/Temporary/LastTest.log
+          when: always
+      - persist_to_workspace:
+          root: /ws/
+          paths:
+            - attention
+            - ccache
+
   ure:
     docker:
       - image: opencog/opencog-deps
@@ -114,8 +234,11 @@ jobs:
       - attach_workspace:
           at: /ws
       - run:
+          name: Set number of make jobs
+          command: echo "export MAKEFLAGS=-j2" >> $BASH_ENV
+      - run:
           name: Install CogUtil
-          command: cd /ws/cogutil/build && make -j4 install && ldconfig
+          command: cd /ws/cogutil/build && make install && ldconfig
       - restore_cache:
           name: Restore GHC Cache
           keys:
@@ -126,7 +249,7 @@ jobs:
             - haskelldeps-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{checksum "/ws/atomspace/opencog/haskell/opencog-atomspace.cabal"}}-{{ arch }}
       - run:
           name: Install AtomSpace
-          command: cd /ws/atomspace/build && make -j4 install && ldconfig
+          command: cd /ws/atomspace/build && make install && ldconfig
       - run:
           name: Checkout URE
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/ure .
@@ -135,16 +258,16 @@ jobs:
           command: mkdir build && cd build && cmake ..
       - run:
           name: Build
-          command: cd build && make -j2
+          command: cd build && make
       - run:
           name: Build tests
-          command: cd build && make -j2 tests
+          command: cd build && make tests
       - run:
           name: Run tests
-          command: cd build && make -j2 test
+          command: cd build && make test ARGS="$MAKEFLAGS"
       - run:
           name: Install URE
-          command: cd build && make -j2 install && ldconfig
+          command: cd build && make install && ldconfig
       - run:
           name: Print test log
           command: cat build/tests/Testing/Temporary/LastTest.log
@@ -153,7 +276,7 @@ jobs:
           root: /ws/
           paths:
             - ure
-            - ccache
+            # - ccache
 
   miner:
     docker:
@@ -174,14 +297,17 @@ jobs:
           keys:
             - haskelldeps-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{checksum "/ws/atomspace/opencog/haskell/opencog-atomspace.cabal"}}-{{ arch }}
       - run:
+          name: Set number of make jobs
+          command: echo "export MAKEFLAGS=-j2" >> $BASH_ENV
+      - run:
           name: Install CogUtil
-          command: cd /ws/cogutil/build && make -j2 install && ldconfig
+          command: cd /ws/cogutil/build && make install && ldconfig
       - run:
           name: Install AtomSpace
-          command: cd /ws/atomspace/build && make -j2 install && ldconfig
+          command: cd /ws/atomspace/build && make install && ldconfig
       - run:
           name: Install URE
-          command: cd /ws/ure/build && make -j2 install && ldconfig
+          command: cd /ws/ure/build && make install && ldconfig
       - run:
           name: Checkout Miner
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/miner .
@@ -190,16 +316,16 @@ jobs:
           command: mkdir build && cd build && cmake ..
       - run:
           name: Build
-          command: cd build && make -j2
+          command: cd build && make
       - run:
           name: Build tests
-          command: cd build && make -j2 tests
+          command: cd build && make tests
       - run:
           name: Run tests
-          command: cd build && make -j2 test ARGS=-j2
+          command: cd build && make test ARGS="$MAKEFLAGS"
       - run:
           name: Install Miner
-          command: cd build && make -j2 install && ldconfig
+          command: cd build && make install && ldconfig
       - run:
           name: Print test log
           command: cat build/tests/Testing/Temporary/LastTest.log
@@ -221,8 +347,11 @@ jobs:
       - attach_workspace:
           at: /ws
       - run:
+          name: Set number of make jobs
+          command: echo "export MAKEFLAGS=-j2" >> $BASH_ENV
+      - run:
           name: Install CogUtil
-          command: cd /ws/cogutil/build && make -j4 install && ldconfig
+          command: cd /ws/cogutil/build && make install && ldconfig
       - run:
           name: Checkout MOSES
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/moses .
@@ -231,13 +360,13 @@ jobs:
           command: mkdir build && cd build && cmake ..
       - run:
           name: Build
-          command: cd build && make -j2
+          command: cd build && make
       - run:
           name: Build tests
-          command: cd build && make -j4 tests
+          command: cd build && make tests
       - run:
           name: Run tests
-          command: cd build && make -j4 test
+          command: cd build && make test ARGS="$MAKEFLAGS"
       - run:
           name: Print test log
           command: cat build/tests/Testing/Temporary/LastTest.log
@@ -254,11 +383,14 @@ jobs:
       - attach_workspace:
           at: /ws
       - run:
+          name: Set number of make jobs
+          command: echo "export MAKEFLAGS=-j2" >> $BASH_ENV
+      - run:
           name: Install CogUtil
-          command: cd /ws/cogutil/build && make -j4 install && ldconfig
+          command: cd /ws/cogutil/build && make install && ldconfig
       - run:
           name: Install AtomSpace
-          command: cd /ws/atomspace/build && make -j4 install && ldconfig
+          command: cd /ws/atomspace/build && make install && ldconfig
       - run:
           name: Checkout AS-MOSES
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/asmoses .
@@ -267,13 +399,13 @@ jobs:
           command: mkdir build && cd build && cmake ..
       - run:
           name: Build
-          command: cd build && make -j2
+          command: cd build && make
       - run:
           name: Build tests
-          command: cd build && make -j4 tests
+          command: cd build && make tests
       - run:
           name: Run tests
-          command: cd build && make -j4 test
+          command: cd build && make test ARGS="$MAKEFLAGS"
       - run:
           name: Print test log
           command: cat build/tests/Testing/Temporary/LastTest.log
@@ -298,14 +430,23 @@ jobs:
           keys:
             - haskelldeps-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{checksum "/ws/atomspace/opencog/haskell/opencog-atomspace.cabal"}}-{{ arch }}
       - run:
+          name: Set number of make jobs
+          command: echo "export MAKEFLAGS=-j2" >> $BASH_ENV
+      - run:
           name: Install CogUtil
-          command: cd /ws/cogutil/build && make -j4 install && ldconfig
+          command: cd /ws/cogutil/build && make install && ldconfig
       - run:
           name: Install AtomSpace
-          command: cd /ws/atomspace/build && make -j4 install && ldconfig
+          command: cd /ws/atomspace/build && make install && ldconfig
+      - run:
+          name: Install CogServer
+          command: cd /ws/cogserver/build && make install && ldconfig
+      - run:
+          name: Install Attention
+          command: cd /ws/attention/build && make install && ldconfig
       - run:
           name: Install URE
-          command: cd /ws/ure/build && make -j4 install && ldconfig
+          command: cd /ws/ure/build && make install && ldconfig
       - run:
           name: Checkout OpenCog
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/opencog .
@@ -314,16 +455,16 @@ jobs:
           command: mkdir build && cd build && cmake ..
       - run:
           name: Build
-          command: cd build && make -j4
+          command: cd build && make
       - run:
           name: Build tests
-          command: cd build && make -j4 tests
+          command: cd build && make tests
       - run:
           name: Run tests
-          command: cd build && make -j4 test
+          command: cd build && make test ARGS="$MAKEFLAGS"
       - run:
           name: Install OpenCog
-          command: cd build && make -j4 install && ldconfig
+          command: cd build && make install && ldconfig
       - run:
           name: Print test log
           command: cat build/tests/Testing/Temporary/LastTest.log
@@ -363,6 +504,12 @@ workflows:
       - atomspace:
           requires:
             - cogutil
+      - cogserver:
+          requires:
+            - atomspace
+      - attention:
+          requires:
+            - cogserver
       - ure:
           requires:
             - atomspace
@@ -378,8 +525,10 @@ workflows:
             - atomspace
       - opencog:
           requires:
-            - ure
             - atomspace
+            - ure
+            - cogserver
+            - attention
       - package:
           requires:
             - opencog
