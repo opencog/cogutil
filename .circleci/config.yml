@@ -498,9 +498,10 @@ workflows:
             - atomspace
       - opencog:
           requires:
-            - attention
-            - ure
             - atomspace
+            - ure
+            - cogserver
+            - attention
       - package:
           requires:
             - opencog
