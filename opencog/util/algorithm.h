@@ -370,6 +370,11 @@ Seq seq_filtered(const Seq& seq, const Indices& indices)
 	return res;
 }
 
+/**
+ * Return true if el is in set.
+ *
+ * TODO: Use T::contains instead once we move to C++20.
+ */
 template<typename T>
 bool is_in(const typename std::set<T>::value_type& el,
            const typename std::set<T>& set)
@@ -378,7 +383,7 @@ bool is_in(const typename std::set<T>::value_type& el,
 }
 
 /**
- * Return true if el is in s.
+ * Return true if el is in c where c is not a set.
  */
 template<typename Container>
 bool is_in(const typename Container::value_type& el, const Container& c)
@@ -395,30 +400,6 @@ void clear_by_swap(C& c)
 {
 	C empty;
 	c.swap(empty);
-}
-
-// Crappy range versions of std::any_of, std::all_of and std::none_of,
-// till it makes into the boost library
-//
-// TODO: remove those as they are implemented in boost
-// https://www.boost.org/doc/libs/1_69_0/libs/algorithm/doc/html/algorithm/CXX11.html
-// will soon be part of the standard.
-template<typename C, typename P>
-bool any_of(const C& c, const P& p)
-{
-	return std::any_of(c.begin(), c.end(), p);
-}
-
-template<typename C, typename P>
-bool all_of(const C& c, const P& p)
-{
-	return std::all_of(c.begin(), c.end(), p);
-}
-
-template<typename C, typename P>
-bool none_of(const C& c, const P& p)
-{
-	return std::none_of(c.begin(), c.end(), p);
 }
 
 /** @}*/
