@@ -48,8 +48,6 @@ class Logger
     void set(const Logger&);
 public:
 
-    // WARNING: if you change the levels don't forget to update
-    // levelStrings[] in Logger.cc
     enum Level { NONE, ERROR, WARN, INFO, DEBUG, FINE, BAD_LEVEL=255 };
 
     /**
@@ -306,6 +304,8 @@ public:
      */
     void flush();
 
+    static void on_load();
+    static void on_exit();
 private:
 
     std::string component;
@@ -367,6 +367,8 @@ private:
     };
 
     LogWriter* _log_writer;
+
+    static std::mutex _loggers_mtx;
     static std::map<std::string, LogWriter*> _loggers;
 
 }; // class
@@ -374,7 +376,7 @@ private:
 // A singleton instance is enough for most users.
 Logger& logger();
 
-// Macros to not evaluate the stream if log level is disabled
+// Macros that avoid evaluating the stream if the log-level is disabled
 #define LAZY_LOG_ERROR if(logger().is_error_enabled()) logger().error()
 #define LAZY_LOG_WARN if(logger().is_warn_enabled()) logger().warn()
 #define LAZY_LOG_INFO if(logger().is_info_enabled()) logger().info()

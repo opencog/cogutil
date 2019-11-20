@@ -7,6 +7,12 @@
  * Modified by Linas Vepstas
  * Updated API to more closely resemble the proposed
  * ISO/IEC JTC1 SC22 WG21 N3533 C++ Concurrent Queues
+ * ISO/IEC JTC1 SC22 WG21 P0260R3 C++ Concurrent Queues
+ *
+ * This differs from P0260R3 in that:
+ * 1) The queue here is unbounded in size
+ * 2) It doesn't have iterators
+ * 3) There is no try_put()
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License v3 as
@@ -63,12 +69,15 @@ private:
     std::condition_variable the_cond;
     bool is_canceled;
 
-public:
-    concurrent_queue()
-        : the_queue(), the_mutex(), the_cond(), is_canceled(false)
-    {}
     concurrent_queue(const concurrent_queue&) = delete;  // disable copying
     concurrent_queue& operator=(const concurrent_queue&) = delete; // no assign
+
+public:
+    concurrent_queue(void)
+        : the_queue(), the_mutex(), the_cond(), is_canceled(false)
+    {}
+    ~concurrent_queue()
+    { if (not is_canceled) cancel(); }
 
     struct Canceled : public std::exception
     {
@@ -95,7 +104,10 @@ public:
         the_cond.notify_one();
     }
 
-    /// Return true if the queue is empty.
+    /// Return true if the queue is empty at this instant in time.
+    /// Since other threads may have pushed or popped immediately
+    /// after this call, the emptiness of the queue may have
+    /// changed by the time the caller looks at it.
     bool is_empty() const
     {
         std::lock_guard<std::mutex> lock(the_mutex);
@@ -103,9 +115,13 @@ public:
         return the_queue.empty();
     }
 
-    /// Return the size of the queue.
-    /// Since the queue is time-varying, the size may become incorrect
-    /// shortly after this method returns.
+    /// The queue is unbounded. It will never get full.
+    bool is_full() const noexcept { return false; }
+
+    /// Return the size of the queue at this instant in time.
+    /// Since other threads may have pushed or popped immediately
+    /// after this call, the size may have become incorrect by
+    /// the time the caller looks at it.
     unsigned int size() const
     {
         std::lock_guard<std::mutex> lock(the_mutex);
@@ -127,6 +143,7 @@ public:
         the_queue.pop();
         return true;
     }
+    bool try_pop(Element& value) { return try_get(value); }
 
     /// Pop an item off the queue. Block if the queue is empty.
     void pop(Element& value)
@@ -149,13 +166,19 @@ public:
         value = the_queue.front();
         the_queue.pop();
     }
+    void wait_pop(Element& value) { pop(value); }
 
-    Element pop()
+    Element value_pop()
     {
         Element value;
         pop(value);
         return value;
     }
+
+    /// XXX DO NOT USE! This has a C++ signature incompatible with
+    /// the other pop, immediately above, thus wrecking automatic
+    /// C++ overloading!
+    Element pop() { return value_pop(); }
 
     std::deque<Element> wait_and_take_all()
     {
@@ -203,6 +226,7 @@ public:
        std::lock_guard<std::mutex> lock(the_mutex);
        is_canceled = false;
     }
+    void open() { cancel_reset(); }
 
     void cancel()
     {
@@ -212,7 +236,11 @@ public:
        lock.unlock();
        the_cond.notify_all();
     }
+    void close() { cancel(); }
 
+    bool is_closed() const noexcept { return is_canceled; }
+
+    static bool is_lock_free() noexcept { return false; }
 };
 /** @}*/
 

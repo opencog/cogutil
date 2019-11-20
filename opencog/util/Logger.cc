@@ -141,13 +141,16 @@ static void prt_backtrace(std::ostringstream& oss)
 }
 #endif
 
+std::mutex Logger::_loggers_mtx;
+std::map<std::string, Logger::LogWriter*> Logger::_loggers;
+
 Logger::~Logger()
 {
-    // Wait for queue to empty
+    // Do NOT destroy/delete the LogWriter; other logger instances
+    // might be using it! Just drain it's write queue.
     if (_log_writer) _log_writer->flush();
+    _log_writer = nullptr;
 }
-
-std::map<std::string, Logger::LogWriter*> Logger::_loggers;
 
 Logger::LogWriter::LogWriter(void)
 {
@@ -163,40 +166,76 @@ Logger::LogWriter::~LogWriter()
 {
     if (logfile == NULL) return;
 
+    // Remove the logfile from the list.
+    std::lock_guard<std::mutex> lock(_loggers_mtx);
+    _loggers.erase(fileName);
+
     // Wait for queue to empty
     flush();
     stop_write_loop();
+    fflush(logfile);
     fclose(logfile);
+    logfile = nullptr;
 }
 
 void Logger::LogWriter::start_write_loop()
 {
     std::unique_lock<std::mutex> lock(the_mutex);
     if (!writingLoopActive)
-    {
-        writingLoopActive = true;
         writer_thread = std::thread(&Logger::LogWriter::writing_loop, this);
-    }
 }
 
 void Logger::LogWriter::stop_write_loop()
 {
     std::unique_lock<std::mutex> lock(the_mutex);
-    msg_queue.cancel();
+    msg_queue.close();
     // rejoin thread
     writer_thread.join();
-    writingLoopActive = false;
 }
 
 void Logger::LogWriter::writing_loop()
 {
+    // When the thread exits, make sure that all pending messages have
+    // been written to the logfile. This code is here because the usual
+    // case is that the singleton logger() has continued to live on
+    // until program termination.  If it was ever used, a LogWriter
+    // thread was started (this thread), and the ~LogWriter() dtor
+    // never gets a chance to run before program exit. We cannot call
+    // ~LogWriter() in the shared library _fini() because, by then,
+    // other assorted globals may be gone, and, in particular, this
+    // thread might have been destructed already. So our one and only
+    // chance to flush the message queue is on thread exit, namely
+    // with the class below, whose dtor is called upon exit from scope.
+    class OnExit
+    {
+        public:
+            LogWriter* that;
+            ~OnExit()
+            {
+                // Try very very hard to make sure that the message
+                // queue has been completely drained.
+                while (not that->msg_queue.is_closed())
+                {
+                    std::string* msg = that->msg_queue.value_pop();
+                    that->write_msg(*msg);
+                    delete msg;
+                }
+                that->pending_write = false;
+                that->writingLoopActive = false;
+                fflush(that->logfile);
+            }
+    };
+    thread_local OnExit exiter;
+    exiter.that = this;
+
+    writingLoopActive = true;
     try
     {
         while (true)
         {
             // The pending_write flag prevents Logger::flush()
             // from returning prematurely.
-            std::string* msg = msg_queue.pop();
+            std::string* msg = msg_queue.value_pop();
             pending_write = true;
             write_msg(*msg);
             pending_write = false;
@@ -205,9 +244,9 @@ void Logger::LogWriter::writing_loop()
     }
     catch (concurrent_queue< std::string* >::Canceled &e)
     {
-        pending_write = false;
-        return;
     }
+    pending_write = false;
+    writingLoopActive = false;
 }
 
 void Logger::flush()
@@ -237,6 +276,7 @@ void Logger::LogWriter::flush()
 void Logger::LogWriter::write_msg(const std::string &msg)
 {
     std::unique_lock<std::mutex> lock(the_mutex);
+
     // Delay opening the file until the first logging statement is issued;
     // this allows us to set the main logger's filename without creating
     // a useless log file with the default filename.
@@ -253,11 +293,26 @@ void Logger::LogWriter::write_msg(const std::string &msg)
     }
 
     // Write to file.
-    fprintf(logfile, "%s", msg.c_str());
+    int rc = fprintf(logfile, "%s", msg.c_str());
+    if ((int) msg.size() != rc)
+    {
+        fprintf(stderr,
+            "[ERROR] failed write to logfile, rc=%d sz=%lu\n",
+            rc, msg.size());
+        exit(1);
+    }
 
     // Flush, because log messages are important, especially if we
     // are about to crash. So we don't want to have these buffered up.
-    fflush(logfile);
+    rc = fflush(logfile);
+    if (0 != rc)
+    {
+        int norr = errno;
+        fprintf(stderr,
+            "[ERROR] failed to flush logfile, rc=%d errno=%d %s\n",
+            rc, norr, strerror(norr));
+        exit(1);
+    }
 }
 
 Logger::Logger(const std::string &fname, Logger::Level level, bool tsEnabled)
@@ -345,13 +400,17 @@ void Logger::LogWriter::setFileName(const std::string& s)
 
 void Logger::set_filename(const std::string& fname)
 {
+    std::lock_guard<std::mutex> lock(_loggers_mtx);
     try {
+        // If there already is an existing writer for this file, just
+        // switch to it. Note that other logger instances might also
+        // be using this writer!
         _log_writer = _loggers.at(fname);
     }
     catch (...) {
         _log_writer = new LogWriter();
         _log_writer->setFileName(fname);
-        _loggers[fname] = _log_writer;
+        _loggers.insert({fname, _log_writer});
     }
 
     enable();
@@ -566,9 +625,22 @@ Logger::Level Logger::get_level_from_string(const std::string& levelStr)
     return BAD_LEVEL;
 }
 
-// Create and return the single instance
+/// Create and return the single instance
 Logger& opencog::logger()
 {
     static Logger instance;
     return instance;
+}
+
+// Avoid shared-library crazy-making.
+static bool already_loaded = false;
+static __attribute__ ((constructor)) void _init(void)
+{
+    if (already_loaded)
+    {
+        fprintf(stderr,
+            "[FATAL ERROR] Cannot load shared lib more than once!\n");
+        exit(1);
+    }
+    already_loaded = true;
 }
