@@ -188,21 +188,38 @@ void Logger::LogWriter::start_write_loop()
 void Logger::LogWriter::stop_write_loop()
 {
     std::unique_lock<std::mutex> lock(the_mutex);
-    msg_queue.cancel();
+    msg_queue.close();
     // rejoin thread
     writer_thread.join();
 }
 
 void Logger::LogWriter::writing_loop()
 {
-    // When the thread exits, make sure that all pending
-    // messages have been written to the logfile.
+    // When the thread exits, make sure that all pending messages have
+    // been written to the logfile. This code is here because the usual
+    // case is that the singleton logger() has continued to live on
+    // until program termination.  If it was ever used, a LogWriter
+    // thread was started (this thread), and the ~LogWriter() dtor
+    // never gets a chance to run before program exit. We cannot call
+    // ~LogWriter() in the shared library _fini() because, by then,
+    // other assorted globals may be gone, and, in particular, this
+    // thread might have been destructed already. So our one and only
+    // chance to flush the message queue is on thread exit, namely
+    // with the class below, whose dtor is called upon exit from scope.
     class OnExit
     {
         public:
             LogWriter* that;
             ~OnExit()
             {
+                // Try very very hard to make sure that the message
+                // queue has been completely drained.
+                while (not that->msg_queue.is_closed())
+                {
+                    std::string* msg = that->msg_queue.value_pop();
+                    that->write_msg(*msg);
+                    delete msg;
+                }
                 that->pending_write = false;
                 that->writingLoopActive = false;
                 fflush(that->logfile);
