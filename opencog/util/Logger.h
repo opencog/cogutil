@@ -368,11 +368,8 @@ private:
 
     LogWriter* _log_writer;
 
-    // Please use the mutex! Either that, or fix your code to use
-    // get_log_writer() instead!
     static std::mutex _loggers_mtx;
     static std::map<std::string, LogWriter*> _loggers;
-    static LogWriter* get_log_writer(std::string);
 
 }; // class
 

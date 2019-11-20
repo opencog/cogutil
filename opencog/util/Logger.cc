@@ -143,8 +143,10 @@ static void prt_backtrace(std::ostringstream& oss)
 
 Logger::~Logger()
 {
-    // Wait for queue to empty
+    // Do NOT destroy/delete the LogWriter; other logger instances
+    // might be using it! Just drain it's write queue.
     if (_log_writer) _log_writer->flush();
+    _log_writer = nullptr;
 }
 
 std::mutex Logger::_loggers_mtx;
@@ -164,10 +166,16 @@ Logger::LogWriter::~LogWriter()
 {
     if (logfile == NULL) return;
 
+    // Remove the logfile from the list.
+    std::lock_guard<std::mutex> lock(_loggers_mtx);
+    _loggers.erase(fileName);
+
     // Wait for queue to empty
     flush();
     stop_write_loop();
+    fflush(logfile);
     fclose(logfile);
+    logfile = nullptr;
 }
 
 void Logger::LogWriter::start_write_loop()
@@ -197,7 +205,7 @@ void Logger::LogWriter::writing_loop()
         {
             // The pending_write flag prevents Logger::flush()
             // from returning prematurely.
-            std::string* msg = msg_queue.pop();
+            std::string* msg = msg_queue.value_pop();
             pending_write = true;
             write_msg(*msg);
             pending_write = false;
@@ -363,6 +371,9 @@ void Logger::set_filename(const std::string& fname)
 {
     std::lock_guard<std::mutex> lock(_loggers_mtx);
     try {
+        // If there already is an existing writer for this file, just
+        // switch to it. Note that other logger instances might also
+        // be using this writer!
         _log_writer = _loggers.at(fname);
     }
     catch (...) {
@@ -372,15 +383,6 @@ void Logger::set_filename(const std::string& fname)
     }
 
     enable();
-}
-
-LogWriter* Logger::get_log_writer(const std::string& fname)
-{
-    std::lock_guard<std::mutex> lock(_loggers_mtx);
-    LogWriter* wr = nullptr;
-    try { wr = _loggers.at(fname); }
-    catch (...) {}
-    return wr;
 }
 
 const std::string& Logger::get_filename() const
