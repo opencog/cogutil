@@ -118,7 +118,7 @@ public:
     /// Since other threads may have inserted or removed immediately
     /// after this call, the emptiness of the set may have
     /// changed by the time the caller looks at it.
-    bool is_empty() const noexcept
+    bool is_empty() const
     {
         std::lock_guard<std::mutex> lock(the_mutex);
         if (is_canceled) throw Canceled();
