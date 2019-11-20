@@ -141,6 +141,9 @@ static void prt_backtrace(std::ostringstream& oss)
 }
 #endif
 
+std::mutex Logger::_loggers_mtx;
+std::map<std::string, Logger::LogWriter*> Logger::_loggers;
+
 Logger::~Logger()
 {
     // Do NOT destroy/delete the LogWriter; other logger instances
@@ -164,8 +167,8 @@ Logger::LogWriter::~LogWriter()
     if (logfile == NULL) return;
 
     // Remove the logfile from the list.
-    // std::lock_guard<std::mutex> lock(*_loggers_mtx);
-    // _loggers->erase(fileName);
+    std::lock_guard<std::mutex> lock(_loggers_mtx);
+    _loggers.erase(fileName);
 
     // Wait for queue to empty
     flush();
@@ -192,6 +195,22 @@ void Logger::LogWriter::stop_write_loop()
 
 void Logger::LogWriter::writing_loop()
 {
+    // When the thread exits, make sure that all pending
+    // messages have been written to the logfile.
+    class OnExit
+    {
+        public:
+            LogWriter* that;
+            ~OnExit()
+            {
+                that->pending_write = false;
+                that->writingLoopActive = false;
+                fflush(that->logfile);
+            }
+    };
+    thread_local OnExit exiter;
+    exiter.that = this;
+
     writingLoopActive = true;
     try
     {
@@ -364,17 +383,17 @@ void Logger::LogWriter::setFileName(const std::string& s)
 
 void Logger::set_filename(const std::string& fname)
 {
-    std::lock_guard<std::mutex> lock(*_loggers_mtx);
+    std::lock_guard<std::mutex> lock(_loggers_mtx);
     try {
         // If there already is an existing writer for this file, just
         // switch to it. Note that other logger instances might also
         // be using this writer!
-        _log_writer = _loggers->at(fname);
+        _log_writer = _loggers.at(fname);
     }
     catch (...) {
         _log_writer = new LogWriter();
         _log_writer->setFileName(fname);
-        _loggers->insert({fname, _log_writer});
+        _loggers.insert({fname, _log_writer});
     }
 
     enable();
@@ -596,16 +615,9 @@ Logger& opencog::logger()
     return instance;
 }
 
-std::mutex* Logger::_loggers_mtx = nullptr;
-std::map<std::string, Logger::LogWriter*>* Logger::_loggers = nullptr;;
+// Avoid shared-library crazy-making.
 static bool already_loaded = false;
-
-/// Create the mutex and logger list on the shared-lib load.
-/// We do this here, because otherwise we might not have access to
-/// them in the dtor, since dtors might run in any order, and the
-/// loggers map might have been dtored already by the time that
-/// on_exit() runs.  Bummer about that.
-void Logger::on_load()
+static __attribute__ ((constructor)) void _init(void)
 {
     if (already_loaded)
     {
@@ -613,33 +625,5 @@ void Logger::on_load()
             "[FATAL ERROR] Cannot load shared lib more than once!\n");
         exit(1);
     }
-    _loggers_mtx = new std::mutex;
-    _loggers = new std::map<std::string, Logger::LogWriter*>;
-}
-
-/// Destroy all active loggers on exit. The destructor will
-/// flush all messages to the logs, and close the logfile.
-/// The corresponding writer thread will disappear as well.
-void Logger::on_exit()
-{
-    std::lock_guard<std::mutex> lock(*_loggers_mtx);
-    for (auto wrtr: *_loggers)
-    {
-        delete wrtr.second;
-    }
-    _loggers->clear();
-    delete _loggers_mtx;
-    delete _loggers;
-    _loggers_mtx = nullptr;
-    _loggers = nullptr;
-}
-
-static __attribute__ ((constructor)) void _init(void)
-{
-    Logger::on_load();
-}
-
-static __attribute__ ((destructor)) void _fini(void)
-{
-    Logger::on_exit();
+    already_loaded = true;
 }

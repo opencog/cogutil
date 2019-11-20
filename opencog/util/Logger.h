@@ -368,8 +368,8 @@ private:
 
     LogWriter* _log_writer;
 
-    static std::mutex * _loggers_mtx;
-    static std::map<std::string, LogWriter*> * _loggers;
+    static std::mutex _loggers_mtx;
+    static std::map<std::string, LogWriter*> _loggers;
 
 }; // class
 
