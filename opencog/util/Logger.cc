@@ -603,6 +603,7 @@ Logger& opencog::logger()
 
 /// Destroy all active loggers on exit. The destructor will
 /// flush all messages to the logs, and close the logfile.
+/// The corresponding writer thread will disappear as well.
 void Logger::on_exit()
 {
     std::lock_guard<std::mutex> lock(_loggers_mtx);
