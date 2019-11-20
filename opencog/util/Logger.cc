@@ -253,11 +253,26 @@ void Logger::LogWriter::write_msg(const std::string &msg)
     }
 
     // Write to file.
-    fprintf(logfile, "%s", msg.c_str());
+    int rc = fprintf(logfile, "%s", msg.c_str());
+    if ((int) msg.size() != rc)
+    {
+        fprintf(stderr,
+            "[ERROR] failed write to logfile, rc=%d sz=%lu\n",
+            rc, msg.size());
+        exit(1);
+    }
 
     // Flush, because log messages are important, especially if we
     // are about to crash. So we don't want to have these buffered up.
-    fflush(logfile);
+    rc = fflush(logfile);
+    if (0 != rc)
+    {
+        int norr = errno;
+        fprintf(stderr,
+            "[ERROR] failed to flush logfile, rc=%d errno=%d %s\n",
+            rc, norr, strerror(norr));
+        exit(1);
+    }
 }
 
 Logger::Logger(const std::string &fname, Logger::Level level, bool tsEnabled)
