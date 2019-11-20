@@ -223,6 +223,8 @@ void Logger::LogWriter::writing_loop()
                 that->pending_write = false;
                 that->writingLoopActive = false;
                 fflush(that->logfile);
+                fclose(that->logfile);
+                that->logfile = nullptr;
             }
     };
     thread_local OnExit exiter;
