@@ -147,6 +147,7 @@ Logger::~Logger()
     if (_log_writer) _log_writer->flush();
 }
 
+std::mutex Logger::_loggers_mtx;
 std::map<std::string, Logger::LogWriter*> Logger::_loggers;
 
 Logger::LogWriter::LogWriter(void)
@@ -360,6 +361,7 @@ void Logger::LogWriter::setFileName(const std::string& s)
 
 void Logger::set_filename(const std::string& fname)
 {
+    std::lock_guard<std::mutex> lock(_loggers_mtx);
     try {
         _log_writer = _loggers.at(fname);
     }
@@ -370,6 +372,15 @@ void Logger::set_filename(const std::string& fname)
     }
 
     enable();
+}
+
+LogWriter* Logger::get_log_writer(const std::string& fname)
+{
+    std::lock_guard<std::mutex> lock(_loggers_mtx);
+    LogWriter* wr = nullptr;
+    try { wr = _loggers.at(fname); }
+    catch (...) {}
+    return wr;
 }
 
 const std::string& Logger::get_filename() const
