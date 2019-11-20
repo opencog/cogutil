@@ -179,10 +179,7 @@ void Logger::LogWriter::start_write_loop()
 {
     std::unique_lock<std::mutex> lock(the_mutex);
     if (!writingLoopActive)
-    {
-        writingLoopActive = true;
         writer_thread = std::thread(&Logger::LogWriter::writing_loop, this);
-    }
 }
 
 void Logger::LogWriter::stop_write_loop()
@@ -191,11 +188,11 @@ void Logger::LogWriter::stop_write_loop()
     msg_queue.cancel();
     // rejoin thread
     writer_thread.join();
-    writingLoopActive = false;
 }
 
 void Logger::LogWriter::writing_loop()
 {
+    writingLoopActive = true;
     try
     {
         while (true)
@@ -211,9 +208,9 @@ void Logger::LogWriter::writing_loop()
     }
     catch (concurrent_queue< std::string* >::Canceled &e)
     {
-        pending_write = false;
-        return;
     }
+    pending_write = false;
+    writingLoopActive = false;
 }
 
 void Logger::flush()
