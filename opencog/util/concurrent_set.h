@@ -7,6 +7,12 @@
  * Modified by Linas Vepstas
  * Updated API to more closely resemble the proposed
  * ISO/IEC JTC1 SC22 WG21 N3533 C++ Concurrent Queues
+ * ISO/IEC JTC1 SC22 WG21 P0260R3 C++ Concurrent Queues
+ *
+ * This differs from P0260R3 in that:
+ * 1) There is no open or close
+ * 2) The set here is unbounded in size
+ * 3) It doesn't have iterators
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License v3 as
@@ -75,12 +81,13 @@ private:
     std::condition_variable the_cond;
     bool is_canceled;
 
+    concurrent_set(const concurrent_set&) = delete;  // disable copying
+    concurrent_set& operator=(const concurrent_set&) = delete; // no assign
+
 public:
     concurrent_set()
         : the_set(), the_mutex(), the_cond(), is_canceled(false)
     {}
-    concurrent_set(const concurrent_set&) = delete;  // disable copying
-    concurrent_set& operator=(const concurrent_set&) = delete; // no assign
 
     struct Canceled : public std::exception
     {
@@ -107,17 +114,24 @@ public:
         the_cond.notify_one();
     }
 
-    /// Return true if the set is empty.
-    bool is_empty() const
+    /// Return true if the set is empty at this instant in time.
+    /// Since other threads may have inserted or removed immediately
+    /// after this call, the emptiness of the set may have
+    /// changed by the time the caller looks at it.
+    bool is_empty() const noexcept
     {
         std::lock_guard<std::mutex> lock(the_mutex);
         if (is_canceled) throw Canceled();
         return the_set.empty();
     }
 
-    /// Return the size of the set.
-    /// Since the set is time-varying, the size may become incorrect
-    /// shortly after this method returns.
+    /// The set is unbounded. It will never get full.
+    bool is_full() const noexcept { return false; }
+
+    /// Return the size of the set at this instant in time.
+    /// Since other threads may have inserted or removed immediately
+    /// after this call, the size may have become incorrect by
+    /// the time the caller looks at it.
     unsigned int size() const
     {
         std::lock_guard<std::mutex> lock(the_mutex);
@@ -163,8 +177,9 @@ public:
         value = *it;
         the_set.erase(it);
     }
+    void wait_get(Element& value) { get(value); }
 
-    Element get()
+    Element value_get()
     {
         Element value;
         get(value);
@@ -227,6 +242,7 @@ public:
        the_cond.notify_all();
     }
 
+    static bool is_lock_free() noexcept { return false; }
 };
 /** @}*/
 

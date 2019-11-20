@@ -7,6 +7,12 @@
  * Modified by Linas Vepstas
  * Updated API to more closely resemble the proposed
  * ISO/IEC JTC1 SC22 WG21 N3533 C++ Concurrent Queues
+ * ISO/IEC JTC1 SC22 WG21 P0260R3 C++ Concurrent Queues
+ *
+ * This differs from P0260R3 in that:
+ * 1) There is no open or close
+ * 2) The stack here is unbounded in size
+ * 3) It doesn't have iterators
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License v3 as
@@ -63,12 +69,13 @@ private:
     std::condition_variable the_cond;
     bool is_canceled;
 
+    concurrent_stack(const concurrent_stack&) = delete;  // disable copying
+    concurrent_stack& operator=(const concurrent_stack&) = delete; // no assign
+
 public:
     concurrent_stack()
         : the_stack(), the_mutex(), the_cond(), is_canceled(false)
     {}
-    concurrent_stack(const concurrent_stack&) = delete;  // disable copying
-    concurrent_stack& operator=(const concurrent_stack&) = delete; // no assign
 
     struct Canceled : public std::exception
     {
@@ -95,17 +102,24 @@ public:
         the_cond.notify_one();
     }
 
-    /// Return true if the stack is empty.
-    bool is_empty() const
+    /// Return true if the stack is empty at this instant in time.
+    /// Since other threads may have pushed or popped immediately
+    /// after this call, the emptiness of the stack may have
+    /// changed by the time the caller looks at it.
+    bool is_empty() const noexcept
     {
         std::lock_guard<std::mutex> lock(the_mutex);
         if (is_canceled) throw Canceled();
         return the_stack.empty();
     }
 
-    /// Return the size of the stack.
-    /// Since the stack is time-varying, the size may become incorrect
-    /// shortly after this method returns.
+    /// The stack is unbounded. It will never get full.
+    bool is_full() const noexcept { return false; }
+
+    /// Return the size of the stack at this instant in time.
+    /// Since other threads may have pushed or popped immediately
+    /// after this call, the size may have become incorrect by
+    /// the time the caller looks at it.
     unsigned int size() const
     {
         std::lock_guard<std::mutex> lock(the_mutex);
@@ -149,8 +163,9 @@ public:
         value = the_stack.top();
         the_stack.pop();
     }
+    void wait_pop(Element& value) { pop(value); }
 
-    Element pop()
+    Element value_pop()
     {
         Element value;
         pop(value);
@@ -213,6 +228,7 @@ public:
        the_cond.notify_all();
     }
 
+    static bool is_lock_free() noexcept { return false; }
 };
 /** @}*/
 
