@@ -85,9 +85,11 @@ private:
     concurrent_set& operator=(const concurrent_set&) = delete; // no assign
 
 public:
-    concurrent_set()
+    concurrent_set(void)
         : the_set(), the_mutex(), the_cond(), is_canceled(false)
     {}
+    ~concurrent_set()
+    { if (not is_canceled) cancel(); }
 
     struct Canceled : public std::exception
     {

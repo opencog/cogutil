@@ -73,9 +73,11 @@ private:
     concurrent_stack& operator=(const concurrent_stack&) = delete; // no assign
 
 public:
-    concurrent_stack()
+    concurrent_stack(void)
         : the_stack(), the_mutex(), the_cond(), is_canceled(false)
     {}
+    ~concurrent_stack()
+    { if (not is_canceled) cancel(); }
 
     struct Canceled : public std::exception
     {

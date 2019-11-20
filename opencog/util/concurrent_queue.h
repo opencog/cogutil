@@ -73,9 +73,12 @@ private:
     concurrent_queue& operator=(const concurrent_queue&) = delete; // no assign
 
 public:
-    concurrent_queue()
+    concurrent_queue(void)
         : the_queue(), the_mutex(), the_cond(), is_canceled(false)
     {}
+    ~concurrent_queue()
+    { if (not is_canceled) cancel(); }
+
     struct Canceled : public std::exception
     {
         const char * what() { return "Cancellation of wait on concurrent_queue"; }
