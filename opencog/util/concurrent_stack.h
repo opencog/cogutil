@@ -10,9 +10,9 @@
  * ISO/IEC JTC1 SC22 WG21 P0260R3 C++ Concurrent Queues
  *
  * This differs from P0260R3 in that:
- * 1) There is no open or close
- * 2) The stack here is unbounded in size
- * 3) It doesn't have iterators
+ * 1) The stack here is unbounded in size
+ * 2) It doesn't have iterators
+ * 3) There is no try_put()
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License v3 as
@@ -220,6 +220,7 @@ public:
        std::lock_guard<std::mutex> lock(the_mutex);
        is_canceled = false;
     }
+    void open() { cancel_reset(); }
 
     void cancel()
     {
@@ -229,6 +230,9 @@ public:
        lock.unlock();
        the_cond.notify_all();
     }
+    void close() { cancel(); }
+
+    bool is_closed() const noexcept { return is_canceled; }
 
     static bool is_lock_free() noexcept { return false; }
 };
