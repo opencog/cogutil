@@ -306,6 +306,7 @@ public:
      */
     void flush();
 
+    static void on_exit();
 private:
 
     std::string component;
@@ -376,7 +377,7 @@ private:
 // A singleton instance is enough for most users.
 Logger& logger();
 
-// Macros to not evaluate the stream if log level is disabled
+// Macros that avoid evaluating the stream if the log-level is disabled
 #define LAZY_LOG_ERROR if(logger().is_error_enabled()) logger().error()
 #define LAZY_LOG_WARN if(logger().is_warn_enabled()) logger().warn()
 #define LAZY_LOG_INFO if(logger().is_info_enabled()) logger().info()

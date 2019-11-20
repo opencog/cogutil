@@ -594,9 +594,26 @@ Logger::Level Logger::get_level_from_string(const std::string& levelStr)
     return BAD_LEVEL;
 }
 
-// Create and return the single instance
+/// Create and return the single instance
 Logger& opencog::logger()
 {
     static Logger instance;
     return instance;
+}
+
+/// Destroy all active loggers on exit. The destructor will
+/// flush all messages to the logs, and close the logfile.
+void Logger::on_exit()
+{
+    std::lock_guard<std::mutex> lock(_loggers_mtx);
+    for (auto wrtr: _loggers)
+    {
+        delete wrtr.second;
+    }
+    _loggers.clear();
+}
+
+static __attribute__ ((destructor)) void _fini(void)
+{
+   Logger::on_exit();
 }
