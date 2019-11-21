@@ -175,11 +175,6 @@ public:
         return value;
     }
 
-    /// XXX DO NOT USE! This has a C++ signature incompatible with
-    /// the other pop, immediately above, thus wrecking automatic
-    /// C++ overloading!
-    Element pop() { return value_pop(); }
-
     std::deque<Element> wait_and_take_all()
     {
         std::unique_lock<std::mutex> lock(the_mutex);
