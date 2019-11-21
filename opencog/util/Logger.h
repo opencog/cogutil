@@ -304,8 +304,6 @@ public:
      */
     void flush();
 
-    static void on_load();
-    static void on_exit();
 private:
 
     std::string component;
