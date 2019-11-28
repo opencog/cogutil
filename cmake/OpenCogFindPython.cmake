@@ -43,24 +43,29 @@ IF(HAVE_PY_INTERP)
 		ADD_DEFINITIONS(-DHAVE_CYTHON)
 		SET(HAVE_CYTHON 1)
 
-		# Find python destination dir for python bindings
-		# because it may differ on each operating system.
-		EXECUTE_PROCESS(
-			COMMAND ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/scripts/get_python_lib.py" "${CMAKE_INSTALL_PREFIX}"
-			OUTPUT_VARIABLE PYTHON_DEST
-		)
+		IF (NOT DEFINED PYTHON_INSTALL_PREFIX)
+			# Find python destination dir for python bindings
+			# because it may differ on each operating system.
+			EXECUTE_PROCESS(
+				COMMAND ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/scripts/get_python_lib.py" "${CMAKE_INSTALL_PREFIX}"
+				OUTPUT_VARIABLE PYTHON_DEST
+				)
 
-		# Replace new line at end
-		STRING(REPLACE "\n" "" PYTHON_DEST "${PYTHON_DEST}")
-		IF ("${PYTHON_DEST}" STREQUAL "")
-			MESSAGE(FATAL_ERROR "Python destination dir not found")
-		ELSE ("${PYTHON_DEST}" STREQUAL "")
-			MESSAGE(STATUS "Python destination dir found: ${PYTHON_DEST}" )
-		ENDIF ("${PYTHON_DEST}" STREQUAL "")
+			# Replace new line at end
+			STRING(REPLACE "\n" "" PYTHON_DEST "${PYTHON_DEST}")
+			IF ("${PYTHON_DEST}" STREQUAL "")
+				MESSAGE(FATAL_ERROR "Python destination dir not found")
+			ELSE ("${PYTHON_DEST}" STREQUAL "")
+				MESSAGE(STATUS "Python destination dir found: ${PYTHON_DEST}" )
+			ENDIF ("${PYTHON_DEST}" STREQUAL "")
 
-		# thunk
-		SET(PYTHON_ROOT "${PYTHON_DEST}")
-		SET(PYTHON_DEST "${PYTHON_DEST}/opencog")
+			# thunk
+			SET(PYTHON_ROOT "${PYTHON_DEST}")
+			SET(PYTHON_DEST "${PYTHON_DEST}/opencog")
+		ELSE()
+			SET(PYTHON_ROOT "${PYTHON_INSTALL_PREFIX}")
+			SET(PYTHON_DEST "${PYTHON_INSTALL_PREFIX}/opencog")
+		ENDIF()
 
 		MESSAGE(STATUS
 			"Python install dir: ${PYTHON_DEST}" )
