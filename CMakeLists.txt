@@ -104,8 +104,7 @@ SET(MIN_BOOST 1.46)
 
 # Required boost packages
 # 1.46 is minimum for required filesystem support
-# program_options needed by some combo utilities
-FIND_PACKAGE(Boost ${MIN_BOOST} COMPONENTS date_time filesystem program_options regex serialization system thread REQUIRED)
+FIND_PACKAGE(Boost ${MIN_BOOST} COMPONENTS filesystem program_options system thread REQUIRED)
 
 IF (Boost_FOUND)
 	SET(Boost_FOUND_SAVE 1)
