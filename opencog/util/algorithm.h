@@ -402,6 +402,24 @@ void clear_by_swap(C& c)
 	c.swap(empty);
 }
 
+/**
+ * Return the attractive fixpoint of a unary function and its
+ * argument, if it exists.  If no attractive fixpoint exists then it
+ * may never return.
+ *
+ * For the definition of fixpoint see
+ *
+ * https://en.wikipedia.org/wiki/Fixed_point_(mathematics)
+ */
+template<typename F, typename A>
+A fixpoint(const F& fun, const A& arg)
+{
+	A res = fun(arg);
+	if (res == arg)
+		return res;
+	return fixpoint(fun, res);
+}
+
 /** @}*/
 } //~namespace opencog
 

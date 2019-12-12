@@ -21,6 +21,7 @@
  */
 
 #include <opencog/util/algorithm.h>
+#include <cmath>
 
 using namespace opencog;
 using namespace std;
@@ -28,7 +29,8 @@ using namespace std;
 class algorithmUTest : public CxxTest::TestSuite
 {
 public:
-	void test_powerset() {
+	void test_powerset()
+	{
 		set<int> s = {1, 3, 5};
 		set<set<int> > ps = powerset(s);
 		set<set<int> > expect_set = { {}, {1}, {3}, {5},
@@ -38,7 +40,8 @@ public:
 		TS_ASSERT_EQUALS(ps, expect_set);
 	}
 
-	void test_powerset_exact() {
+	void test_powerset_exact()
+	{
 		set<int> s = {1, 3, 5};
 		set<set<int> > ps = powerset(s, 2, true);
 		set<set<int> > expect_set = { {1, 3}, {1, 5}, {3, 5} };
@@ -46,7 +49,8 @@ public:
 		TS_ASSERT_EQUALS(ps, expect_set);
 	}
 
-	void test_cartesian_product() {
+	void test_cartesian_product()
+	{
 		set<int> c = {1, 2, 3};
 		set<vector<int>> result = cartesian_product(c, 2);
 		set<vector<int>> expect = { {1, 1}, {1, 2}, {1, 3},
@@ -54,5 +58,11 @@ public:
 		                            {3, 1}, {3, 2}, {3, 3} };
 
 		TS_ASSERT_EQUALS(result, expect);
+	}
+
+	void test_fixpoint()
+	{
+		float fp = fixpoint(sqrtf, 2.0f);
+		TS_ASSERT_EQUALS(fp, 1.0f);
 	}
 };
