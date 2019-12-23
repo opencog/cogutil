@@ -19,11 +19,6 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-// Overall idea taken from here:
-//   https://stackoverflow.com/questions/9983239/how-to-generate-zipf-distributed-numbers-efficiently
-// with a theoretical overview from here:
-//   https://medium.com/@jasoncrease/zipf-54912d5651cc
-// and then updated so that its vaguely respectable code.
 
 #include <cmath>
 #include <random>
@@ -48,12 +43,12 @@ Zipf::Zipf(double alpha, int n) :
 	// XXX FIXME. For large `n`, one can approximate the CDF.
 	// Ideally, one uses an exact CDF for the first few thousand,
 	// and then an approximation for the rest.
-	_cdf.reserve(n+1);
-	_cdf.push_back(0.0);
+	_pdf.reserve(n+1);
+	_pdf.push_back(0.0);
 	for (int i=1; i<=n; i++)
-		_cdf.push_back(std::pow((double) i, -alpha));
+		_pdf.push_back(std::pow((double) i, -alpha));
 
-	_dist = new std::discrete_distribution<int>(_cdf.begin(), _cdf.end());
+	_dist = new std::discrete_distribution<int>(_pdf.begin(), _pdf.end());
 }
 
 Zipf::~Zipf()
@@ -84,6 +79,9 @@ int Zipf::draw()
 	// hundred, and then use an asymptotic approximation for the
 	// rest. In that case, we'd need to revive the code below,
 	// its a rough blueprint.
+	//
+	// Asymptotic expansion is here:
+	//   https://medium.com/@jasoncrease/zipf-54912d5651cc
 	//
 	// FWIW, I experimented with Newton-Rapheson, but that's
 	// kind-of tricky, because the CDF is so sharply convex.

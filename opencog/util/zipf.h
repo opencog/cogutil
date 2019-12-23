@@ -34,7 +34,7 @@ class Zipf
 {
 	private:
 		int _n;
-		std::vector<double> _cdf;
+		std::vector<double> _pdf;
 		std::discrete_distribution<int>* _dist;
 	public:
 		Zipf(double alpha, int n);
