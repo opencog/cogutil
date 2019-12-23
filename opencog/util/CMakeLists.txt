@@ -117,7 +117,6 @@ INSTALL(FILES
 	selection.h
 	sigslot.h
 	StringTokenizer.h
-	tbb.h
 	tree.h
 	zipf.h
 	DESTINATION "include/opencog/util"

@@ -112,8 +112,7 @@ ELSE(Boost_FOUND)
 	MESSAGE(FATAL_ERROR "Boost ${MIN_BOOST} or newer (package libboost-all-dev if using Ubuntu) is needed to build!")
 ENDIF (Boost_FOUND)
 
-# Optional boost packages; can build without these.
-FIND_PACKAGE(Boost ${MIN_BOOST} COMPONENTS python program_options QUIET)
+# Optional boost packages; can build without these. (?? what needs this ??)
 FIND_PACKAGE(Boost ${MIN_BOOST} COMPONENTS math_c99 QUIET)
 
 # Arghhh. Except cmake is treating above as required, not optional. #$%**&
@@ -295,15 +294,11 @@ SET(CPACK_PACKAGING_INSTALL_PREFIX "/usr/local")
 
 ## Debian specific configurations
 SET(DEPENDENCY_LIST
-	"libboost-date-time-dev (>= ${MIN_BOOST})"
 	"libboost-filesystem-dev (>= ${MIN_BOOST})"
 	"libboost-math-dev (>= ${MIN_BOOST})"
 	"libboost-program-options-dev (>= ${MIN_BOOST})"
-	"libboost-regex-dev (>= ${MIN_BOOST})"
-	"libboost-serialization-dev (>= ${MIN_BOOST})"
 	"libboost-thread-dev (>= ${MIN_BOOST})"
 	"libboost-system-dev (>= ${MIN_BOOST})"
-	"libboost-random-dev (>= ${MIN_BOOST})"
 	"libstdc++6 (>= 4.7)"
 	"binutils-dev"
 	"libiberty-dev"
