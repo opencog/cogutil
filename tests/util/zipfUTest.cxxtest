@@ -1,4 +1,4 @@
-/** zipfUTest.cxxtest --- 
+/** zipfUTest.cxxtest ---
  *
  * Copyright (C) 2019 Linas Vepstas
  *
@@ -6,12 +6,12 @@
  * it under the terms of the GNU Affero General Public License v3 as
  * published by the Free Software Foundation and including the exceptions
  * at http://opencog.org/wiki/Licenses
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program; if not, write to:
  * Free Software Foundation, Inc.,
@@ -29,23 +29,24 @@ public:
 	void test_zipf()
 	{
 		int sz = 300;
-		Zipf zipf(1.0, sz);
-		printf("zipf: donw with init\n");
+		Zipf zipf(1.0, sz-1);
+		printf("\nzipf: done with init\n");
 
 		int* dist = new int[sz];
 		for (int i = 0; i < sz; i++)
 			dist[i] = 0;
 
-		for (size_t s = 0; s < 623000; s++)
+		for (size_t s = 0; s < 1623000; s++)
 			dist[zipf.draw()] ++;
 
-		for (int i = 0; i < sz; i++)
+		double norm = 1.0 / dist[1];
+		for (int i = 1; i < 30; i++)
 		{
-			double approx = dist[i];
-			approx /= i * dist[0];
+			double approx = norm * i * dist[i];
 			printf("ola %d %d %g\n", i, dist[i], approx);
+
+			// Should have approx == 1.0, approximately.
+			TS_ASSERT_DELTA(approx, 1.0, 0.5);
 		}
-		
-		// TS_ASSERT_DELTA(mean, m, delta);
 	}
 };
