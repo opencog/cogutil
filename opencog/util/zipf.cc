@@ -48,18 +48,28 @@ Zipf::Zipf(double alpha, int n) :
 	// XXX FIXME. For large `n`, one can approximate the CDF.
 	// Ideally, one uses an exact CDF for the first few thousand,
 	// and then an approximation for the rest.
-	double norm = 0.0;   // Normalization constant
 	_cdf = new double[n+1];
 	_cdf[0] = 0.0;
 	for (int i=1; i<=n; i++)
 		_cdf[i] = _cdf[i-1] + std::pow((double) i, -alpha);
 
-	norm = 1.0 / _cdf[n];
+#if USE_LOGCDF
+	// Compute the log-cdf. The only reason for doing this is that
+	// the log-cdf is much flatter than the regular cdf. And thus
+	// interpolation can go faster. In theory.  In practice, it
+	// seems that more than 99% of CPU time is lost in the uniform RNG!!
+	double norm = 1.0 / _cdf[n];
+	for (int i=1; i<=n; i++)
+		_cdf[i] = - log(1.0 - norm * _cdf[i]);
+#else
+	// Normalize the cdf
+	double norm = 1.0 / _cdf[n];
 	for (int i=1; i<=n; i++)
 		_cdf[i] *= norm;
+#endif
 }
 
-/// Perform one draw, with a ZZipf distribution.
+/// Perform one draw, with a Zipf distribution.
 /// Return an integer in the range [1,n] includsive.
 ///
 int Zipf::draw()
@@ -76,11 +86,16 @@ int Zipf::draw()
 	}
 	while (u == 0);
 
+#if USE_LOGCDF
+	u = - log(1.0 - u);
+#endif
+
 #define BISECT 1
 #if BISECT
 	// Perform simple (weighted) bisection to find invert the CDF.
-	// This runs in log(_n) time, whichy is OK, but perhaps
-	// not ideal.
+	// This runs in log(_n) time, which is OK, but perhaps not ideal.
+	// But it doesn't really matter; it seems that more than 99% of
+	// CPU time is spent in the uniform RNG, and not bisecting!!
 	int lo = 1;
 	int hi = _n;
 	do
@@ -105,8 +120,10 @@ int Zipf::draw()
 	// estimator always overshoots to the left, and undershoots
 	// to the right. The fix below is to hack around this; another
 	// fix would be to use a parabolic fit; but even that would
-	// not work well. Perhaps taking the log would be better;
-	// then a linear fit should work very well...
+	// not work well. Taking the USE_LOGCDF does work better, but
+	// it mostly doesn't matter: seems that more than 99% of the
+	// cpu time is spent in the uniform RNG, and not in the
+	// interpolation/bisection!
 	int lo = 1;
 	int hi = _n;
 	int mid = _n / 8;
