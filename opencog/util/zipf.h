@@ -157,7 +157,7 @@ class ZipfSmall
 		{
 			_pdf.reserve(n+1);
 			_pdf.push_back(0.0);
-			for (int i=1; i<=n; i++)
+			for (IntType i=1; i<=n; i++)
 				_pdf.push_back(std::pow((double) i, -q));
 
 			_dist = new std::discrete_distribution<IntType>(_pdf.begin(), _pdf.end());
