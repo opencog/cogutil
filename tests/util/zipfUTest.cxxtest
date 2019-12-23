@@ -43,10 +43,26 @@ public:
 		for (int i = 1; i < 30; i++)
 		{
 			double approx = norm * i * dist[i];
-			printf("ola %d %d %g\n", i, dist[i], approx);
+			printf("Zipf rank=%d mass=%d approx=%g\n", i, dist[i], approx);
 
 			// Should have approx == 1.0, approximately.
-			TS_ASSERT_DELTA(approx, 1.0, 0.5);
+			TS_ASSERT_DELTA(approx, 1.0, 0.01);
+		}
+		for (int i = 30; i < 50; i++)
+		{
+			double approx = norm * i * dist[i];
+			printf("Zipf rank=%d mass=%d approx=%g\n", i, dist[i], approx);
+
+			// Should have approx == 1.0, approximately.
+			TS_ASSERT_DELTA(approx, 1.0, 0.03);
+		}
+		for (int i = 50; i < 150; i++)
+		{
+			double approx = norm * i * dist[i];
+			printf("Zipf rank=%d mass=%d approx=%g\n", i, dist[i], approx);
+
+			// Should have approx == 1.0, approximately.
+			TS_ASSERT_DELTA(approx, 1.0, 0.06);
 		}
 	}
 };

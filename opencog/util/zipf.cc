@@ -52,42 +52,44 @@ Zipf::Zipf(double alpha, int n) :
 	_cdf = new double[n+1];
 	_cdf[0] = 0.0;
 	for (int i=1; i<=n; i++)
-	{
 		_cdf[i] = _cdf[i-1] + std::pow((double) i, -alpha);
-		norm += _cdf[i];
-	}
 
-	norm = 1.0 / norm;
+	norm = 1.0 / _cdf[n];
 	for (int i=1; i<=n; i++)
 		_cdf[i] *= norm;
 }
 
+/// Perform one draw, with a ZZipf distribution.
+/// Return an integer in the range [1,n] includsive.
+///
 int Zipf::draw()
 {
 	static std::random_device rd;
 	std::mt19937 gen(rd());
 	static std::uniform_real_distribution<> uniform(0.0, 1.0);
 
-	// Pull a uniform random number (0 < z < 1)
-	double z;
+	// Pull a uniform random number (0 < u < 1)
+	double u;
 	do
 	{
-		z = uniform(gen);
+		u = uniform(gen);
 	}
-	while (z == 0);
+	while (u == 0);
 
+#define BISECT 1
+#if BISECT
 	// Perform simple bisection to find invert the CDF.
-	// It would be faster to perform the Newton-Rapheson here.
-	// XXX FIXME .. convert to Newton-Rapheson ...
+	// This runs in log(_n) time, whichy is OK, but perhaps
+	// not ideal.
 	int lo = 1;
 	int hi = _n;
 	do
 	{
 		int mid = (lo + hi) / 2;
-		if (_cdf[mid] >= z and _cdf[mid-1] < z)
+		if (_cdf[mid] >= u and _cdf[mid-1] < u)
 			return mid;
 
-		if (_cdf[mid] >= z)
+		if (_cdf[mid] >= u)
 			hi = mid-1;
 		else
 			lo = mid+1;
@@ -95,4 +97,36 @@ int Zipf::draw()
 	while (lo <= hi);
 
 	return lo;
+#else
+	// Perform Newton-Rapheson, for speed.
+	int lo = 1;
+	int hi = _n;
+
+	double flo = _cdf[lo];
+	double fhi = _cdf[hi];
+	do
+	{
+printf("duude flohi= %g %g\n", flo, fhi);
+		double slp = (hi - lo) / (fhi - flo);
+		int mid = lo - (flo-u) * slp;
+printf("duuude iter u=%g lo=%d hi=%d mid=%d slp=%g\n", u, lo, hi, mid, slp);
+fflush (stdout);
+		if (_cdf[mid] >= u and _cdf[mid-1] < u)
+			return mid;
+
+		if (_cdf[mid] >= u)
+		{
+			hi = mid-1;
+			fhi = _cdf[hi];
+		}
+		else
+		{
+			lo = mid+1;
+			flo = _cdf[lo];
+		}
+	}
+	while (lo <= hi);
+
+	return lo;
+#endif
 }
