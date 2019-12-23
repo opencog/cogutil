@@ -48,10 +48,14 @@ Zipf::Zipf(double alpha, int n) :
 	// XXX FIXME. For large `n`, one can approximate the CDF.
 	// Ideally, one uses an exact CDF for the first few thousand,
 	// and then an approximation for the rest.
-	_cdf = new double[n+1];
-	_cdf[0] = 0.0;
+	_cdf.reserve(n+1);
+	double acc = 0.0;
+	_cdf.push_back(acc);
 	for (int i=1; i<=n; i++)
-		_cdf[i] = _cdf[i-1] + std::pow((double) i, -alpha);
+	{
+		acc += std::pow((double) i, -alpha);
+		_cdf.push_back(acc);
+	}
 
 #if USE_LOGCDF
 	// Compute the log-cdf. The only reason for doing this is that

@@ -22,6 +22,8 @@
 #ifndef _OPENCOG_ZIPF_H
 #define _OPENCOG_ZIPF_H
 
+#include <vector>
+
 namespace opencog {
 /** \addtogroup grp_cogutil
  *  @{
@@ -31,7 +33,7 @@ class Zipf
 {
 	private:
 		int _n;
-		double* _cdf;
+		std::vector<double> _cdf;
 	public:
 		Zipf(double alpha, int n);
 		int draw();
