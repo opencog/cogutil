@@ -22,6 +22,7 @@
 #ifndef _OPENCOG_ZIPF_H
 #define _OPENCOG_ZIPF_H
 
+#include <random>
 #include <vector>
 
 namespace opencog {
@@ -34,8 +35,10 @@ class Zipf
 	private:
 		int _n;
 		std::vector<double> _cdf;
+		std::discrete_distribution<int>* _dist;
 	public:
 		Zipf(double alpha, int n);
+		~Zipf();
 		int draw();
 };
 

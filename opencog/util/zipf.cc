@@ -49,28 +49,16 @@ Zipf::Zipf(double alpha, int n) :
 	// Ideally, one uses an exact CDF for the first few thousand,
 	// and then an approximation for the rest.
 	_cdf.reserve(n+1);
-	double acc = 0.0;
-	_cdf.push_back(acc);
+	_cdf.push_back(0.0);
 	for (int i=1; i<=n; i++)
-	{
-		acc += std::pow((double) i, -alpha);
-		_cdf.push_back(acc);
-	}
+		_cdf.push_back(std::pow((double) i, -alpha));
 
-#if USE_LOGCDF
-	// Compute the log-cdf. The only reason for doing this is that
-	// the log-cdf is much flatter than the regular cdf. And thus
-	// interpolation can go faster. In theory.  In practice, it
-	// seems that more than 99% of CPU time is lost in the uniform RNG!!
-	double norm = 1.0 / _cdf[n];
-	for (int i=1; i<=n; i++)
-		_cdf[i] = - log(1.0 - norm * _cdf[i]);
-#else
-	// Normalize the cdf
-	double norm = 1.0 / _cdf[n];
-	for (int i=1; i<=n; i++)
-		_cdf[i] *= norm;
-#endif
+	_dist = new std::discrete_distribution<int>(_cdf.begin(), _cdf.end());
+}
+
+Zipf::~Zipf()
+{
+	delete _dist;
 }
 
 /// Perform one draw, with a Zipf distribution.
@@ -80,9 +68,28 @@ int Zipf::draw()
 {
 	static std::random_device rd;
 	static std::mt19937 gen(rd());
-	static std::uniform_real_distribution<> uniform(0.0, 1.0);
+
+#define USE_STD_DIST 1
+#if USE_STD_DIST
+	return _dist->operator()(gen);
+
+#else
+	// Perform a simple (weighted) bisection to invert the CDF.
+	// This runs in log(_n) time, which is OK, but not ideal. The
+	// std::discrete_distribution() runs a itsy-bitsy tiny bit
+	// faster. We keep this code here for some potential future
+	// performance improvement for the large-N case, e.g. N=1e6
+	// where creating a vector would be sloppy/inefficient. In
+	// that case, we can use a discrete vector for the first few
+	// hundred, and then use an asymptotic approximation for the
+	// rest. In that case, we'd need to revive the code below,
+	// its a rough blueprint.
+	//
+	// FWIW, I experimented with Newton-Rapheson, but that's
+	// kind-of tricky, because the CDF is so sharply convex.
 
 	// Pull a uniform random number (0 < u < 1)
+	static std::uniform_real_distribution<> uniform(0.0, 1.0);
 	double u;
 	do
 	{
@@ -90,60 +97,12 @@ int Zipf::draw()
 	}
 	while (u == 0);
 
-#if USE_LOGCDF
-	u = - log(1.0 - u);
-#endif
-
-#define BISECT 1
-#if BISECT
-	// Perform simple (weighted) bisection to find invert the CDF.
-	// This runs in log(_n) time, which is OK, but perhaps not ideal.
-	// But it doesn't really matter; it seems that more than 99% of
-	// CPU time is spent in the uniform RNG, and not bisecting!!
 	int lo = 1;
 	int hi = _n;
 	do
 	{
 		// int mid = (lo + hi) / 2;
 		int mid = (7*lo + hi) / 8;
-		if (_cdf[mid] >= u and _cdf[mid-1] < u)
-			return mid;
-
-		if (_cdf[mid] >= u)
-			hi = mid-1;
-		else
-			lo = mid+1;
-	}
-	while (lo <= hi);
-
-	return lo;
-#else
-	// Perform Newton-Rapheson, for speed. This is easy to say,
-	// but hard to do, and is tied for speed with the code above.
-	// The problem is that the function is strongly convex, so the
-	// estimator always overshoots to the left, and undershoots
-	// to the right. The fix below is to hack around this; another
-	// fix would be to use a parabolic fit; but even that would
-	// not work well. Taking the USE_LOGCDF does work better, but
-	// it mostly doesn't matter: seems that more than 99% of the
-	// cpu time is spent in the uniform RNG, and not in the
-	// interpolation/bisection!
-	int lo = 1;
-	int hi = _n;
-	int mid = _n / 8;
-
-	do
-	{
-		double fmi = _cdf[mid-1];
-		double slp = _cdf[mid] - fmi;
-		int delta = (fmi-u) / slp;
-		if (8 < delta) delta *=2;
-		else if (delta < -8) delta /= 2;
-
-		mid = mid - delta;
-		if (mid < lo) mid = lo;
-		if (hi < mid) mid = hi;
-
 		if (_cdf[mid] >= u and _cdf[mid-1] < u)
 			return mid;
 
