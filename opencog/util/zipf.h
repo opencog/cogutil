@@ -61,6 +61,9 @@ class Zipf
 		static_assert(std::numeric_limits<IntType>::is_integer, "");
 		static_assert(!std::numeric_limits<RealType>::is_integer, "");
 
+		/// Zipf(N, s)
+		/// Zipf distribution for `N` items, in the range `[1,N]` inclusive.
+		/// The distribution follows the power-law 1/n^s with exponent `s`.
 		Zipf(const IntType n=std::numeric_limits<IntType>::max(),
 		     const RealType q=1.0)
         : n(n)
@@ -152,6 +155,9 @@ class ZipfSmall
 		std::vector<RealType> _pdf;
 		std::discrete_distribution<IntType>* _dist;
 	public:
+		/// ZipfSmall(N, s)
+		/// Zipf distribution for `N` items, in the range `[1,N]` inclusive.
+		/// The distribution follows the power-law 1/n^s with exponent `s`.
 		ZipfSmall(const IntType n,
 		          const RealType q=1.0)
 		{
