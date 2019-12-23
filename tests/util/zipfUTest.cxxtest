@@ -35,7 +35,7 @@ public:
 			// printf("Zipf rank=%d mass=%d approx=%g\n", i, pdf[i], approx);
 
 			// Should have approx == 1.0, approximately.
-			TS_ASSERT_DELTA(approx, 1.0, 0.045);
+			TS_ASSERT_DELTA(approx, 1.0, 0.046);
 		}
 
 		for (int i = 30; i < 50; i++)
