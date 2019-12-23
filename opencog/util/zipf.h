@@ -48,24 +48,26 @@ namespace opencog {
  *
  *    std::random_device rd;
  *    std::mt19937 gen(rd());
- *    Zipf<> zipf(300);
+ *    zipf_distribution<> zipf(300);
  *
  *    for (int i = 0; i < 100; i++)
  *        printf("draw %d %d\n", i, zipf(gen));
  */
 
 template<class IntType = unsigned long, class RealType = double>
-class Zipf
+class zipf_distribution
 {
 	public:
+		typedef IntType result_type;
+
 		static_assert(std::numeric_limits<IntType>::is_integer, "");
 		static_assert(!std::numeric_limits<RealType>::is_integer, "");
 
-		/// Zipf(N, s)
+		/// zipf_distribution(N, s)
 		/// Zipf distribution for `N` items, in the range `[1,N]` inclusive.
 		/// The distribution follows the power-law 1/n^s with exponent `s`.
-		Zipf(const IntType n=std::numeric_limits<IntType>::max(),
-		     const RealType q=1.0)
+		zipf_distribution(const IntType n=std::numeric_limits<IntType>::max(),
+		                  const RealType q=1.0)
 			: n(n)
 			, q(q)
 			, H_x1(H(1.5) - 1.0)
@@ -85,13 +87,17 @@ class Zipf
 			}
 		}
 
+		RealType s() const { return q; }
+		IntType min() const { return 1; }
+		IntType max() const { return n; }
+
 	private:
-		static constexpr RealType epsilon = 1e-8;
 		IntType                                  n;     ///< Number of elements
 		RealType                                 q;     ///< Exponent
 		RealType                                 H_x1;  ///< H(x_1)
 		RealType                                 H_n;   ///< H(n)
 		std::uniform_real_distribution<RealType> dist;  ///< [H(x_1), H(n)]
+		static constexpr RealType epsilon = 1e-8;
 
 		/** Clamp x to [min, max]. */
 		template<typename T>
@@ -140,7 +146,8 @@ class Zipf
 		/** That hat function h(x) = 1 / (x ^ q) */
 		const RealType h(const RealType x)
 		{
-			return std::exp(-q * std::log(x));
+			// return std::exp(-q * std::log(x));
+			return std::pow(x, -q);
 		}
 };
 
@@ -153,17 +160,21 @@ class Zipf
  * Choose carefully between this and the above implementation.
  */
 template<class IntType = unsigned long, class RealType = double>
-class ZipfSmall
+class zipf_table_distribution
 {
 	private:
 		std::vector<RealType> _pdf;
 		std::discrete_distribution<IntType>* _dist;
 	public:
-		/// ZipfSmall(N, s)
+		/// zipf_table_distribution(N, s)
 		/// Zipf distribution for `N` items, in the range `[1,N]` inclusive.
 		/// The distribution follows the power-law 1/n^s with exponent `s`.
-		ZipfSmall(const IntType n,
-		          const RealType q=1.0)
+		/// This uses a table-lookup, and thus provides values more
+		/// quickly than zipf_distribution. However, the table can take
+		/// up a considerable amount of RAM, and initializing this table
+		/// can consume significant time.
+		zipf_table_distribution(const IntType n,
+		                        const RealType q=1.0)
 		{
 			_pdf.reserve(n+1);
 			_pdf.push_back(0.0);
@@ -173,7 +184,7 @@ class ZipfSmall
 			_dist = new std::discrete_distribution<IntType>(_pdf.begin(), _pdf.end());
 		}
 
-		~ZipfSmall()
+		~zipf_table_distribution()
 		{
 			delete _dist;
 		}

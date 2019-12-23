@@ -63,8 +63,8 @@ public:
 		std::mt19937 gen(rd());
 
 		int sz = 300;
-		Zipf<> zipf(sz);
-		printf("\nzipf: done with init\n");
+		zipf_distribution<> zipf(sz);
+		printf("\nzipf_distribution: done with init\n");
 
 		std::vector<int> pdf;
 		pdf.reserve(sz+1);
@@ -91,7 +91,7 @@ public:
 		std::mt19937 gen(rd());
 
 		int sz = 300;
-		ZipfSmall<> zipf(sz);
+		zipf_table_distribution<> zipf(sz);
 		printf("\nzipf-small: done with init\n");
 
 		std::vector<int> pdf;
