@@ -31,7 +31,6 @@ class Zipf
 {
 	private:
 		int _n;
-		double _norm;
 		double* _cdf;
 	public:
 		Zipf(double alpha, int n);
