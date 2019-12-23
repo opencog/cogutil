@@ -34,7 +34,7 @@ unsigned int opencog::bitcount(unsigned long n)
 {
     /* works for 32-bit numbers only    */
     /* fix last line for 64-bit numbers */
-    register unsigned long tmp;
+    unsigned long tmp;
 
     tmp = n - ((n >> 1) & 033333333333)
           - ((n >> 2) & 011111111111);
