@@ -163,7 +163,7 @@ public:
 		TS_ASSERT_LESS_THAN(abs(pdf[1]), 18000);
 		TS_ASSERT_LESS_THAN(abs(pdf[2]), 11000);
 		for (int i = 3; i <= 40; i++)
-			TS_ASSERT_LESS_THAN(abs(pdf[i]), 6000);
+			TS_ASSERT_LESS_THAN(abs(pdf[i]), 8000);
 		for (int i = 50; i <= 110; i++)
 			TS_ASSERT_LESS_THAN(abs(pdf[i]), 1500);
 		for (int i = 150; i <= 300; i++)
