@@ -120,6 +120,7 @@ INSTALL(FILES
 	StringTokenizer.h
 	tbb.h
 	tree.h
+	zipf.h
 	DESTINATION "include/opencog/util"
 )
 

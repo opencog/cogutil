@@ -8,16 +8,9 @@
 #include <cmath>
 #include <random>
 
-class Zipf
-{
-	private:
-		int _n;
-		double _norm;
-		double* _cdf;
-	public:
-		Zipf(double alpha, int n);
-		int draw();
-};
+#include "zipf.h"
+
+using namespace opencog;
 
 Zipf::Zipf(double alpha, int n) :
 	_n(n)
@@ -52,6 +45,8 @@ int Zipf::draw()
 	}
 	while (z == 0);
 
+	// Perform simple bisection to find invert the CDF.
+	// It would be faster to perform the Newton-Rapheson here.
 	int low = 1;
 	int high = _n;
 	int zipf_draw = 0;
