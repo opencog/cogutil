@@ -33,21 +33,31 @@ namespace opencog {
 
 /** Zipf-like random distribution.
  *
+ * Implementation taken from drobilla's May 24, 2017 answer to
+ * https://stackoverflow.com/questions/9983239/how-to-generate-zipf-distributed-numbers-efficiently
+ *
+ * That code is referenced with this:
  * "Rejection-inversion to generate variates from monotone discrete
  * distributions", Wolfgang Hörmann and Gerhard Derflinger
  * ACM TOMACS 6.3 (1996): 169-184
  *
- * Implementation from 
- * https://stackoverflow.com/questions/9983239/how-to-generate-zipf-distributed-numbers-efficiently
+ * This code works best for large-N distributions; for small-N
+ * use the SmallZipf class, further below.
+ *
+ * Example usage:
+ *
+ *    std::random_device rd;
+ *    std::mt19937 gen(rd());
+ *    Zipf<> zipf(300);
+ *
+ *    for (int i = 0; i < 100; i++)
+ *        printf("draw %d %d\n", i, zipf(gen));
  */
 
 template<class IntType = unsigned long, class RealType = double>
 class Zipf
 {
 	public:
-		// typedef RealType input_type;
-		// typedef IntType result_type;
-
 		static_assert(std::numeric_limits<IntType>::is_integer, "");
 		static_assert(!std::numeric_limits<RealType>::is_integer, "");
 
