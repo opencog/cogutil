@@ -8,34 +8,44 @@
 #include <cmath>
 #include <random>
 
-int zipf(double alpha, int n)
+class Zipf
 {
-	static bool first = true;     // Static first time flag
-	static double c = 0;          // Normalization constant
-	static double *sum_probs;     // Pre-calculated sum of probabilities
-	double z;                     // Uniform random number (0 < z < 1)
+	private:
+		int _n;
+		double _norm;
+		double* _cdf;
+	public:
+		Zipf(double alpha, int n);
+		int draw();
+};
 
+Zipf::Zipf(double alpha, int n) :
+	_n(n)
+{
+	_norm = 0.0;   // Normalization constant
+
+	// XXX FIXME, this is slow; see
+	// https://medium.com/@jasoncrease/zipf-54912d5651cc
+	// for something better.
+	for (int i=1; i<=n; i++)
+		_norm = _norm + pow((double) i, -alpha);
+
+	_norm = 1.0 / _norm;
+
+	_cdf = new double[n+1];
+	_cdf[0] = 0.0;
+	for (int i=1; i<=n; i++)
+		_cdf[i] = _cdf[i-1] + _norm * pow((double) i, -alpha);
+}
+
+int Zipf::draw()
+{
 	static std::random_device rd;
 	std::mt19937 gen(rd());
 	static std::uniform_real_distribution<> uniform(0.0, 1.0);
 
-	// Compute normalization constant on first call only
-	if (first)
-	{
-		for (int i=1; i<=n; i++)
-			c = c + (1.0 / pow((double) i, alpha));
-
-		c = 1.0 / c;
-
-		sum_probs = (double *) malloc((n+1)*sizeof(*sum_probs));
-		sum_probs[0] = 0;
-		for (int i=1; i<=n; i++)
-			sum_probs[i] = sum_probs[i-1] + c / pow((double) i, alpha);
-
-		first = false;
-	}
-
 	// Pull a uniform random number (0 < z < 1)
+	double z;
 	do
 	{
 		z = uniform(gen);
@@ -43,15 +53,15 @@ int zipf(double alpha, int n)
 	while (z == 0);
 
 	int low = 1;
-	int high = n;
+	int high = _n;
 	int zipf_draw = 0;
 	do
 	{
 		int mid = floor(0.5 * (low + high));
-		if (sum_probs[mid] >= z && sum_probs[mid-1] < z) {
+		if (_cdf[mid] >= z && _cdf[mid-1] < z) {
 			zipf_draw = mid;
 			break;
-		} else if (sum_probs[mid] >= z) {
+		} else if (_cdf[mid] >= z) {
 			high = mid-1;
 		} else {
 			low = mid+1;
