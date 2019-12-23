@@ -201,16 +201,16 @@ class zipf_table_distribution
 		result_type max() const { return _n; }
 
 	private:
+		std::vector<RealType>               _pdf;  ///< Prob. distribution
 		IntType                             _n;    ///< Number of elements
 		RealType                            _q;    ///< Exponent
-		std::vector<RealType>               _pdf;  ///< Prob. distribution
 		std::discrete_distribution<IntType> _dist; ///< Draw generator
 
 		/** Initialize the probability mass function */
 		IntType init(const IntType n, const RealType q)
 		{
 			_pdf.reserve(n+1);
-			_pdf.push_back(0.0);
+			_pdf.emplace_back(0.0);
 			for (IntType i=1; i<=n; i++)
 				_pdf.emplace_back(std::pow((double) i, -q));
 			return n;
