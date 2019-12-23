@@ -32,19 +32,29 @@
 
 using namespace opencog;
 
+/// Initialize the Zipfian distribution generator.
+/// Parameters:
+/// @alpha: double-precision power (equal to +1.0 in the standard zipf)
+/// @n: integer, the number of elements in the distribution.
+///
+/// The implementation here creates an exact CDF (cumulative
+/// distribution function) which is both slow, and memory-consuming,
+/// if `n` is more than a few thousand, and only a hadnfule of draws
+/// are made. So this is a bad solution for large `n`.
+
 Zipf::Zipf(double alpha, int n) :
 	_n(n)
 {
-	// XXX FIXME, this is slow; see
-	// https://medium.com/@jasoncrease/zipf-54912d5651cc
-	// for something better.
+	// XXX FIXME. For large `n`, one can approximate the CDF.
+	// Ideally, one uses an exact CDF for the first few thousand,
+	// and then an approximation for the rest.
 	double norm = 0.0;   // Normalization constant
 	_cdf = new double[n+1];
 	_cdf[0] = 0.0;
 	for (int i=1; i<=n; i++)
 	{
-		_cdf[i] = _cdf[i-1] + pow((double) i, -alpha);
-		norm += cdf[i];
+		_cdf[i] = _cdf[i-1] + std::pow((double) i, -alpha);
+		norm += _cdf[i];
 	}
 
 	norm = 1.0 / norm;
@@ -68,6 +78,7 @@ int Zipf::draw()
 
 	// Perform simple bisection to find invert the CDF.
 	// It would be faster to perform the Newton-Rapheson here.
+	// XXX FIXME .. convert to Newton-Rapheson ...
 	int lo = 1;
 	int hi = _n;
 	do

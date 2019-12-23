@@ -1,0 +1,51 @@
+/** zipfUTest.cxxtest --- 
+ *
+ * Copyright (C) 2019 Linas Vepstas
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License v3 as
+ * published by the Free Software Foundation and including the exceptions
+ * at http://opencog.org/wiki/Licenses
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program; if not, write to:
+ * Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#include <opencog/util/zipf.h>
+
+using namespace opencog;
+
+class zipfUTest : public CxxTest::TestSuite
+{
+public:
+
+	void test_zipf()
+	{
+		int sz = 300;
+		Zipf zipf(1.0, sz);
+		printf("zipf: donw with init\n");
+
+		int* dist = new int[sz];
+		for (int i = 0; i < sz; i++)
+			dist[i] = 0;
+
+		for (size_t s = 0; s < 623000; s++)
+			dist[zipf.draw()] ++;
+
+		for (int i = 0; i < sz; i++)
+		{
+			double approx = dist[i];
+			approx /= i * dist[0];
+			printf("ola %d %d %g\n", i, dist[i], approx);
+		}
+		
+		// TS_ASSERT_DELTA(mean, m, delta);
+	}
+};
