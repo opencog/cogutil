@@ -32,7 +32,7 @@ public:
 		for (int i = 1; i < 30; i++)
 		{
 			double approx = norm * i * pdf[i];
-			printf("Zipf rank=%d mass=%d approx=%g\n", i, pdf[i], approx);
+			// printf("Zipf rank=%d mass=%d approx=%g\n", i, pdf[i], approx);
 
 			// Should have approx == 1.0, approximately.
 			TS_ASSERT_DELTA(approx, 1.0, 0.04);
@@ -41,7 +41,7 @@ public:
 		for (int i = 30; i < 50; i++)
 		{
 			double approx = norm * i * pdf[i];
-			printf("Zipf rank=%d mass=%d approx=%g\n", i, pdf[i], approx);
+			// printf("Zipf rank=%d mass=%d approx=%g\n", i, pdf[i], approx);
 
 			// Should have approx == 1.0, approximately.
 			TS_ASSERT_DELTA(approx, 1.0, 0.07);
@@ -50,7 +50,7 @@ public:
 		for (int i = 50; i < 150; i++)
 		{
 			double approx = norm * i * pdf[i];
-			printf("Zipf rank=%d mass=%d approx=%g\n", i, pdf[i], approx);
+			// printf("Zipf rank=%d mass=%d approx=%g\n", i, pdf[i], approx);
 
 			// Should have approx == 1.0, approximately.
 			TS_ASSERT_DELTA(approx, 1.0, 0.11);
@@ -72,7 +72,15 @@ public:
 			pdf[i] = 0;
 
 		for (size_t s = 0; s < 1623000; s++)
-			pdf[zipf(gen)] ++;
+		{
+			unsigned int draw = zipf(gen);
+			TS_ASSERT_LESS_THAN_EQUALS(0, draw);
+			TS_ASSERT_LESS_THAN_EQUALS(draw, sz);
+			pdf[draw] ++;
+		}
+		printf("Last bucket, zipf=%d\n", pdf[sz]);
+		TS_ASSERT_LESS_THAN(600, pdf[sz]);
+		TS_ASSERT_LESS_THAN(pdf[sz], 1300);
 
 		verify(pdf);
 	}
@@ -92,7 +100,15 @@ public:
 			pdf[i] = 0;
 
 		for (size_t s = 0; s < 1623000; s++)
-			pdf[zipf(gen)] ++;
+		{
+			unsigned int draw = zipf(gen);
+			TS_ASSERT_LESS_THAN_EQUALS(0, draw);
+			TS_ASSERT_LESS_THAN_EQUALS(draw, sz);
+			pdf[draw] ++;
+		}
+		printf("Last bucket, zipf-small=%d\n", pdf[sz]);
+		TS_ASSERT_LESS_THAN(600, pdf[sz]);
+		TS_ASSERT_LESS_THAN(pdf[sz], 1300);
 
 		verify(pdf);
 	}
