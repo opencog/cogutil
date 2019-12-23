@@ -46,7 +46,7 @@ public:
 			printf("Zipf rank=%d mass=%d approx=%g\n", i, dist[i], approx);
 
 			// Should have approx == 1.0, approximately.
-			TS_ASSERT_DELTA(approx, 1.0, 0.01);
+			TS_ASSERT_DELTA(approx, 1.0, 0.04);
 		}
 		for (int i = 30; i < 50; i++)
 		{
@@ -54,7 +54,7 @@ public:
 			printf("Zipf rank=%d mass=%d approx=%g\n", i, dist[i], approx);
 
 			// Should have approx == 1.0, approximately.
-			TS_ASSERT_DELTA(approx, 1.0, 0.03);
+			TS_ASSERT_DELTA(approx, 1.0, 0.07);
 		}
 		for (int i = 50; i < 150; i++)
 		{
@@ -62,7 +62,7 @@ public:
 			printf("Zipf rank=%d mass=%d approx=%g\n", i, dist[i], approx);
 
 			// Should have approx == 1.0, approximately.
-			TS_ASSERT_DELTA(approx, 1.0, 0.06);
+			TS_ASSERT_DELTA(approx, 1.0, 0.11);
 		}
 	}
 };

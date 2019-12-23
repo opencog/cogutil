@@ -78,14 +78,15 @@ int Zipf::draw()
 
 #define BISECT 1
 #if BISECT
-	// Perform simple bisection to find invert the CDF.
+	// Perform simple (weighted) bisection to find invert the CDF.
 	// This runs in log(_n) time, whichy is OK, but perhaps
 	// not ideal.
 	int lo = 1;
 	int hi = _n;
 	do
 	{
-		int mid = (lo + hi) / 2;
+		// int mid = (lo + hi) / 2;
+		int mid = (7*lo + hi) / 8;
 		if (_cdf[mid] >= u and _cdf[mid-1] < u)
 			return mid;
 
@@ -98,32 +99,37 @@ int Zipf::draw()
 
 	return lo;
 #else
-	// Perform Newton-Rapheson, for speed.
+	// Perform Newton-Rapheson, for speed. This is easy to say,
+	// but hard to do, and is tied for speed with the code above.
+	// The problem is that the function is strongly convex, so the
+	// estimator always overshoots to the left, and undershoots
+	// to the right. The fix below is to hack around this; another
+	// fix would be to use a parabolic fit; but even that would
+	// not work well. Perhaps taking the log would be better;
+	// then a linear fit should work very well...
 	int lo = 1;
 	int hi = _n;
+	int mid = _n / 8;
 
-	double flo = _cdf[lo];
-	double fhi = _cdf[hi];
 	do
 	{
-printf("duude flohi= %g %g\n", flo, fhi);
-		double slp = (hi - lo) / (fhi - flo);
-		int mid = lo - (flo-u) * slp;
-printf("duuude iter u=%g lo=%d hi=%d mid=%d slp=%g\n", u, lo, hi, mid, slp);
-fflush (stdout);
+		double fmi = _cdf[mid-1];
+		double slp = _cdf[mid] - fmi;
+		int delta = (fmi-u) / slp;
+		if (8 < delta) delta *=2;
+		else if (delta < -8) delta /= 2;
+
+		mid = mid - delta;
+		if (mid < lo) mid = lo;
+		if (hi < mid) mid = hi;
+
 		if (_cdf[mid] >= u and _cdf[mid-1] < u)
 			return mid;
 
 		if (_cdf[mid] >= u)
-		{
 			hi = mid-1;
-			fhi = _cdf[hi];
-		}
 		else
-		{
 			lo = mid+1;
-			flo = _cdf[lo];
-		}
 	}
 	while (lo <= hi);
 
