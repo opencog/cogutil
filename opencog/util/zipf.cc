@@ -79,7 +79,7 @@ Zipf::Zipf(double alpha, int n) :
 int Zipf::draw()
 {
 	static std::random_device rd;
-	std::mt19937 gen(rd());
+	static std::mt19937 gen(rd());
 	static std::uniform_real_distribution<> uniform(0.0, 1.0);
 
 	// Pull a uniform random number (0 < u < 1)
