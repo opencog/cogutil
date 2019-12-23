@@ -66,22 +66,22 @@ class Zipf
 		/// The distribution follows the power-law 1/n^s with exponent `s`.
 		Zipf(const IntType n=std::numeric_limits<IntType>::max(),
 		     const RealType q=1.0)
-        : n(n)
-        , q(q)
-        , H_x1(H(1.5) - 1.0)
-        , H_n(H(n + 0.5))
-        , dist(H_x1, H_n)
+			: n(n)
+			, q(q)
+			, H_x1(H(1.5) - 1.0)
+			, H_n(H(n + 0.5))
+			, dist(H_x1, H_n)
 		{}
 
 		IntType operator()(std::mt19937& rng)
 		{
-			while (true) {
+			while (true)
+			{
 				const RealType u = dist(rng);
 				const RealType x = H_inv(u);
 				const IntType  k = clamp<IntType>(std::round(x), 1, n);
-				if (u >= H(k + 0.5) - h(k)) {
+				if (u >= H(k + 0.5) - h(k))
 					return k;
-				}
 			}
 		}
 
@@ -146,7 +146,11 @@ class Zipf
 
 /**
  * Same API as above, but about 2.3x faster for N=300.
- * I'm not sure where the cross-over is.
+ * I'm not sure where the cross-over is. This has a much slower
+ * initialization, because of the std::pow() function, and also
+ * this will thrash the d-cache for N much greater than this
+ * (because this requires lookup in the std::vector<> array).
+ * Choose carefully between this and the above implementation.
  */
 template<class IntType = unsigned long, class RealType = double>
 class ZipfSmall
