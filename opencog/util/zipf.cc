@@ -19,6 +19,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#if 0
 
 #include <cmath>
 #include <random>
@@ -114,3 +115,4 @@ int Zipf::draw()
 	return lo;
 #endif
 }
+#endif

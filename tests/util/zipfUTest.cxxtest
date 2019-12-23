@@ -28,8 +28,11 @@ public:
 
 	void test_zipf()
 	{
+		std::random_device rd;
+		std::mt19937 gen(rd());
+
 		int sz = 300;
-		Zipf zipf(1.0, sz-1);
+		Zipf<> zipf(sz-1);
 		printf("\nzipf: done with init\n");
 
 		int* dist = new int[sz];
@@ -37,7 +40,7 @@ public:
 			dist[i] = 0;
 
 		for (size_t s = 0; s < 1623000; s++)
-			dist[zipf.draw()] ++;
+			dist[zipf(gen)] ++;
 
 		double norm = 1.0 / dist[1];
 		for (int i = 1; i < 30; i++)
