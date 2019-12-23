@@ -48,7 +48,6 @@ ADD_LIBRARY(cogutil SHARED
 	ranking
 	StringTokenizer
 	tree
-	zipf
 	${WIN32_GETOPT_FILES}
 	${APPLE_STRNDUP_FILES}
 )

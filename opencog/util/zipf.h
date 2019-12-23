@@ -141,6 +141,39 @@ class Zipf
 		}
 };
 
+/**
+ * Same API as above, but about 2.3x faster for N=300.
+ * I'm not sure where the cross-over is.
+ */
+template<class IntType = unsigned long, class RealType = double>
+class ZipfSmall
+{
+	private:
+		std::vector<RealType> _pdf;
+		std::discrete_distribution<IntType>* _dist;
+	public:
+		ZipfSmall(const IntType n,
+		          const RealType q=1.0)
+		{
+			_pdf.reserve(n+1);
+			_pdf.push_back(0.0);
+			for (int i=1; i<=n; i++)
+				_pdf.push_back(std::pow((double) i, -q));
+
+			_dist = new std::discrete_distribution<IntType>(_pdf.begin(), _pdf.end());
+		}
+
+		~ZipfSmall()
+		{
+			delete _dist;
+		}
+
+		IntType operator()(std::mt19937& rng)
+		{
+			return _dist->operator()(rng);
+		}
+};
+
 /** @}*/
 } // ~namespace opencog
 
