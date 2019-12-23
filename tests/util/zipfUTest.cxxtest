@@ -35,7 +35,7 @@ public:
 			// printf("Zipf rank=%d mass=%d approx=%g\n", i, pdf[i], approx);
 
 			// Should have approx == 1.0, approximately.
-			TS_ASSERT_DELTA(approx, 1.0, 0.04);
+			TS_ASSERT_DELTA(approx, 1.0, 0.045);
 		}
 
 		for (int i = 30; i < 50; i++)
@@ -80,7 +80,7 @@ public:
 		}
 		printf("Last bucket, zipf=%d\n", pdf[sz]);
 		TS_ASSERT_LESS_THAN(600, pdf[sz]);
-		TS_ASSERT_LESS_THAN(pdf[sz], 1300);
+		TS_ASSERT_LESS_THAN(pdf[sz], 1000);
 
 		verify(pdf);
 	}
@@ -108,7 +108,7 @@ public:
 		}
 		printf("Last bucket, zipf-small=%d\n", pdf[sz]);
 		TS_ASSERT_LESS_THAN(600, pdf[sz]);
-		TS_ASSERT_LESS_THAN(pdf[sz], 1300);
+		TS_ASSERT_LESS_THAN(pdf[sz], 1000);
 
 		verify(pdf);
 	}
