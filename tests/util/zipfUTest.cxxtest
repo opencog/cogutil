@@ -26,6 +26,11 @@ class zipfUTest : public CxxTest::TestSuite
 {
 public:
 
+	// Check that the generated distribution is very roughly within
+	// expected bounds. The bounds are hand-crafted guesstimates
+	// and are not based on theory, nor are precise. They're rough
+	// but workable.  With these bounds and paramters, I get about
+	// one failure of bounding out of every 10K test runs.
 	void verify(const std::vector<int>& pdf)
 	{
 		double norm = 1.0 / pdf[1];
@@ -57,14 +62,16 @@ public:
 		}
 	}
 
+	// Test the Zipf distribution, 300 bins, for exponent s=1.
+	// This is a pretty small test, as such things go.
 	void test_zipf()
 	{
 		std::random_device rd;
 		std::mt19937 gen(rd());
 
 		int sz = 300;
-		Zipf<> zipf(sz);
-		printf("\nzipf: done with init\n");
+		zipf_distribution<> zipf(sz);
+		printf("\nzipf_distribution: done with init\n");
 
 		std::vector<int> pdf;
 		pdf.reserve(sz+1);
@@ -79,19 +86,21 @@ public:
 			pdf[draw] ++;
 		}
 		printf("Last bucket, zipf=%d\n", pdf[sz]);
-		TS_ASSERT_LESS_THAN(600, pdf[sz]);
-		TS_ASSERT_LESS_THAN(pdf[sz], 1000);
+		TS_ASSERT_LESS_THAN(700, pdf[sz]);
+		TS_ASSERT_LESS_THAN(pdf[sz], 1100);
 
 		verify(pdf);
 	}
 
-	void test_small_zipf()
+	// Test the Zipf distribution, 300 bins, for exponent s=1.
+	// This is a pretty small test, as such things go.
+	void test_ztable()
 	{
 		std::random_device rd;
 		std::mt19937 gen(rd());
 
 		int sz = 300;
-		ZipfSmall<> zipf(sz);
+		zipf_table_distribution<> zipf(sz);
 		printf("\nzipf-small: done with init\n");
 
 		std::vector<int> pdf;
@@ -107,10 +116,57 @@ public:
 			pdf[draw] ++;
 		}
 		printf("Last bucket, zipf-small=%d\n", pdf[sz]);
-		TS_ASSERT_LESS_THAN(600, pdf[sz]);
-		TS_ASSERT_LESS_THAN(pdf[sz], 1000);
+		TS_ASSERT_LESS_THAN(700, pdf[sz]);
+		TS_ASSERT_LESS_THAN(pdf[sz], 1100);
 
 		verify(pdf);
 	}
 
+	// Use both the table, and the rejection-inversion method
+	// and compare them to one-another, for 300 bins and exponent s=1.5
+	void test_deep_zipf()
+	{
+		std::random_device rd;
+		std::mt19937 gen(rd());
+
+		int sz = 300;
+		zipf_distribution<> zipf(sz, 1.5);
+		zipf_table_distribution<> ztab(sz, 1.5);
+
+		printf("\ndeep: done with init\n");
+
+		std::vector<int> pdf;
+		pdf.reserve(sz+1);
+		for (int i = 0; i <= sz; i++)
+			pdf[i] = 0;
+
+		int norm = 0;
+		for (size_t s = 0; s < 41623000; s++)
+		{
+			pdf[zipf(gen)] ++;
+			unsigned int draw = ztab(gen);
+			if (1 == draw) norm ++;
+			pdf[draw] --;
+		}
+
+		printf("norm = %d\n", norm);
+		for (int i = 1; i <= sz; i++)
+			printf("residual bucket %d = %d\n", i, pdf[i]);
+
+		// Some hand-crafted, very rough bound for what we
+		// expect the distribution to lie inside of. These
+		// are probabilistic; something like 99 out of 100
+		// unit tests should pass, but one might fail.
+		TS_ASSERT_LESS_THAN(16123000, norm);
+		TS_ASSERT_LESS_THAN(norm, 17223000);
+
+		TS_ASSERT_LESS_THAN(abs(pdf[1]), 18000);
+		TS_ASSERT_LESS_THAN(abs(pdf[2]), 13000);
+		for (int i = 3; i <= 40; i++)
+			TS_ASSERT_LESS_THAN(abs(pdf[i]), 8000);
+		for (int i = 50; i <= 110; i++)
+			TS_ASSERT_LESS_THAN(abs(pdf[i]), 1500);
+		for (int i = 150; i <= 300; i++)
+			TS_ASSERT_LESS_THAN(abs(pdf[i]), 600);
+	}
 };
