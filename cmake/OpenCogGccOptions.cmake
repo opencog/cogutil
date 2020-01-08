@@ -2,12 +2,11 @@
 # Detect different compilers and OS'es, tweak flags as necessary.
 
 IF (CMAKE_COMPILER_IS_GNUCXX)
-	# Version 5.0 of gcc is required for passing non-trivially
-	# copyable class via C varargs.
+	# Version 6.0 of gcc is required for C++17 support.
 
-	IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0)
-		MESSAGE(FATAL_ERROR "GCC version must be at least 5.0!")
-	ENDIF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0)
+	IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
+		MESSAGE(FATAL_ERROR "GCC version must be at least 6.0!")
+	ENDIF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
 
 	IF (APPLE)
 		CMAKE_POLICY(SET CMP0042 NEW)  # Something about MACOSX_RPATH
@@ -55,8 +54,8 @@ IF (CMAKE_COMPILER_IS_GNUCXX)
 	#
 	# 2) -fopenmp for multithreading support
 	#
-	# 3) -std=gnu++14 for C++14 and GNU extensions support
-	SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wno-variadic-macros -fopenmp -std=gnu++14")
+	# 3) -std=gnu++17 for C++17 and GNU extensions support
+	SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wno-variadic-macros -fopenmp -std=gnu++17")
 
 	SET(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
 	SET(CMAKE_CXX_FLAGS_PROFILE ${CMAKE_C_FLAGS_PROFILE})
@@ -74,5 +73,5 @@ ENDIF (CMAKE_COMPILER_IS_GNUCXX)
 IF (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 	SET(CMAKE_SHARED_LINKER_FLAGS "-undefined dynamic_lookup")
 	SET(CMAKE_EXE_LINKER_FLAGS "-lstdc++")
-	SET(CMAKE_CXX_FLAGS "-std=c++14")
+	SET(CMAKE_CXX_FLAGS "-std=c++17")
 ENDIF (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
