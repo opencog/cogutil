@@ -255,7 +255,7 @@ void async_caller<Writer, Element>::stop_writer_threads()
 	_store_queue.cancel_reset();
 	while (not _store_queue.is_empty())
 	{
-		Element elt = _store_queue.pop();
+		Element elt = _store_queue.value_pop();
 		(_writer->*_do_write)(elt);
 	}
 	
@@ -322,7 +322,7 @@ void async_caller<Writer, Element>::write_loop()
 	{
 		while (true)
 		{
-			Element elt = _store_queue.pop();
+			Element elt = _store_queue.value_pop();
 			_busy_writers ++; // Bad -- window after pop returns, before increment!
 			(_writer->*_do_write)(elt);
 			_busy_writers --;

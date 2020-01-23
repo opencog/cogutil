@@ -1,0 +1,172 @@
+/** zipfUTest.cxxtest ---
+ *
+ * Copyright (C) 2019 Linas Vepstas
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License v3 as
+ * published by the Free Software Foundation and including the exceptions
+ * at http://opencog.org/wiki/Licenses
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program; if not, write to:
+ * Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#include <opencog/util/zipf.h>
+
+using namespace opencog;
+
+class zipfUTest : public CxxTest::TestSuite
+{
+public:
+
+	// Check that the generated distribution is very roughly within
+	// expected bounds. The bounds are hand-crafted guesstimates
+	// and are not based on theory, nor are precise. They're rough
+	// but workable.  With these bounds and paramters, I get about
+	// one failure of bounding out of every 10K test runs.
+	void verify(const std::vector<int>& pdf)
+	{
+		double norm = 1.0 / pdf[1];
+		for (int i = 1; i < 30; i++)
+		{
+			double approx = norm * i * pdf[i];
+			// printf("Zipf rank=%d mass=%d approx=%g\n", i, pdf[i], approx);
+
+			// Should have approx == 1.0, approximately.
+			TS_ASSERT_DELTA(approx, 1.0, 0.046);
+		}
+
+		for (int i = 30; i < 50; i++)
+		{
+			double approx = norm * i * pdf[i];
+			// printf("Zipf rank=%d mass=%d approx=%g\n", i, pdf[i], approx);
+
+			// Should have approx == 1.0, approximately.
+			TS_ASSERT_DELTA(approx, 1.0, 0.07);
+		}
+
+		for (int i = 50; i < 150; i++)
+		{
+			double approx = norm * i * pdf[i];
+			// printf("Zipf rank=%d mass=%d approx=%g\n", i, pdf[i], approx);
+
+			// Should have approx == 1.0, approximately.
+			TS_ASSERT_DELTA(approx, 1.0, 0.11);
+		}
+	}
+
+	// Test the Zipf distribution, 300 bins, for exponent s=1.
+	// This is a pretty small test, as such things go.
+	void test_zipf()
+	{
+		std::random_device rd;
+		std::mt19937 gen(rd());
+
+		int sz = 300;
+		zipf_distribution<> zipf(sz);
+		printf("\nzipf_distribution: done with init\n");
+
+		std::vector<int> pdf;
+		pdf.reserve(sz+1);
+		for (int i = 0; i <= sz; i++)
+			pdf[i] = 0;
+
+		for (size_t s = 0; s < 1623000; s++)
+		{
+			unsigned int draw = zipf(gen);
+			TS_ASSERT_LESS_THAN_EQUALS(0, draw);
+			TS_ASSERT_LESS_THAN_EQUALS(draw, sz);
+			pdf[draw] ++;
+		}
+		printf("Last bucket, zipf=%d\n", pdf[sz]);
+		TS_ASSERT_LESS_THAN(700, pdf[sz]);
+		TS_ASSERT_LESS_THAN(pdf[sz], 1100);
+
+		verify(pdf);
+	}
+
+	// Test the Zipf distribution, 300 bins, for exponent s=1.
+	// This is a pretty small test, as such things go.
+	void test_ztable()
+	{
+		std::random_device rd;
+		std::mt19937 gen(rd());
+
+		int sz = 300;
+		zipf_table_distribution<> zipf(sz);
+		printf("\nzipf-small: done with init\n");
+
+		std::vector<int> pdf;
+		pdf.reserve(sz+1);
+		for (int i = 0; i <= sz; i++)
+			pdf[i] = 0;
+
+		for (size_t s = 0; s < 1623000; s++)
+		{
+			unsigned int draw = zipf(gen);
+			TS_ASSERT_LESS_THAN_EQUALS(0, draw);
+			TS_ASSERT_LESS_THAN_EQUALS(draw, sz);
+			pdf[draw] ++;
+		}
+		printf("Last bucket, zipf-small=%d\n", pdf[sz]);
+		TS_ASSERT_LESS_THAN(700, pdf[sz]);
+		TS_ASSERT_LESS_THAN(pdf[sz], 1100);
+
+		verify(pdf);
+	}
+
+	// Use both the table, and the rejection-inversion method
+	// and compare them to one-another, for 300 bins and exponent s=1.5
+	void test_deep_zipf()
+	{
+		std::random_device rd;
+		std::mt19937 gen(rd());
+
+		int sz = 300;
+		zipf_distribution<> zipf(sz, 1.5);
+		zipf_table_distribution<> ztab(sz, 1.5);
+
+		printf("\ndeep: done with init\n");
+
+		std::vector<int> pdf;
+		pdf.reserve(sz+1);
+		for (int i = 0; i <= sz; i++)
+			pdf[i] = 0;
+
+		int norm = 0;
+		for (size_t s = 0; s < 41623000; s++)
+		{
+			pdf[zipf(gen)] ++;
+			unsigned int draw = ztab(gen);
+			if (1 == draw) norm ++;
+			pdf[draw] --;
+		}
+
+		printf("norm = %d\n", norm);
+		for (int i = 1; i <= sz; i++)
+			printf("residual bucket %d = %d\n", i, pdf[i]);
+
+		// Some hand-crafted, very rough bound for what we
+		// expect the distribution to lie inside of. These
+		// are probabilistic; something like 99 out of 100
+		// unit tests should pass, but one might fail.
+		TS_ASSERT_LESS_THAN(16123000, norm);
+		TS_ASSERT_LESS_THAN(norm, 17223000);
+
+		TS_ASSERT_LESS_THAN(abs(pdf[1]), 18000);
+		TS_ASSERT_LESS_THAN(abs(pdf[2]), 13000);
+		for (int i = 3; i <= 40; i++)
+			TS_ASSERT_LESS_THAN(abs(pdf[i]), 8000);
+		for (int i = 50; i <= 110; i++)
+			TS_ASSERT_LESS_THAN(abs(pdf[i]), 1500);
+		for (int i = 150; i <= 300; i++)
+			TS_ASSERT_LESS_THAN(abs(pdf[i]), 600);
+	}
+};

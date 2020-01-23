@@ -301,7 +301,7 @@ void async_buffer<Writer, Element>::stop_writer_threads()
 	_store_set.cancel_reset();
 	while (not _store_set.is_empty())
 	{
-		Element elt = _store_set.get();
+		Element elt = _store_set.value_get();
 		(_writer->*_do_write)(elt);
 	}
 	
@@ -381,7 +381,7 @@ void async_buffer<Writer, Element>::write_loop()
 				std::this_thread::sleep_for(std::chrono::milliseconds(3));
 			}
 
-			Element elt = _store_set.get();
+			Element elt = _store_set.value_get();
 			_busy_writers ++; // Bad -- window after get returns, before increment!
 			(_writer->*_do_write)(elt);
 			_busy_writers --;
