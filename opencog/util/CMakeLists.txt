@@ -55,7 +55,6 @@ ADD_LIBRARY(cogutil SHARED
 TARGET_LINK_LIBRARIES(cogutil
 	${Boost_FILESYSTEM_LIBRARY}
 	${Boost_SYSTEM_LIBRARY}
-	${Boost_REGEX_LIBRARY}
 	${Boost_THREAD_LIBRARY}
 )
 
@@ -65,7 +64,6 @@ IF (HAVE_BFD AND HAVE_IBERTY)
 		${BFD_LIBRARY}
 		iberty
 	)
-
 ENDIF (HAVE_BFD AND HAVE_IBERTY)
 
 ADD_SUBDIRECTORY(boost_ext)
@@ -88,11 +86,13 @@ INSTALL(FILES
 	concurrent_stack.h
 	digraph.h
 	dorepeat.h
+	empty_string.h
 	exceptions.h
 	files.h
 	functional.h
 	hashing.h
 	iostreamContainer.h
+	jaccard_index.h
 	KLD.h
 	lazy_normal_selector.h
 	lazy_random_selector.h
@@ -105,7 +105,6 @@ INSTALL(FILES
 	misc.h
 	mt19937ar.h
 	numeric.h
-	jaccard_index.h
 	oc_assert.h
 	oc_omp.h
 	octime.h
@@ -118,9 +117,8 @@ INSTALL(FILES
 	selection.h
 	sigslot.h
 	StringTokenizer.h
-	tbb.h
 	tree.h
-        empty_string.h
+	zipf.h
 	DESTINATION "include/opencog/util"
 )
 

@@ -28,23 +28,23 @@ using namespace std;
 class algorithmUTest : public CxxTest::TestSuite
 {
 public:
-    void test_powerset() {
-        set<int> s = {1, 3, 5};
-        set<set<int> > ps = powerset(s);
-        set<set<int> > expect_set = { {}, {1}, {3}, {5},
-                                      {1, 3}, {1, 5}, {3, 5},
-                                      {1, 3, 5} };
+	void test_powerset() {
+		set<int> s = {1, 3, 5};
+		set<set<int> > ps = powerset(s);
+		set<set<int> > expect_set = { {}, {1}, {3}, {5},
+		                              {1, 3}, {1, 5}, {3, 5},
+		                              {1, 3, 5} };
         
-        TS_ASSERT_EQUALS(ps, expect_set);
-    }
+		TS_ASSERT_EQUALS(ps, expect_set);
+	}
 
-    void test_powerset_exact() {
-        set<int> s = {1, 3, 5};
-        set<set<int> > ps = powerset(s, 2, true);
-        set<set<int> > expect_set = { {1, 3}, {1, 5}, {3, 5} };
+	void test_powerset_exact() {
+		set<int> s = {1, 3, 5};
+		set<set<int> > ps = powerset(s, 2, true);
+		set<set<int> > expect_set = { {1, 3}, {1, 5}, {3, 5} };
 
-        TS_ASSERT_EQUALS(ps, expect_set);
-    }
+		TS_ASSERT_EQUALS(ps, expect_set);
+	}
 
 	void test_cartesian_product() {
 		set<int> c = {1, 2, 3};
