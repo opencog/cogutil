@@ -140,6 +140,11 @@ public:
     void set_thread_id_flag(bool);
 
     /**
+     * Get the value of the current thread id flag.
+     */
+    bool get_thread_id_flag() const;
+
+    /**
      * If set, log messages are printed to the stdout.
      */
     void set_print_to_stdout_flag(bool);
