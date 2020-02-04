@@ -445,6 +445,11 @@ void Logger::set_thread_id_flag(bool flag)
     threadIdEnabled = flag;
 }
 
+bool Logger::get_thread_id_flag() const
+{
+    return threadIdEnabled;
+}
+
 void Logger::set_print_to_stdout_flag(bool flag)
 {
     printToStdout = flag;
