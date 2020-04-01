@@ -39,7 +39,7 @@ namespace opencog {
 /// block until one is given back.
 ///
 /// This maintains a finite-sized pool of resources, which can be
-/// borrowed and returned, much like a libary book.  As long as the
+/// borrowed and returned, much like a library book.  As long as the
 /// pool is not empty, resources can be borrowed. If the pool is empty,
 /// (there is nothing to be borrowed), then the borrowing thread will
 /// block, until such time as the pool becomes non-empty.  When a
@@ -65,7 +65,7 @@ namespace opencog {
 ///
 /// This is similar to concurrent_queue (also in this directory) but
 /// with a simpler, less sophisticated API.  The main difference is that
-/// this API uses named that make it clear that resources are being
+/// this API uses names that make it clear that resources are being
 /// borrowed, and returned, whereas the concurrent_queue has an API that
 /// is geared towards the producer-consumer mode of thinking.
 //
