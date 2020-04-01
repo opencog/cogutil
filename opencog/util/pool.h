@@ -93,7 +93,7 @@ class pool
         /// Put a resource into the pool.  If the pool is empty, and
         /// other threads are blocked and waiting, this will release
         /// some other blocked thread.
-        void give_back(Resource& obj)
+        void give_back(const Resource& obj)
         {
             std::lock_guard<std::mutex> lock(mu);
             objs.push(obj);
