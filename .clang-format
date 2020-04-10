@@ -1,0 +1,8 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+Language: Cpp
+BreakBeforeBraces: Linux
+IndentCaseLabels: true
+IndentPPDirectives: BeforeHash
+ColumnLimit: 100
+AllowShortIfStatementsOnASingleLine: true
