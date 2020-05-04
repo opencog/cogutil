@@ -111,7 +111,6 @@ public:
     bool is_empty() const
     {
         std::lock_guard<std::mutex> lock(the_mutex);
-        if (is_canceled) throw Canceled();
         return the_queue.empty();
     }
 
@@ -133,7 +132,6 @@ public:
     bool try_get(Element& value)
     {
         std::lock_guard<std::mutex> lock(the_mutex);
-        if (is_canceled) throw Canceled();
         if (the_queue.empty())
         {
             return false;
@@ -159,7 +157,7 @@ public:
             {
                 the_cond.wait(lock);
             }
-            if (is_canceled) throw Canceled();
+            if (is_canceled) break;
         }
         while (the_queue.empty());
 
@@ -178,7 +176,6 @@ public:
     std::deque<Element> wait_and_take_all()
     {
         std::unique_lock<std::mutex> lock(the_mutex);
-        if (is_canceled) throw Canceled();
 
         // Use two nested loops here.  It can happen that the cond
         // wakes up, and yet the queue is empty.
@@ -213,7 +210,6 @@ public:
         {
             the_cond.wait(lock);
         }
-        if (is_canceled) throw Canceled();
     }
 
     void cancel_reset()
