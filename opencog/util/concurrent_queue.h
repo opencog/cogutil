@@ -178,6 +178,7 @@ public:
     std::deque<Element> wait_and_take_all()
     {
         std::unique_lock<std::mutex> lock(the_mutex);
+        if (is_canceled) throw Canceled();
 
         // Use two nested loops here.  It can happen that the cond
         // wakes up, and yet the queue is empty.
@@ -187,7 +188,8 @@ public:
             {
                 the_cond.wait(lock);
             }
-            if (is_canceled) throw Canceled();
+				// Once the queue has been closed, we are done.
+            if (is_canceled) break;
         }
         while (the_queue.empty());
 
