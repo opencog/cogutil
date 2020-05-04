@@ -187,7 +187,7 @@ public:
             {
                 the_cond.wait(lock);
             }
-            if (is_canceled) throw Canceled();
+            if (is_canceled) break;
         }
         while (the_queue.empty());
 
