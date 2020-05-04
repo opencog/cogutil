@@ -278,7 +278,7 @@ void async_buffer<Writer, Element>::stop_writer_threads()
 	std::unique_lock<std::mutex> lock(_write_mutex);
 	_stopping_writers = true;
 
-	// Spin a while, until the writeer threads are (mostly) done.
+	// Spin a while, until the writer threads are (mostly) done.
 	while (not _store_set.is_empty())
 	{
 		// std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -380,6 +380,8 @@ void async_buffer<Writer, Element>::write_loop()
 			{
 				std::this_thread::sleep_for(std::chrono::milliseconds(3));
 			}
+
+			if (_store_set.is_closed()) break;
 
 			Element elt = _store_set.value_get();
 			_busy_writers ++; // Bad -- window after get returns, before increment!
