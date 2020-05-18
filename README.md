@@ -34,8 +34,8 @@ container in which OpenCog will be built and run.
 > http://www.cmake.org/ | cmake
 
 ###### cxxtest
-> Test framework
-> http://cxxtest.sourceforge.net/ | https://launchpad.net/~opencog-dev/+archive/ppa
+> Unit test framework
+> https://cxxtest.com/ | `apt-get install cxxtest`
 
 Optional Prerequisites
 ----------------------

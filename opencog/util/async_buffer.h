@@ -278,7 +278,7 @@ void async_buffer<Writer, Element>::stop_writer_threads()
 	std::unique_lock<std::mutex> lock(_write_mutex);
 	_stopping_writers = true;
 
-	// Spin a while, until the writeer threads are (mostly) done.
+	// Spin a while, until the writer threads are (mostly) done.
 	while (not _store_set.is_empty())
 	{
 		// std::this_thread::sleep_for(std::chrono::milliseconds(1));
