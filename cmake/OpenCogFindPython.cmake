@@ -36,7 +36,8 @@ ENDIF()
 
 # Cython is used to generate python bindings.
 IF(HAVE_PY_INTERP)
-	FIND_PACKAGE(Cython 0.23.0)
+	# Version 0.24 or later needed for @property markup for python2
+	FIND_PACKAGE(Cython 0.24.0)
 
 	IF (CYTHON_FOUND AND HAVE_PY_LIBS)
 		ADD_DEFINITIONS(-DHAVE_CYTHON)
