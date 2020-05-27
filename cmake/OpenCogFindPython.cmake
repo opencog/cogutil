@@ -5,7 +5,7 @@
 # and for running the FindCython module.
 #
 # Search for Python3 first, and use that, if found. Else use Python2.
-# To use Python2 only from the build directory run the following
+# To use Python2 only, run the following in the build directory:
 # rm CMakeCache.txt && cmake -DCMAKE_DISABLE_FIND_PACKAGE_Python3Interp=TRUE ..
 
 FIND_PACKAGE(Python3Interp)
@@ -36,7 +36,8 @@ ENDIF()
 
 # Cython is used to generate python bindings.
 IF(HAVE_PY_INTERP)
-	FIND_PACKAGE(Cython 0.23.0)
+	# Version 0.24 or later needed for @property markup for python2
+	FIND_PACKAGE(Cython 0.24.0)
 
 	IF (CYTHON_FOUND AND HAVE_PY_LIBS)
 		ADD_DEFINITIONS(-DHAVE_CYTHON)
