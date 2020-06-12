@@ -26,6 +26,8 @@
 #include <boost/program_options.hpp>
 #include <opencog/util/iostreamContainer.h>
 
+#include <sstream>
+
 namespace opencog {
 /** \addtogroup grp_cogutil
  *  @{
@@ -46,7 +48,9 @@ bool to_string(const boost::program_options::variable_value& vv,
                std::string separator)
 {
     if(vv.value().type() == typeid(T)) {
-        str = boost::lexical_cast<std::string>(vv.as<T>());
+        std::stringstream ss;
+        ss << vv.as<T>();
+        str = ss.str();
         return true;
     } else if(vv.value().type() == typeid(std::vector<T>)) {
         str = opencog::container_to_str(vv.as<std::vector<T> >(), separator.c_str());
