@@ -29,7 +29,10 @@ INSTALL(FILES
         Findcpprest.cmake
         Summary.cmake
         OpenCogGccOptions.cmake
+        OpenCogLibOptions.cmake
+        OpenCogInstallOptions.cmake
         OpenCogFindPython.cmake
+        OpenCogFindGuile.cmake
         COPYING-CMAKE-SCRIPTS
         DESTINATION
         ${DATADIR}/cmake/)

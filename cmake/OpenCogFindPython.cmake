@@ -1,6 +1,19 @@
 # ----------------------------------------------------------
 # Python and Cython
 #
+
+# ----------------------------------------------------------
+# secure_getenv
+# Without this, one gets the common cryptic python error message:
+#    ImportError: No module named 'opencog'
+
+INCLUDE(CheckSymbolExists)
+CHECK_SYMBOL_EXISTS(secure_getenv "stdlib.h" HAVE_SECURE_GETENV)
+IF (HAVE_SECURE_GETENV)
+   ADD_DEFINITIONS(-DHAVE_SECURE_GETENV)
+ENDIF (HAVE_SECURE_GETENV)
+
+# ----------------------------------------------------------
 # NOTE: Python interpreter is needed for runing python unit tests,
 # and for running the FindCython module.
 #
