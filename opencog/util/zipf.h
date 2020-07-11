@@ -102,7 +102,10 @@ class zipf_distribution
 		RealType                                 H_x1;  ///< H(x_1)
 		RealType                                 H_n;   ///< H(n)
 		std::uniform_real_distribution<RealType> dist;  ///< [H(x_1), H(n)]
-		static constexpr RealType epsilon = 1e-8;
+
+		// This provides 16 decimal places of precision,
+		// i.e. good to (epsilon)^4 / 24 per expanions log, exp below.
+		static constexpr RealType epsilon = 2e-5;
 
 		/** Clamp x to [min, max]. */
 		template<typename T>
@@ -111,7 +114,7 @@ class zipf_distribution
 			return std::max(min, std::min(max, x));
 		}
 
-		/** exp(x) - 1 / x */
+		/** (exp(x) - 1) / x */
 		static double
 		expxm1bx(const double x)
 		{
