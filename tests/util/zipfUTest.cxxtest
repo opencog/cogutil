@@ -32,13 +32,15 @@ public:
 	zipfUTest() : gen(rd()) {}
 
 	// Check that the generated distribution is normally distributed.
-	void verify(const std::vector<int>& pdf,
-	            int len, double s=1.0, double q=0.0)
+	void verify(const std::vector<int>& pdf, size_t ndraw,
+	            int n, double s=1.0, double q=0.0)
 	{
+		int len = n + 1;
+
 		// Create the expected distribution
 		double norm = 0.0;
 		std::vector<double> expect;
-		expect.reserve(len);
+		expect.resize(len);
 		for (int i = 1; i <len; i++)
 		{
 			double term = std::pow (i+q, -s);
@@ -54,6 +56,8 @@ public:
 		size_t cnt = 0;
 		for (int i = 1; i <len; i++)
 			cnt += pdf[i];
+		TS_ASSERT_EQUALS (cnt, ndraw);
+
 		double fcnt = (double) cnt;
 
 		// Take the difference.  We expect the difference
@@ -73,20 +77,22 @@ public:
 			mean += expect[i];
 			meansq += expect[i] * expect[i];
 		}
-		mean *= 1.0 / len;
-		meansq *= 1.0 / len;
+		mean *= 1.0 / n;
+		meansq *= 1.0 / n;
 		double rms = sqrt(meansq);
 
 		// rms should be near 1/(2pi sqrt(cnt))
 		double erms = 1.0 / sqrt(2.0 * 3.14159 * fcnt);
 
-		double navg = mean*sqrt(fcnt*len);
+		double navg = mean*sqrt(fcnt*n);
 		double nrms = rms/erms;
-		printf("Distribution: n=%d s=%4.3f q=%4.2f cnt=%lu mean=%6.4g rms=%6.4g\n",
-			len, s, q, cnt, navg, nrms);
+		double allow = 3.0 * sqrt(n / fcnt);
+		printf("Distribution: n=%d s=%4.3f q=%4.2f cnt=%lu "
+		       "mean=%6.4g rms=%6.4g allow=%6.4g\n",
+			n, s, q, cnt, navg, nrms, allow);
 
 		TS_ASSERT_LESS_THAN(navg, 2.0);
-		TS_ASSERT_DELTA(nrms, 1.0, 0.1);
+		TS_ASSERT_DELTA(nrms, 1.0, allow);
 
 		// Actually test. We're going to use sigma as the max allowed
 		// deviation. For now five-sigma seems OK.
@@ -102,7 +108,32 @@ public:
 	void check_zipf(size_t ndraw, int n, double s, double q)
 	{
 		zipf_distribution<> zipf(n);
-		printf("Init distribution: n=%d s=%4.3f q=%4.2f draw=%lu\n",
+		printf("Init rejection-inversion: n=%d s=%4.3f q=%4.2f draw=%lu\n",
+			n, s, q, ndraw);
+
+		std::vector<int> pdf;
+		pdf.resize(n+1);
+		for (int i = 0; i <= n; i++)
+			pdf[i] = 0;
+
+		for (size_t s = 0; s < ndraw; s++)
+		{
+			unsigned int draw = zipf(gen);
+			TS_ASSERT_LESS_THAN_EQUALS(1, draw);
+			TS_ASSERT_LESS_THAN_EQUALS(draw, n);
+			pdf[draw] = pdf[draw] + 1;
+		}
+
+		verify(pdf, ndraw, n, s, q);
+		printf("\n");
+	}
+
+
+	// Draw from the Zipf distribution per given parameters.
+	void check_table(size_t ndraw, int n, double s, double q)
+	{
+		zipf_table_distribution<> zipf(n);
+		printf("Init table: n=%d s=%4.3f q=%4.2f draw=%lu\n",
 			n, s, q, ndraw);
 
 		std::vector<int> pdf;
@@ -117,86 +148,18 @@ public:
 			TS_ASSERT_LESS_THAN_EQUALS(draw, n);
 			pdf[draw] ++;
 		}
-		verify(pdf, n, s, q);
+		verify(pdf, ndraw, n, s, q);
+		printf("\n");
 	}
 
 	// Test the Zipf distribution, 300 bins, for exponent s=1.
 	// This is a pretty small test, as such things go.
 	void test_zipf()
 	{
+		printf("\n");
+		check_zipf(1623, 30, 1.0, 0.0);
 		check_zipf(1623000, 300, 1.0, 0.0);
 
-		// zipf_distribution<> zipf(sz);
-	}
-
-	// Test the Zipf distribution, 300 bins, for exponent s=1.
-	// This is a pretty small test, as such things go.
-	void test_ztable()
-	{
-		int sz = 300;
-		zipf_table_distribution<> zipf(sz);
-		printf("\nzipf-small: done with init\n");
-
-		std::vector<int> pdf;
-		pdf.reserve(sz+1);
-		for (int i = 0; i <= sz; i++)
-			pdf[i] = 0;
-
-		for (size_t s = 0; s < 1623000; s++)
-		{
-			unsigned int draw = zipf(gen);
-			TS_ASSERT_LESS_THAN_EQUALS(1, draw);
-			TS_ASSERT_LESS_THAN_EQUALS(draw, sz);
-			pdf[draw] ++;
-		}
-		verify(pdf, sz);
-	}
-
-	// Use both the table, and the rejection-inversion method
-	// and compare them to one-another, for 300 bins and exponent s=1.5
-	void test_deep_zipf()
-	{
-		std::random_device rd;
-		std::mt19937 gen(rd());
-
-		int sz = 300;
-		zipf_distribution<> zipf(sz, 1.5);
-		zipf_table_distribution<> ztab(sz, 1.5);
-
-		printf("\ndeep: done with init\n");
-
-		std::vector<int> pdf;
-		pdf.reserve(sz+1);
-		for (int i = 0; i <= sz; i++)
-			pdf[i] = 0;
-
-		int norm = 0;
-		for (size_t s = 0; s < 41623000; s++)
-		{
-			pdf[zipf(gen)] ++;
-			unsigned int draw = ztab(gen);
-			if (1 == draw) norm ++;
-			pdf[draw] --;
-		}
-
-		printf("norm = %d\n", norm);
-		for (int i = 1; i <= sz; i++)
-			printf("residual bucket %d = %d\n", i, pdf[i]);
-
-		// Some hand-crafted, very rough bound for what we
-		// expect the distribution to lie inside of. These
-		// are probabilistic; something like 99 out of 100
-		// unit tests should pass, but one might fail.
-		TS_ASSERT_LESS_THAN(16123000, norm);
-		TS_ASSERT_LESS_THAN(norm, 17223000);
-
-		TS_ASSERT_LESS_THAN(abs(pdf[1]), 18000);
-		TS_ASSERT_LESS_THAN(abs(pdf[2]), 13000);
-		for (int i = 3; i <= 40; i++)
-			TS_ASSERT_LESS_THAN(abs(pdf[i]), 8000);
-		for (int i = 50; i <= 110; i++)
-			TS_ASSERT_LESS_THAN(abs(pdf[i]), 1500);
-		for (int i = 150; i <= 300; i++)
-			TS_ASSERT_LESS_THAN(abs(pdf[i]), 600);
+		check_table(1623000, 300, 1.0, 0.0);
 	}
 };
