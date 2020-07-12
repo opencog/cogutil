@@ -1,6 +1,6 @@
 /** zipfUTest.cxxtest ---
  *
- * Copyright (C) 2019 Linas Vepstas
+ * Copyright (C) 2019, 2020 Linas Vepstas
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License v3 as
@@ -18,6 +18,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <climits>
 #include <opencog/util/zipf.h>
 
 using namespace opencog;
@@ -31,34 +32,54 @@ public:
 	// and are not based on theory, nor are precise. They're rough
 	// but workable.  With these bounds and paramters, I get about
 	// one failure of bounding out of every 10K test runs.
-	void verify(const std::vector<int>& pdf)
+	void verify(const std::vector<int>& pdf,
+	            int len, double s=1.0, double q=0.0)
 	{
-		double norm = 1.0 / pdf[1];
+		// Create the expected distribution
+		double norm = 0.0;
+		std::vector<double> expect;
+		expect.reserve(len);
+		for (int i = 1; i <len; i++)
+		{
+			double term = std::pow (i+q, -s);
+			expect[i] = term;
+			norm += term;
+		}
+
+		// Normalize
+		for (int i = 1; i <len; i++)
+			expect[i] *= 1.0 / norm;
+
+		// Also normalize the pdf.
+		double cnt = 0.0;
+		for (int i = 1; i <len; i++)
+			cnt += pdf[i];
+
+		for (int i = 1; i <len; i++)
+			expect[i] -= pdf[i] / cnt;
+
 		for (int i = 1; i < 30; i++)
 		{
-			double approx = norm * i * pdf[i];
 			// printf("Zipf rank=%d mass=%d approx=%g\n", i, pdf[i], approx);
 
 			// Should have approx == 1.0, approximately.
-			TS_ASSERT_DELTA(approx, 1.0, 0.046);
+			TS_ASSERT_DELTA(expect[i], 0.0, 0.046);
 		}
 
 		for (int i = 30; i < 50; i++)
 		{
-			double approx = norm * i * pdf[i];
 			// printf("Zipf rank=%d mass=%d approx=%g\n", i, pdf[i], approx);
 
 			// Should have approx == 1.0, approximately.
-			TS_ASSERT_DELTA(approx, 1.0, 0.07);
+			TS_ASSERT_DELTA(expect[i], 0.0, 0.07);
 		}
 
 		for (int i = 50; i < 150; i++)
 		{
-			double approx = norm * i * pdf[i];
 			// printf("Zipf rank=%d mass=%d approx=%g\n", i, pdf[i], approx);
 
 			// Should have approx == 1.0, approximately.
-			TS_ASSERT_DELTA(approx, 1.0, 0.11);
+			TS_ASSERT_DELTA(expect[i], 0.0, 0.11);
 		}
 	}
 
@@ -89,7 +110,7 @@ public:
 		TS_ASSERT_LESS_THAN(700, pdf[sz]);
 		TS_ASSERT_LESS_THAN(pdf[sz], 1100);
 
-		verify(pdf);
+		verify(pdf, sz);
 	}
 
 	// Test the Zipf distribution, 300 bins, for exponent s=1.
@@ -119,7 +140,7 @@ public:
 		TS_ASSERT_LESS_THAN(700, pdf[sz]);
 		TS_ASSERT_LESS_THAN(pdf[sz], 1100);
 
-		verify(pdf);
+		verify(pdf, sz);
 	}
 
 	// Use both the table, and the rejection-inversion method
