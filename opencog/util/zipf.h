@@ -72,6 +72,7 @@ class zipf_distribution
 		                  const RealType s=1.0)
 			: n(n)
 			, _s(s)
+			, oms(1.0-s)
 			, H_x1(H(1.5) - 1.0)
 			, H_n(H(n + 0.5))
 			, cut(1.0 - H_inv(H(1.5) - h(1.0)))
@@ -103,6 +104,7 @@ class zipf_distribution
 	private:
 		IntType                                  n;     ///< Number of elements
 		RealType                                 _s;    ///< Exponent
+		RealType                                 oms;   ///< 1-s
 		RealType                                 H_x1;  ///< H(x_1)
 		RealType                                 H_n;   ///< H(n)
 		RealType                                 cut;   ///< rejection cut
@@ -130,7 +132,7 @@ class zipf_distribution
 		const RealType H(const RealType x)
 		{
 			const RealType log_x = std::log(x);
-			return expxm1bx((1.0 - _s) * log_x) * log_x;
+			return expxm1bx(oms * log_x) * log_x;
 		}
 
 		/** log(1 + x) / x */
@@ -145,8 +147,7 @@ class zipf_distribution
 		/** The inverse function of H(x) */
 		const RealType H_inv(const RealType x)
 		{
-			const RealType t = std::max(-1.0, x * (1.0 - _s));
-			return std::exp(log1pxbx(t) * x);
+			return std::exp(log1pxbx(oms*x) * x);
 		}
 
 		/** That hat function h(x) = 1/x^s */
