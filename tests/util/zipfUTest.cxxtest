@@ -27,11 +27,7 @@ class zipfUTest : public CxxTest::TestSuite
 {
 public:
 
-	// Check that the generated distribution is very roughly within
-	// expected bounds. The bounds are hand-crafted guesstimates
-	// and are not based on theory, nor are precise. They're rough
-	// but workable.  With these bounds and paramters, I get about
-	// one failure of bounding out of every 10K test runs.
+	// Check that the generated distribution is normally distributed.
 	void verify(const std::vector<int>& pdf,
 	            int len, double s=1.0, double q=0.0)
 	{
@@ -51,35 +47,50 @@ public:
 			expect[i] *= 1.0 / norm;
 
 		// Also normalize the pdf.
-		double cnt = 0.0;
+		size_t cnt = 0;
 		for (int i = 1; i <len; i++)
 			cnt += pdf[i];
+		double fcnt = (double) cnt;
 
+		// Take the difference.  We expect the difference
+		// to be zero. Also adjust the variance; we expect
+		// a normal distribution.
+		double mean = 0.0;
+		double meansq = 0.0;
 		for (int i = 1; i <len; i++)
-			expect[i] -= pdf[i] / cnt;
-
-		for (int i = 1; i < 30; i++)
 		{
-			// printf("Zipf rank=%d mass=%d approx=%g\n", i, pdf[i], approx);
+			expect[i] -= pdf[i] / fcnt;
 
-			// Should have approx == 1.0, approximately.
-			TS_ASSERT_DELTA(expect[i], 0.0, 0.046);
+			// The tail of the distribution is very accurate.
+			// The head, not so much. Multiplying by sqrt seems
+			// to turn the distribution into a normal distribution.
+			expect[i] *= sqrt(i);
+
+			mean += expect[i];
+			meansq += expect[i] * expect[i];
 		}
+		mean *= 1.0 / len;
+		meansq *= 1.0 / len;
+		double rms = sqrt(meansq);
 
-		for (int i = 30; i < 50; i++)
+		// rms should be near 1/(2pi sqrt(cnt))
+		double erms = 1.0 / sqrt(2.0 * 3.14159 * fcnt);
+
+		double navg = mean*sqrt(fcnt*len);
+		double nrms = rms/erms;
+		printf("Distribution: n=%d s=%4.3f q=%4.2f cnt=%lu mean=%6.4g rms=%6.4g\n",
+			len, s, q, cnt, navg, nrms);
+
+		TS_ASSERT_LESS_THAN(navg, 2.0);
+		TS_ASSERT_DELTA(nrms, 1.0, 0.1);
+
+		// Actually test. We're going to use sigma as the max allowed
+		// deviation. For now five-sigma seems OK.
+		double sigma = 5.0;
+		for (int i = 1; i < len; i++)
 		{
-			// printf("Zipf rank=%d mass=%d approx=%g\n", i, pdf[i], approx);
-
 			// Should have approx == 1.0, approximately.
-			TS_ASSERT_DELTA(expect[i], 0.0, 0.07);
-		}
-
-		for (int i = 50; i < 150; i++)
-		{
-			// printf("Zipf rank=%d mass=%d approx=%g\n", i, pdf[i], approx);
-
-			// Should have approx == 1.0, approximately.
-			TS_ASSERT_DELTA(expect[i], 0.0, 0.11);
+			TS_ASSERT_DELTA(expect[i], 0.0, sigma*erms);
 		}
 	}
 
