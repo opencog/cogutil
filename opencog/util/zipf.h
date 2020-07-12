@@ -72,6 +72,7 @@ class zipf_distribution
 			, q(q)
 			, H_x1(H(1.5) - 1.0)
 			, H_n(H(n + 0.5))
+			, cut(1.0 - H_inv( H(1.5) - h(1.0)))
 			, dist(H_x1, H_n)
 		{}
 		void reset() {}
@@ -83,6 +84,7 @@ class zipf_distribution
 				const RealType u = dist(rng);
 				const RealType x = H_inv(u);
 				const IntType  k = clamp<IntType>(std::round(x), 1, n);
+				if (k - x <= cut) return k;
 				if (u >= H(k + 0.5) - h(k))
 					return k;
 			}
@@ -101,6 +103,7 @@ class zipf_distribution
 		RealType                                 q;     ///< Exponent
 		RealType                                 H_x1;  ///< H(x_1)
 		RealType                                 H_n;   ///< H(n)
+		RealType                                 cut;   ///< rejection cut
 		std::uniform_real_distribution<RealType> dist;  ///< [H(x_1), H(n)]
 
 		// This provides 16 decimal places of precision,
