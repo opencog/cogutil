@@ -85,7 +85,7 @@ class zipf_distribution
 			{
 				const RealType u = dist(rng);
 				const RealType x = H_inv(u);
-				const IntType  k = clamp<IntType>(std::round(x), 1, n);
+				const IntType  k = std::round(x);
 				if (k - x <= cut) return k;
 				if (u >= H(k + 0.5) - h(k))
 					return k;
@@ -111,13 +111,6 @@ class zipf_distribution
 		// This provides 16 decimal places of precision,
 		// i.e. good to (epsilon)^4 / 24 per expanions log, exp below.
 		static constexpr RealType epsilon = 2e-5;
-
-		/** Clamp x to [min, max]. */
-		template<typename T>
-		static constexpr T clamp(const T x, const T min, const T max)
-		{
-			return std::max(min, std::min(max, x));
-		}
 
 		/** (exp(x) - 1) / x */
 		static double
