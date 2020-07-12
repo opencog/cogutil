@@ -25,7 +25,11 @@ using namespace opencog;
 
 class zipfUTest : public CxxTest::TestSuite
 {
+	std::random_device rd;
+	std::mt19937 gen;
+
 public:
+	zipfUTest() : gen(rd()) {}
 
 	// Check that the generated distribution is normally distributed.
 	void verify(const std::vector<int>& pdf,
@@ -94,43 +98,41 @@ public:
 		}
 	}
 
+	// Draw from the Zipf distribution per given parameters.
+	void check_zipf(size_t ndraw, int n, double s, double q)
+	{
+		zipf_distribution<> zipf(n);
+		printf("Init distribution: n=%d s=%4.3f q=%4.2f draw=%lu\n",
+			n, s, q, ndraw);
+
+		std::vector<int> pdf;
+		pdf.resize(n+1);
+		for (int i = 0; i <= n; i++)
+			pdf[i] = 0;
+
+		for (size_t s = 0; s < ndraw; s++)
+		{
+			unsigned int draw = zipf(gen);
+			TS_ASSERT_LESS_THAN_EQUALS(1, draw);
+			TS_ASSERT_LESS_THAN_EQUALS(draw, n);
+			pdf[draw] ++;
+		}
+		verify(pdf, n, s, q);
+	}
+
 	// Test the Zipf distribution, 300 bins, for exponent s=1.
 	// This is a pretty small test, as such things go.
 	void test_zipf()
 	{
-		std::random_device rd;
-		std::mt19937 gen(rd());
+		check_zipf(1623000, 300, 1.0, 0.0);
 
-		int sz = 300;
-		zipf_distribution<> zipf(sz);
-		printf("\nzipf_distribution: done with init\n");
-
-		std::vector<int> pdf;
-		pdf.reserve(sz+1);
-		for (int i = 0; i <= sz; i++)
-			pdf[i] = 0;
-
-		for (size_t s = 0; s < 1623000; s++)
-		{
-			unsigned int draw = zipf(gen);
-			TS_ASSERT_LESS_THAN_EQUALS(0, draw);
-			TS_ASSERT_LESS_THAN_EQUALS(draw, sz);
-			pdf[draw] ++;
-		}
-		printf("Last bucket, zipf=%d\n", pdf[sz]);
-		TS_ASSERT_LESS_THAN(700, pdf[sz]);
-		TS_ASSERT_LESS_THAN(pdf[sz], 1100);
-
-		verify(pdf, sz);
+		// zipf_distribution<> zipf(sz);
 	}
 
 	// Test the Zipf distribution, 300 bins, for exponent s=1.
 	// This is a pretty small test, as such things go.
 	void test_ztable()
 	{
-		std::random_device rd;
-		std::mt19937 gen(rd());
-
 		int sz = 300;
 		zipf_table_distribution<> zipf(sz);
 		printf("\nzipf-small: done with init\n");
@@ -143,14 +145,10 @@ public:
 		for (size_t s = 0; s < 1623000; s++)
 		{
 			unsigned int draw = zipf(gen);
-			TS_ASSERT_LESS_THAN_EQUALS(0, draw);
+			TS_ASSERT_LESS_THAN_EQUALS(1, draw);
 			TS_ASSERT_LESS_THAN_EQUALS(draw, sz);
 			pdf[draw] ++;
 		}
-		printf("Last bucket, zipf-small=%d\n", pdf[sz]);
-		TS_ASSERT_LESS_THAN(700, pdf[sz]);
-		TS_ASSERT_LESS_THAN(pdf[sz], 1100);
-
 		verify(pdf, sz);
 	}
 
