@@ -96,6 +96,10 @@ public:
 			n, s, q, cnt, navg, nrms, allow);
 
 		TS_ASSERT_LESS_THAN(navg, 2.0);
+
+		// Hmm. There is some non-trivial expression for nrms
+		// that I do not know. Its close to 1.0 but seems to
+		// depend on s and depend on .. what ? log(n) ???
 		// TS_ASSERT_DELTA(nrms, 1.0, allow);
 
 		// Actually test. We're going to use sigma as the max allowed
