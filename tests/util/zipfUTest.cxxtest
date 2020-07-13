@@ -30,11 +30,11 @@ class zipfUTest : public CxxTest::TestSuite
 
 public:
 	// zipfUTest() : gen(rd()) {}
-	zipfUTest() : gen(1) {}
+	zipfUTest() : gen(2) {}
 
 	// Check that the generated distribution is normally distributed.
 	void verify(const std::vector<int>& pdf, size_t ndraw,
-	            int n, double s=1.0, double q=0.0)
+	            int n, double s, double q, double sigma)
 	{
 		int len = n + 1;
 
@@ -61,6 +61,9 @@ public:
 
 		double fcnt = (double) cnt;
 
+		// Expected standard deviation.  1/(2pi sqrt(cnt))
+		double erms = 1.0 / sqrt(2.0 * 3.14159 * fcnt);
+
 		// Take the difference.  We expect the difference
 		// to be zero. Also adjust the variance; we expect
 		// a normal distribution.
@@ -68,15 +71,24 @@ public:
 		double meansq = 0.0;
 		for (int i = 1; i <len; i++)
 		{
-			// printf("%d	%g	%g	%g\n", i, expect[i],  pdf[i]/fcnt,
-			//        expect[i] - pdf[i]/fcnt);
+// #define GRAPH
+#ifdef GRAPH
+			printf("%d	%g	%g	%g\n", i, expect[i],
+			      pdf[i]/fcnt, (expect[i] - pdf[i]/fcnt)/erms);
+#endif
 
 			expect[i] -= pdf[i] / fcnt;
 
 			// The tail of the distribution is very accurate.
 			// The head, not so much. Multiplying by sqrt seems
 			// to turn the distribution into a normal distribution.
-			expect[i] *= pow(i, 0.5*s);
+			// I don't know the theory; this seems to work, though.
+			if (abs(q) < 0.1)
+				expect[i] *= pow(i, 0.5*s);
+			else
+				expect[i] *= pow((i+q)/q, 0.5*s);
+
+			expect[i] /= erms;
 
 			mean += expect[i];
 			meansq += expect[i] * expect[i];
@@ -85,17 +97,11 @@ public:
 		meansq *= 1.0 / n;
 		double rms = sqrt(meansq);
 
-		// rms should be near 1/(2pi sqrt(cnt))
-		double erms = 1.0 / sqrt(2.0 * 3.14159 * fcnt);
-
-		double navg = mean*sqrt(fcnt*n);
-		double nrms = rms/erms;
-		double allow = sqrt(n / fcnt);
 		printf("Dist: n=%d s=%4.3f q=%4.2f cnt=%lu "
-		       "mean=%6.4g rms=%6.4g allow=%6.4g\n",
-			n, s, q, cnt, navg, nrms, allow);
+		       "mean=%6.4g rms=%5.3g\n",
+			n, s, q, cnt, mean, rms);
 
-		TS_ASSERT_LESS_THAN(navg, 2.0);
+		TS_ASSERT_LESS_THAN(mean, 2.0);
 
 		// Hmm. There is some non-trivial expression for nrms
 		// that I do not know. Its close to 1.0 but seems to
@@ -105,18 +111,17 @@ public:
 		// Actually test. We're going to use sigma as the max allowed
 		// deviation. So six-sigma allows the unit tests to pass most
 		// of the time.
-		double sigma = 7.0;
 		for (int i = 1; i < len; i++)
 		{
 			// Should have approx == 1.0, approximately.
-			TS_ASSERT_DELTA(expect[i], 0.0, sigma*erms);
+			TS_ASSERT_DELTA(expect[i], 0.0, sigma);
 		}
 	}
 
 	// Draw from the Zipf distribution per given parameters.
-	void check_zipf(size_t ndraw, int n, double s, double q)
+	void check_zipf(size_t ndraw, int n, double s, double q, double sigma)
 	{
-		zipf_distribution<> zipf(n, s);
+		zipf_distribution<> zipf(n, s, q);
 		printf("Init rejection-inversion: n=%d s=%4.3f q=%4.2f draw=%lu\n",
 			n, s, q, ndraw);
 
@@ -133,7 +138,7 @@ public:
 			pdf[draw] = pdf[draw] + 1;
 		}
 
-		verify(pdf, ndraw, n, s, q);
+		verify(pdf, ndraw, n, s, q, sigma);
 		printf("\n");
 	}
 
@@ -157,7 +162,7 @@ public:
 			TS_ASSERT_LESS_THAN_EQUALS(draw, n);
 			pdf[draw] ++;
 		}
-		verify(pdf, ndraw, n, s, q);
+		verify(pdf, ndraw, n, s, q, 6.0);
 		printf("\n");
 	}
 
@@ -166,25 +171,79 @@ public:
 	void test_zipf()
 	{
 		printf("\n");
-		check_zipf(1623, 30, 1.0, 0.0);
-		check_zipf(1623000, 300, 1.0, 0.0);
-		check_zipf(1623000, 3000, 1.0, 0.0);
-		check_zipf(5623000, 30000, 1.0, 0.0);
 
-		check_zipf(1623000, 30, 0.2, 0.0);
-		check_zipf(1623000, 30, 0.6, 0.0);
-		check_zipf(1623000, 30, 0.8, 0.0);
-		check_zipf(1623000, 30, 1.2, 0.0);
-		check_zipf(1623000, 30, 1.5, 0.0);
-		check_zipf(1623000, 30, 2.0, 0.0);
-		check_zipf(1623000, 30, 3.1, 0.0);
-		check_zipf(1623000, 30, 4.5, 0.0);
-		check_zipf(1623000, 30, 8.2, 0.0);
+		// Six sigma should do the trick.
+		double sigma = 7.0;
 
-		check_zipf(1623000, 3021, 0.01, 0.0);
-		check_zipf(1623000, 3070, 0.53, 0.0);
-		check_zipf(1623000, 2999, 1.03, 0.0);
-		check_zipf(2623010, 213, 2.31, 0.0);
+		check_zipf(1623, 30, 1.0, 0.0, sigma);
+		check_zipf(1623000, 300, 1.0, 0.0, sigma);
+		check_zipf(1623000, 3000, 1.0, 0.0, sigma);
+		check_zipf(5623000, 30000, 1.0, 0.0, sigma);
+
+		check_zipf(1623000, 30, 0.2, 0.0, sigma);
+		check_zipf(1623000, 30, 0.6, 0.0, sigma);
+		check_zipf(1623000, 30, 0.8, 0.0, sigma);
+		check_zipf(1623000, 30, 1.2, 0.0, sigma);
+		check_zipf(1623000, 30, 1.5, 0.0, sigma);
+		check_zipf(1623000, 30, 2.0, 0.0, sigma);
+		check_zipf(1623000, 30, 3.1, 0.0, sigma);
+		check_zipf(1623000, 30, 4.5, 0.0, sigma);
+		check_zipf(1623000, 30, 8.2, 0.0, sigma);
+
+		check_zipf(1623000, 30, 1.0 - 1e-3, 0.0, sigma);
+		check_zipf(1623000, 30, 1.0 - 1e-6, 0.0, sigma);
+		check_zipf(1623000, 30, 1.0 - 1e-9, 0.0, sigma);
+		check_zipf(1623000, 30, 1.0 - 1e-12, 0.0, sigma);
+
+		check_zipf(1623000, 30, 1.0 + 1e-3, 0.0, sigma);
+		check_zipf(1623000, 30, 1.0 + 1e-6, 0.0, sigma);
+		check_zipf(1623000, 30, 1.0 + 1e-9, 0.0, sigma);
+		check_zipf(1623000, 30, 1.0 + 1e-12, 0.0, sigma);
+
+		check_zipf(1623000, 3021, 0.01, 0.0, sigma);
+		check_zipf(1623000, 3070, 0.53, 0.0, sigma);
+		check_zipf(1623000, 2999, 1.03, 0.0, sigma);
+		check_zipf(2623010, 213, 2.31, 0.0, sigma);
+
+		check_zipf(1623000, 30, 1, -0.49, sigma);
+		check_zipf(1623000, 30, 1, -0.4, sigma);
+		check_zipf(1623000, 30, 1, -0.1, sigma);
+		check_zipf(1623000, 30, 1,  0.1, sigma);
+
+		check_zipf(1623000, 30, 1.1, -0.49, sigma);
+		check_zipf(1623000, 30, 1.1, -0.4, sigma);
+		check_zipf(1623000, 30, 1.1, -0.1, sigma);
+		check_zipf(1623000, 30, 1.1,  0.1, sigma);
+
+		// I don't understand the theory of the error
+		// distribution for q != 0 but this seems to work.
+		check_zipf(1623000, 30, 1.2, 0.4, 1.2*sigma);
+		check_zipf(1623000, 30, 1.5, 0.4, 1.5*sigma);
+		check_zipf(1623000, 30, 2.0, 0.4, 1.5*sigma);
+		check_zipf(1623000, 30, 3.1, 0.4, 3.1*sigma);
+		check_zipf(1623000, 30, 4.5, 0.4, 4.5*sigma);
+		check_zipf(1623000, 30, 8.2, 0.4, 8.2*sigma);
+
+		check_zipf(1623000, 30, 1.2, 4, sigma);
+		check_zipf(1623000, 30, 1.5, 4, sigma);
+		check_zipf(1623000, 30, 2.0, 4, sigma);
+		check_zipf(1623000, 30, 3.1, 4, sigma);
+		check_zipf(1623000, 30, 4.5, 4, 9.5);
+		check_zipf(1623000, 30, 8.2, 4, 24.0);
+
+		check_zipf(1623000, 30, 1.2, 44, sigma);
+		check_zipf(1623000, 30, 1.5, 44, sigma);
+		check_zipf(1623000, 30, 2.0, 44, sigma);
+		check_zipf(1623000, 30, 3.1, 44, sigma);
+		check_zipf(1623000, 30, 4.5, 44, sigma);
+		check_zipf(1623000, 30, 8.2, 44, sigma);
+
+		check_zipf(1623000, 30, 1.2, 44e4, sigma);
+		check_zipf(1623000, 30, 1.5, 44e4, sigma);
+		check_zipf(1623000, 30, 2.0, 44e4, sigma);
+		check_zipf(1623000, 30, 3.1, 44e4, sigma);
+		check_zipf(1623000, 30, 4.5, 44e4, sigma);
+		check_zipf(1623000, 30, 8.2, 44e4, sigma);
 
 		check_table(1623000, 310, 1.0, 0.0);
 		check_table(1623000, 312, 1.2, 0.0);

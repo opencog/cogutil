@@ -76,15 +76,15 @@ class zipf_distribution
 			, _s(s)
 			, _q(q)
 			, oms(1.0-s)
-			, H_x1(H(1.5) - 1.0)
+			, spole(abs(oms) < epsilon)
+			, rvs(spole ? 0.0 : 1.0/oms)
+			, H_x1(H(1.5) - h(1.0))
 			, H_n(H(n + 0.5))
 			, cut(1.0 - H_inv(H(1.5) - h(1.0)))
 			, dist(H_x1, H_n)
 		{
-			// Non-zero q not implemented. See note below for how
-			// to fix this. Basically, port the srfi-194 code to C++.
-			if (0.0 != q)
-				throw std::runtime_error("not implemented");
+			if (-0.5 >= q)
+				throw std::runtime_error("Range error: Parameter q must be greater than -0.5!");
 		}
 		void reset() {}
 
@@ -112,13 +112,15 @@ class zipf_distribution
 
 
 	private:
-		IntType                                  n;     ///< Number of elements
-		RealType                                 _s;    ///< Exponent
-		RealType                                 _q;    ///< Deformation
-		RealType                                 oms;   ///< 1-s
-		RealType                                 H_x1;  ///< H(x_1)
-		RealType                                 H_n;   ///< H(n)
-		RealType                                 cut;   ///< rejection cut
+		IntType    n;     ///< Number of elements
+		RealType   _s;    ///< Exponent
+		RealType   _q;    ///< Deformation
+		RealType   oms;   ///< 1-s
+		bool       spole; ///< true if s near 1.0
+		RealType   rvs;   ///< 1/(1-s)
+		RealType   H_x1;  ///< H(x_1)
+		RealType   H_n;   ///< H(n)
+		RealType   cut;   ///< rejection cut
 		std::uniform_real_distribution<RealType> dist;  ///< [H(x_1), H(n)]
 
 		// This provides 16 decimal places of precision,
@@ -129,25 +131,26 @@ class zipf_distribution
 		static double
 		expxm1bx(const double x)
 		{
-			return (std::abs(x) > epsilon)
-			    ? std::expm1(x) / x
-			    : (1.0 + x/2.0 * (1.0 + x/3.0 * (1.0 + x/4.0)));
+			if (std::abs(x) > epsilon)
+				return std::expm1(x) / x;
+			return (1.0 + x/2.0 * (1.0 + x/3.0 * (1.0 + x/4.0)));
 		}
 
 		/** log(1 + x) / x */
 		static RealType
 		log1pxbx(const RealType x)
 		{
-			return (std::abs(x) > epsilon)
-			    ? std::log1p(x) / x
-			    : 1.0 - x * ((1/2.0) - x * ((1/3.0) - x * (1/4.0)));
+			if (std::abs(x) > epsilon)
+				return std::log1p(x) / x;
+			return 1.0 - x * ((1/2.0) - x * ((1/3.0) - x * (1/4.0)));
 		}
 
-		/** That hat function h(x) = 1/x^s */
+		/**
+		 * The hat function h(x) = 1/(x+q)^s
+		 */
 		const RealType h(const RealType x)
 		{
-			// return std::exp(-_s * std::log(x));
-			return std::pow(x, -_s);
+			return std::pow(x + _q, -_s);
 		}
 
 		/**
@@ -156,33 +159,40 @@ class zipf_distribution
 		 * and if s==1 then
 		 *     H(x) = log(x+q) - log(1+q)
 		 *
-		 * Note the numerator is one less than in the paper order to
-		 * work with all positive s.
+		 * Note that the numerator is one less than in the paper
+		 * order to work with all s. Unfortunately, the naive
+		 * implementation of the above hits numerical underflow
+		 * when q is larger than 10 or so, so we split into
+		 * different regimes.
+		 *
+		 * When q != 0, we shift back to what the paper defined:
+		 *    H(x) = (x+q)^{1-s} / (1-s)
+		 * and for q != 0 and also s==1, use
+		 *    H(x) = [exp{(1-s) log(x+q)} - 1] / (1-s)
 		 */
 		const RealType H(const RealType x)
 		{
-			// TODO XXX FIXME - implement for non-zero q.
-			// I already did this, but ... there were problems.
-			// The big problem is that the expxm1bx() trick fails
-			// for `q` larger than 5 r 10, because of numeric
-			// underflow. To avoid underflow, we have to use
-			// std::pow(a,b) directly, instead of exp(b*log(a))
-			// .. which then has issues at s near 1.0... argh.
-			// A working implementation can be found in srfi-194.
-			// See
-			// https://github.com/scheme-requests-for-implementation/srfi-194/
-			// and port the code there.
-			const RealType log_x = std::log(x);
-			return expxm1bx(oms * log_x) * log_x;
+			if (not spole)
+				return std::pow(x + _q, oms) / oms;
+
+			const RealType log_xpq = std::log(x + _q);
+			return log_xpq * expxm1bx(oms * log_xpq);
 		}
 
 		/**
 		 * The inverse function of H(x).
 		 *    H^{-1}(y) = [(1-s)y + (1+q)^{1-s}]^{1/(1-s)} - q
+		 * Same convergence issues as above; two regimes.
+		 *
+		 * For s far away from 1.0 use the paper version
+		 *    H^{-1}(y) = -q + (y(1-s))^{1/(1-s)}
 		 */
-		const RealType H_inv(const RealType x)
+		const RealType H_inv(const RealType y)
 		{
-			return std::exp(log1pxbx(oms*x) * x);
+			if (not spole)
+				return std::pow(y * oms, rvs) - _q;
+
+			return std::exp(y * log1pxbx(oms * y)) - _q;
 		}
 };
 
