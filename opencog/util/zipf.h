@@ -31,7 +31,8 @@ namespace opencog {
  *  @{
  */
 
-/** Zipf-like random distribution.
+/**
+ * Zipf (Zeta) random distribution.
  *
  * Implementation taken from drobilla's May 24, 2017 answer to
  * https://stackoverflow.com/questions/9983239/how-to-generate-zipf-distributed-numbers-efficiently
