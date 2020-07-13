@@ -76,7 +76,7 @@ class zipf_distribution
 			, _s(s)
 			, _q(q)
 			, oms(1.0-s)
-			, H_x1(H(1.5) - 1.0)
+			, H_x1(H(1.5) - h(1.0))
 			, H_n(H(n + 0.5))
 			, cut(1.0 - H_inv(H(1.5) - h(1.0)))
 			, dist(H_x1, H_n)
@@ -146,7 +146,6 @@ class zipf_distribution
 		/** That hat function h(x) = 1/x^s */
 		const RealType h(const RealType x)
 		{
-			// return std::exp(-_s * std::log(x));
 			return std::pow(x, -_s);
 		}
 
