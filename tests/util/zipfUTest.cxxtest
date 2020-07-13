@@ -71,8 +71,11 @@ public:
 		double meansq = 0.0;
 		for (int i = 1; i <len; i++)
 		{
-			// printf("%d	%g	%g	%g\n", i, expect[i],
-			//       pdf[i]/fcnt, (expect[i] - pdf[i]/fcnt)/erms);
+// #define GRAPH
+#ifdef GRAPH
+			printf("%d	%g	%g	%g\n", i, expect[i],
+			      pdf[i]/fcnt, (expect[i] - pdf[i]/fcnt)/erms);
+#endif
 
 			expect[i] -= pdf[i] / fcnt;
 
@@ -198,12 +201,45 @@ public:
 		check_zipf(1623000, 2999, 1.03, 0.0, sigma);
 		check_zipf(2623010, 213, 2.31, 0.0, sigma);
 
-		check_zipf(1623000, 30, 1.2, 0.4, sigma);
-		check_zipf(1623000, 30, 1.5, 0.4, sigma);
-		check_zipf(1623000, 30, 2.0, 0.4, sigma);
-		check_zipf(1623000, 30, 3.1, 0.4, sigma);
-		check_zipf(1623000, 30, 4.5, 0.4, sigma);
-		check_zipf(1623000, 30, 8.2, 0.4, sigma);
+		check_zipf(1623000, 30, 1, -0.49, sigma);
+		check_zipf(1623000, 30, 1, -0.4, sigma);
+		check_zipf(1623000, 30, 1, -0.1, sigma);
+		check_zipf(1623000, 30, 1,  0.1, sigma);
+
+		check_zipf(1623000, 30, 1.1, -0.49, sigma);
+		check_zipf(1623000, 30, 1.1, -0.4, sigma);
+		check_zipf(1623000, 30, 1.1, -0.1, sigma);
+		check_zipf(1623000, 30, 1.1,  0.1, sigma);
+
+		// I don't understand the theory of the error
+		// distribution for q != 0 but this seems to work.
+		check_zipf(1623000, 30, 1.2, 0.4, 1.2*sigma);
+		check_zipf(1623000, 30, 1.5, 0.4, 1.5*sigma);
+		check_zipf(1623000, 30, 2.0, 0.4, 1.5*sigma);
+		check_zipf(1623000, 30, 3.1, 0.4, 3.1*sigma);
+		check_zipf(1623000, 30, 4.5, 0.4, 4.5*sigma);
+		check_zipf(1623000, 30, 8.2, 0.4, 8.2*sigma);
+
+		check_zipf(1623000, 30, 1.2, 4, 1.2*sigma);
+		check_zipf(1623000, 30, 1.5, 4, 1.5*sigma);
+		check_zipf(1623000, 30, 2.0, 4, 1.5*sigma);
+		check_zipf(1623000, 30, 3.1, 4, 3.1*sigma);
+		check_zipf(1623000, 30, 4.5, 4, 4.5*sigma);
+		check_zipf(1623000, 30, 8.2, 4, 8.2*sigma);
+
+		check_zipf(1623000, 30, 1.2, 44, 1.2*sigma);
+		check_zipf(1623000, 30, 1.5, 44, 1.5*sigma);
+		check_zipf(1623000, 30, 2.0, 44, 1.5*sigma);
+		check_zipf(1623000, 30, 3.1, 44, 3.1*sigma);
+		check_zipf(1623000, 30, 4.5, 44, 4.5*sigma);
+		check_zipf(1623000, 30, 8.2, 44, 8.2*sigma);
+
+		check_zipf(1623000, 30, 1.2, 44e4, 1.2*sigma);
+		check_zipf(1623000, 30, 1.5, 44e4, 1.5*sigma);
+		check_zipf(1623000, 30, 2.0, 44e4, 1.5*sigma);
+		check_zipf(1623000, 30, 3.1, 44e4, 3.1*sigma);
+		check_zipf(1623000, 30, 4.5, 44e4, 4.5*sigma);
+		check_zipf(1623000, 30, 8.2, 44e4, 8.2*sigma);
 
 		check_table(1623000, 310, 1.0, 0.0);
 		check_table(1623000, 312, 1.2, 0.0);

@@ -82,7 +82,10 @@ class zipf_distribution
 			, H_n(H(n + 0.5))
 			, cut(1.0 - H_inv(H(1.5) - h(1.0)))
 			, dist(H_x1, H_n)
-		{}
+		{
+			if (-0.5 >= q)
+				throw std::runtime_error("Range error: Parameter q must be greater than -0.5!");
+		}
 		void reset() {}
 
 		IntType operator()(std::mt19937& rng)
