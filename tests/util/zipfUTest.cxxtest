@@ -29,8 +29,8 @@ class zipfUTest : public CxxTest::TestSuite
 	std::mt19937 gen;
 
 public:
-	// zipfUTest() : gen(rd()) {}
-	zipfUTest() : gen(1) {}
+	zipfUTest() : gen(rd()) {}
+	// zipfUTest() : gen(1) {}
 
 	// Check that the generated distribution is normally distributed.
 	void verify(const std::vector<int>& pdf, size_t ndraw,
@@ -82,7 +82,11 @@ public:
 			// The tail of the distribution is very accurate.
 			// The head, not so much. Multiplying by sqrt seems
 			// to turn the distribution into a normal distribution.
-			expect[i] *= pow(i, 0.5*s);
+			// I don't know the theory; this seems to work, though.
+			if (abs(q) < 0.1)
+				expect[i] *= pow(i, 0.5*s);
+			else
+				expect[i] *= pow((i+q)/q, 0.5*s);
 
 			expect[i] /= erms;
 
@@ -220,26 +224,26 @@ public:
 		check_zipf(1623000, 30, 4.5, 0.4, 4.5*sigma);
 		check_zipf(1623000, 30, 8.2, 0.4, 8.2*sigma);
 
-		check_zipf(1623000, 30, 1.2, 4, 1.2*sigma);
-		check_zipf(1623000, 30, 1.5, 4, 1.5*sigma);
-		check_zipf(1623000, 30, 2.0, 4, 1.5*sigma);
-		check_zipf(1623000, 30, 3.1, 4, 3.1*sigma);
-		check_zipf(1623000, 30, 4.5, 4, 4.5*sigma);
-		check_zipf(1623000, 30, 8.2, 4, 8.2*sigma);
+		check_zipf(1623000, 30, 1.2, 4, sigma);
+		check_zipf(1623000, 30, 1.5, 4, sigma);
+		check_zipf(1623000, 30, 2.0, 4, sigma);
+		check_zipf(1623000, 30, 3.1, 4, sigma);
+		check_zipf(1623000, 30, 4.5, 4, 9.5);
+		check_zipf(1623000, 30, 8.2, 4, 18.0);
 
-		check_zipf(1623000, 30, 1.2, 44, 1.2*sigma);
-		check_zipf(1623000, 30, 1.5, 44, 1.5*sigma);
-		check_zipf(1623000, 30, 2.0, 44, 1.5*sigma);
-		check_zipf(1623000, 30, 3.1, 44, 3.1*sigma);
-		check_zipf(1623000, 30, 4.5, 44, 4.5*sigma);
-		check_zipf(1623000, 30, 8.2, 44, 8.2*sigma);
+		check_zipf(1623000, 30, 1.2, 44, sigma);
+		check_zipf(1623000, 30, 1.5, 44, sigma);
+		check_zipf(1623000, 30, 2.0, 44, sigma);
+		check_zipf(1623000, 30, 3.1, 44, sigma);
+		check_zipf(1623000, 30, 4.5, 44, sigma);
+		check_zipf(1623000, 30, 8.2, 44, sigma);
 
-		check_zipf(1623000, 30, 1.2, 44e4, 1.2*sigma);
-		check_zipf(1623000, 30, 1.5, 44e4, 1.5*sigma);
-		check_zipf(1623000, 30, 2.0, 44e4, 1.5*sigma);
-		check_zipf(1623000, 30, 3.1, 44e4, 3.1*sigma);
-		check_zipf(1623000, 30, 4.5, 44e4, 4.5*sigma);
-		check_zipf(1623000, 30, 8.2, 44e4, 8.2*sigma);
+		check_zipf(1623000, 30, 1.2, 44e4, sigma);
+		check_zipf(1623000, 30, 1.5, 44e4, sigma);
+		check_zipf(1623000, 30, 2.0, 44e4, sigma);
+		check_zipf(1623000, 30, 3.1, 44e4, sigma);
+		check_zipf(1623000, 30, 4.5, 44e4, sigma);
+		check_zipf(1623000, 30, 8.2, 44e4, sigma);
 
 		check_table(1623000, 310, 1.0, 0.0);
 		check_table(1623000, 312, 1.2, 0.0);
