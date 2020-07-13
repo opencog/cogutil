@@ -34,7 +34,7 @@ public:
 
 	// Check that the generated distribution is normally distributed.
 	void verify(const std::vector<int>& pdf, size_t ndraw,
-	            int n, double s=1.0, double q=0.0)
+	            int n, double s, double q)
 	{
 		int len = n + 1;
 
@@ -61,6 +61,9 @@ public:
 
 		double fcnt = (double) cnt;
 
+		// Expected standard deviation.  1/(2pi sqrt(cnt))
+		double erms = 1.0 / sqrt(2.0 * 3.14159 * fcnt);
+
 		// Take the difference.  We expect the difference
 		// to be zero. Also adjust the variance; we expect
 		// a normal distribution.
@@ -68,8 +71,8 @@ public:
 		double meansq = 0.0;
 		for (int i = 1; i <len; i++)
 		{
-			// printf("%d	%g	%g	%g\n", i, expect[i],  pdf[i]/fcnt,
-			//        expect[i] - pdf[i]/fcnt);
+			// printf("%d	%g	%g	%g\n", i, expect[i],
+			//       pdf[i]/fcnt, (expect[i] - pdf[i]/fcnt)/erms);
 
 			expect[i] -= pdf[i] / fcnt;
 
@@ -78,6 +81,8 @@ public:
 			// to turn the distribution into a normal distribution.
 			expect[i] *= pow(i, 0.5*s);
 
+			expect[i] /= erms;
+
 			mean += expect[i];
 			meansq += expect[i] * expect[i];
 		}
@@ -85,17 +90,12 @@ public:
 		meansq *= 1.0 / n;
 		double rms = sqrt(meansq);
 
-		// rms should be near 1/(2pi sqrt(cnt))
-		double erms = 1.0 / sqrt(2.0 * 3.14159 * fcnt);
-
-		double navg = mean*sqrt(fcnt*n);
-		double nrms = rms/erms;
-		double allow = sqrt(n / fcnt);
+		double allow = 1.0;
 		printf("Dist: n=%d s=%4.3f q=%4.2f cnt=%lu "
 		       "mean=%6.4g rms=%6.4g allow=%6.4g\n",
-			n, s, q, cnt, navg, nrms, allow);
+			n, s, q, cnt, mean, rms, allow);
 
-		TS_ASSERT_LESS_THAN(navg, 2.0);
+		TS_ASSERT_LESS_THAN(mean, 2.0);
 
 		// Hmm. There is some non-trivial expression for nrms
 		// that I do not know. Its close to 1.0 but seems to
@@ -109,14 +109,14 @@ public:
 		for (int i = 1; i < len; i++)
 		{
 			// Should have approx == 1.0, approximately.
-			TS_ASSERT_DELTA(expect[i], 0.0, sigma*erms);
+			TS_ASSERT_DELTA(expect[i], 0.0, sigma);
 		}
 	}
 
 	// Draw from the Zipf distribution per given parameters.
 	void check_zipf(size_t ndraw, int n, double s, double q)
 	{
-		zipf_distribution<> zipf(n, s);
+		zipf_distribution<> zipf(n, s, q);
 		printf("Init rejection-inversion: n=%d s=%4.3f q=%4.2f draw=%lu\n",
 			n, s, q, ndraw);
 
@@ -185,6 +185,8 @@ public:
 		check_zipf(1623000, 3070, 0.53, 0.0);
 		check_zipf(1623000, 2999, 1.03, 0.0);
 		check_zipf(2623010, 213, 2.31, 0.0);
+
+		check_zipf(1623000, 30, 1.2, 0.4);
 
 		check_table(1623000, 310, 1.0, 0.0);
 		check_table(1623000, 312, 1.2, 0.0);
