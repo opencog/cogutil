@@ -34,7 +34,7 @@ public:
 
 	// Check that the generated distribution is normally distributed.
 	void verify(const std::vector<int>& pdf, size_t ndraw,
-	            int n, double s, double q)
+	            int n, double s, double q, double sigma)
 	{
 		int len = n + 1;
 
@@ -90,10 +90,9 @@ public:
 		meansq *= 1.0 / n;
 		double rms = sqrt(meansq);
 
-		double allow = 1.0;
 		printf("Dist: n=%d s=%4.3f q=%4.2f cnt=%lu "
-		       "mean=%6.4g rms=%6.4g allow=%6.4g\n",
-			n, s, q, cnt, mean, rms, allow);
+		       "mean=%6.4g rms=%5.3g\n",
+			n, s, q, cnt, mean, rms);
 
 		TS_ASSERT_LESS_THAN(mean, 2.0);
 
@@ -105,7 +104,6 @@ public:
 		// Actually test. We're going to use sigma as the max allowed
 		// deviation. So six-sigma allows the unit tests to pass most
 		// of the time.
-		double sigma = 7.0;
 		for (int i = 1; i < len; i++)
 		{
 			// Should have approx == 1.0, approximately.
@@ -114,7 +112,7 @@ public:
 	}
 
 	// Draw from the Zipf distribution per given parameters.
-	void check_zipf(size_t ndraw, int n, double s, double q)
+	void check_zipf(size_t ndraw, int n, double s, double q, double sigma)
 	{
 		zipf_distribution<> zipf(n, s, q);
 		printf("Init rejection-inversion: n=%d s=%4.3f q=%4.2f draw=%lu\n",
@@ -133,7 +131,7 @@ public:
 			pdf[draw] = pdf[draw] + 1;
 		}
 
-		verify(pdf, ndraw, n, s, q);
+		verify(pdf, ndraw, n, s, q, sigma);
 		printf("\n");
 	}
 
@@ -157,7 +155,7 @@ public:
 			TS_ASSERT_LESS_THAN_EQUALS(draw, n);
 			pdf[draw] ++;
 		}
-		verify(pdf, ndraw, n, s, q);
+		verify(pdf, ndraw, n, s, q, 6.0);
 		printf("\n");
 	}
 
@@ -166,27 +164,46 @@ public:
 	void test_zipf()
 	{
 		printf("\n");
-		check_zipf(1623, 30, 1.0, 0.0);
-		check_zipf(1623000, 300, 1.0, 0.0);
-		check_zipf(1623000, 3000, 1.0, 0.0);
-		check_zipf(5623000, 30000, 1.0, 0.0);
 
-		check_zipf(1623000, 30, 0.2, 0.0);
-		check_zipf(1623000, 30, 0.6, 0.0);
-		check_zipf(1623000, 30, 0.8, 0.0);
-		check_zipf(1623000, 30, 1.2, 0.0);
-		check_zipf(1623000, 30, 1.5, 0.0);
-		check_zipf(1623000, 30, 2.0, 0.0);
-		check_zipf(1623000, 30, 3.1, 0.0);
-		check_zipf(1623000, 30, 4.5, 0.0);
-		check_zipf(1623000, 30, 8.2, 0.0);
+		// Six sigma should do the trick.
+		double sigma = 7.0;
 
-		check_zipf(1623000, 3021, 0.01, 0.0);
-		check_zipf(1623000, 3070, 0.53, 0.0);
-		check_zipf(1623000, 2999, 1.03, 0.0);
-		check_zipf(2623010, 213, 2.31, 0.0);
+		check_zipf(1623, 30, 1.0, 0.0, sigma);
+		check_zipf(1623000, 300, 1.0, 0.0, sigma);
+		check_zipf(1623000, 3000, 1.0, 0.0, sigma);
+		check_zipf(5623000, 30000, 1.0, 0.0, sigma);
 
-		check_zipf(1623000, 30, 1.2, 0.4);
+		check_zipf(1623000, 30, 0.2, 0.0, sigma);
+		check_zipf(1623000, 30, 0.6, 0.0, sigma);
+		check_zipf(1623000, 30, 0.8, 0.0, sigma);
+		check_zipf(1623000, 30, 1.2, 0.0, sigma);
+		check_zipf(1623000, 30, 1.5, 0.0, sigma);
+		check_zipf(1623000, 30, 2.0, 0.0, sigma);
+		check_zipf(1623000, 30, 3.1, 0.0, sigma);
+		check_zipf(1623000, 30, 4.5, 0.0, sigma);
+		check_zipf(1623000, 30, 8.2, 0.0, sigma);
+
+		check_zipf(1623000, 30, 1.0 - 1e-3, 0.0, sigma);
+		check_zipf(1623000, 30, 1.0 - 1e-6, 0.0, sigma);
+		check_zipf(1623000, 30, 1.0 - 1e-9, 0.0, sigma);
+		check_zipf(1623000, 30, 1.0 - 1e-12, 0.0, sigma);
+
+		check_zipf(1623000, 30, 1.0 + 1e-3, 0.0, sigma);
+		check_zipf(1623000, 30, 1.0 + 1e-6, 0.0, sigma);
+		check_zipf(1623000, 30, 1.0 + 1e-9, 0.0, sigma);
+		check_zipf(1623000, 30, 1.0 + 1e-12, 0.0, sigma);
+
+		check_zipf(1623000, 3021, 0.01, 0.0, sigma);
+		check_zipf(1623000, 3070, 0.53, 0.0, sigma);
+		check_zipf(1623000, 2999, 1.03, 0.0, sigma);
+		check_zipf(2623010, 213, 2.31, 0.0, sigma);
+
+		check_zipf(1623000, 30, 1.2, 0.4, sigma);
+		check_zipf(1623000, 30, 1.5, 0.4, sigma);
+		check_zipf(1623000, 30, 2.0, 0.4, sigma);
+		check_zipf(1623000, 30, 3.1, 0.4, sigma);
+		check_zipf(1623000, 30, 4.5, 0.4, sigma);
+		check_zipf(1623000, 30, 8.2, 0.4, sigma);
 
 		check_table(1623000, 310, 1.0, 0.0);
 		check_table(1623000, 312, 1.2, 0.0);
