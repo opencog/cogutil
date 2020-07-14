@@ -33,7 +33,7 @@ public:
 	zipfUTest() : gen(2) {}
 
 	// Check that the generated distribution is normally distributed.
-	void verify(const std::vector<int>& pdf, size_t ndraw,
+	void verify(const std::vector<size_t>& pdf, size_t ndraw,
 	            int n, double s, double q, double sigma)
 	{
 		int len = n + 1;
@@ -42,7 +42,7 @@ public:
 		double norm = 0.0;
 		std::vector<double> expect;
 		expect.resize(len);
-		for (int i = 1; i <len; i++)
+		for (int i = len-1; 0<i; i--)
 		{
 			double term = std::pow (i+q, -s);
 			expect[i] = term;
@@ -116,6 +116,26 @@ public:
 			// Should have approx == 1.0, approximately.
 			TS_ASSERT_DELTA(expect[i], 0.0, sigma);
 		}
+
+// #define PRINT_ERROR_DISTRIBUTION
+#ifdef PRINT_ERROR_DISTRIBUTION
+		// Dump the error distribution to a file, for graphing.
+		std::vector<int> edf;
+		edf.resize(200);
+		for (int i = 0; i <200; i++)
+			edf[i] = 0;
+
+		for (int i = 1; i < len; i++)
+		{
+			int bin = (100.0 * expect[i] / 6.0) + 100;
+			if (0>bin) bin=0;
+			if (199 < bin) bin=199;
+			edf[bin] += 1;
+		}
+		printf ("\n#The error distribution:\n#\n");
+		for (int i = 0; i <200; i++)
+			printf("%d	%f	%d\n", i, 6.0*(i-100.0)/100.0, edf[i]);
+#endif // PRINT_ERROR_DISTRIBUTION
 	}
 
 	// Draw from the Zipf distribution per given parameters.
@@ -125,7 +145,7 @@ public:
 		printf("Init rejection-inversion: n=%d s=%4.3f q=%4.2f draw=%lu\n",
 			n, s, q, ndraw);
 
-		std::vector<int> pdf;
+		std::vector<size_t> pdf;
 		pdf.resize(n+1);
 		for (int i = 0; i <= n; i++)
 			pdf[i] = 0;
@@ -150,7 +170,7 @@ public:
 		printf("Init table: n=%d s=%4.3f q=%4.2f draw=%lu\n",
 			n, s, q, ndraw);
 
-		std::vector<int> pdf;
+		std::vector<size_t> pdf;
 		pdf.resize(n+1);
 		for (int i = 0; i <= n; i++)
 			pdf[i] = 0;
