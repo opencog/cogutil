@@ -1,6 +1,12 @@
 # -------------------------------------------------
 # Library configuration
 
+#This fixes linker issue on OS X
+#See https://cmake.org/cmake/help/v3.0/policy/CMP0042.html
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	set(CMAKE_MACOSX_RPATH 1)
+endif()
+
 # Small hack to handle unixes that use "/usr/lib64" instead of
 # "/usr/lib" as the default lib path on 64 bit archs.
 #
@@ -24,9 +30,3 @@ SET(CMAKE_SKIP_BUILD_RPATH FALSE)
 SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib/opencog")
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
-#This fixes linker issue on OS X
-#See https://cmake.org/cmake/help/v3.0/policy/CMP0042.html
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-	set(CMAKE_MACOSX_RPATH 1)
-endif()
