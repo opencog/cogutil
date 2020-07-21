@@ -1,6 +1,12 @@
 # -------------------------------------------------
 # Library configuration
 
+#This fixes linker issue on OS X
+#See https://cmake.org/cmake/help/v3.0/policy/CMP0042.html
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	set(CMAKE_MACOSX_RPATH 1)
+endif()
+
 # Small hack to handle unixes that use "/usr/lib64" instead of
 # "/usr/lib" as the default lib path on 64 bit archs.
 #
