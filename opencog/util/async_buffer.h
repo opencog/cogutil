@@ -67,7 +67,7 @@ namespace opencog
  * queued up before processing starts.
  *
  * In other respects, it provides the same advantages that the
- * async_caller calss does: The buffering helps, if each call
+ * async_caller class does: The buffering helps, if each call
  * takes a long time to run, or if it blocks waiting on I/O.  By
  * running in a different thread, it allows the current thread to
  * return immediately.  It also enables concurrency: a large number of
@@ -77,12 +77,13 @@ namespace opencog
  * You'd think that there would be some BOOST function for this, but
  * there doesn't seem to be ...
  *
- * This class allows a simple implmentation of a thread-safe, multi-
- * threaded de-duplicating write buffer. It is currently used by the
- * persistant storage class, to write atoms out to disk.
+ * This class allows a simple implementation of a thread-safe, multi-
+ * threaded de-duplicating write buffer. It is currently used by
+ * several different storage classes, to write atoms out to disk,
+ * or to do async network I/O.
  *
  * What actually happens is this: The given elements are placed in a
- * set (in a thread-safe manner -- thie enqueue function can be safely
+ * set (in a thread-safe manner -- the enqueue function can be safely
  * called from multiple threads.) This set is then serviced and
  * drained by a pool of active threads, which remove the elements, and
  * call the method on each one.
@@ -103,9 +104,9 @@ namespace opencog
  * instance somewhere, and the overhead of creating threads is to be
  * avoided. (For example, temporary AtomTables used during evaluation.)
  *
- * Note that setting the number of threads to the number of hardware
- * cores is not necessarily a good idea; there are situations where
- * this seems to slow the system down.
+ * Setting the number of threads equal to the number of hardware cores
+ * is probably a bad idea; there are situations where this seems to slow
+ * the system down.
  */
 template<typename Writer, typename Element>
 class async_buffer
