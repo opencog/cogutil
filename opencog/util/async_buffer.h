@@ -107,6 +107,22 @@ namespace opencog
  * Setting the number of threads equal to the number of hardware cores
  * is probably a bad idea; there are situations where this seems to slow
  * the system down.
+ *
+ * Issues: This is a good but minimalist implementation, and thus has a
+ * few issues.  One is that the barrier() call is stronger than it needs
+ * to be, and thus can deadlock if called within a writer. All that the
+ * barrier() call needs to do is to be a fence, ensuring that everything
+ * before really is before everything after. It didn't need to actually
+ * drain everything.
+ *
+ * Another issue is that barrier() is ever-so-slightly racey; there's a
+ * small window where it could return, even though the last writer has
+ * not completed.
+ *
+ * Another issue is that the assorted loops to drain queues use
+ * spin-loops and usleeps. I think this is mostly harmless, but is
+ * impure, and should be replaced by CV's. Doing so becomes much easier
+ * once C++20 is widely available, as it has CV's on std::atomic ints.
  */
 template<typename Writer, typename Element>
 class async_buffer
@@ -318,11 +334,10 @@ void async_buffer<Writer, Element>::stop_writer_threads()
 /// adding at a high rate, this call might not return for a long time;
 /// it might never return! There is no gaurantee of forward progress!
 ///
-/// Even if there are no other threads adding to the queue, the code
-/// here is slightly racey; a writer could still be busy, even though
-/// this returns. This is because there is a small window in write_loop,
-/// between the dequeue, and the busy_writer increment. I guess we
-/// should fix this...
+/// This does not guarantee that all writers have completed; only that
+/// the queue is empty. Thus, unlike barrier(), this is safe to call
+/// from within a writer that may want to add to the queue, whereas
+/// barrier() will deadlock.
 template<typename Writer, typename Element>
 void async_buffer<Writer, Element>::flush()
 {
@@ -331,7 +346,7 @@ void async_buffer<Writer, Element>::flush()
 	// std::this_thread::sleep_for(std::chrono::microseconds(10));
 	usleep(10);
 	_flush_count++;
-	while (0 < _store_set.size() or 0 < _busy_writers);
+	while (0 < _store_set.size());
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		// usleep(1000);
@@ -343,9 +358,11 @@ void async_buffer<Writer, Element>::flush()
 /// Drain the set.  Synchronizing.
 ///
 /// This forces a drain of the pending work-set. It prevents other
-/// threads from adding to the set, while this is being done.
-/// Forward progress is guaranteed: this method will return in finite
-/// time.
+/// threads from adding to the set, while this is being done. It
+/// will wait not only for the pending work-queue to empty, but also
+/// for all writers to have completed.
+///
+/// Warning: This will deadlock if it is called from within a writer!
 ///
 /// Caution: the code here is slightly racey; a writer could still be
 /// busy, even though this returns. This is because there is a small
