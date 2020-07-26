@@ -97,23 +97,33 @@ public:
     };
 
     /// Insert the Element into the set; copies the item.
-    void insert(const Element& item)
+    /// Return true if the item was not already in the set,
+    /// else return false.
+    bool insert(const Element& item)
     {
         std::unique_lock<std::mutex> lock(the_mutex);
         if (is_canceled) throw Canceled();
+        size_t before = the_set.size();
         the_set.insert(item);
+        size_t after = the_set.size();
         lock.unlock();
         the_cond.notify_one();
+        return before < after;
     }
 
     /// Insert the Element into the set, by moving it.
-    void insert(Element&& item)
+    /// Return true if the item was not already in the set,
+    /// else return false.
+    bool insert(Element&& item)
     {
         std::unique_lock<std::mutex> lock(the_mutex);
         if (is_canceled) throw Canceled();
+        size_t before = the_set.size();
         the_set.insert(std::move(item));
+        size_t after = the_set.size();
         lock.unlock();
         the_cond.notify_one();
+        return before < after;
     }
 
     /// Return true if the set is empty at this instant in time.
@@ -158,7 +168,7 @@ public:
     }
 
     /// Get an item from the set. Block if the set is empty.
-    /// The element is remove from the set, before this returns.
+    /// The element is removed from the set, before this returns.
     void get(Element& value)
     {
         std::unique_lock<std::mutex> lock(the_mutex);
