@@ -145,6 +145,9 @@ class async_buffer
 		void stop_writer_threads();
 		void write_loop();
 
+		void do_insert(const Element&);
+		void drain();
+
 	public:
 		async_buffer(Writer*, void (Writer::*)(const Element&), int nthreads=4);
 		~async_buffer();
@@ -327,23 +330,40 @@ void async_buffer<Writer, Element>::stop_writer_threads()
 
 /// Drain the set.  Non-synchronizing.
 ///
+/// This will deadlock, if called from a writer thread.
+/// Thus, not for public use.
+template<typename Writer, typename Element>
+void async_buffer<Writer, Element>::drain()
+{
+	bool save_stall = _stall_writers;
+	_stall_writers = false;
+	_flush_count++;
+
+	// XXX TODO - when C++20 becomes widely available,
+	// replace this loop by _pending.wait(0)
+	while (0 < _pending)
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		// usleep(1000);
+	}
+
+	_stall_writers = save_stall;
+}
+
+/// Drain the set.  Non-synchronizing.
+///
 /// This is NOT synchronizing! It does NOT prevent other threads from
 /// concurrently adding to the queue! Thus, if these other threads are
 /// adding at a high rate, this call might not return for a long time;
 /// it might never return! There is no guarantee of forward progress!
 ///
-/// This does not guarantee that all writers have completed; only that
-/// the queue is empty. Thus, unlike barrier(), this is safe to call
-/// from within a writer that may want to add to the queue, whereas
-/// barrier() will deadlock.
 template<typename Writer, typename Element>
 void async_buffer<Writer, Element>::flush()
 {
 	bool save_stall = _stall_writers;
 	_stall_writers = false;
-	// std::this_thread::sleep_for(std::chrono::microseconds(10));
-	usleep(10);
 	_flush_count++;
+
 	while (0 < _store_set.size())
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -356,28 +376,28 @@ void async_buffer<Writer, Element>::flush()
 /// Drain the set.  Synchronizing.
 ///
 /// This forces a drain of the pending work-set. It prevents other
-/// threads from adding to the set, while this is being done. It
-/// will wait not only for the pending work-queue to empty, but also
+/// threads from adding to the set, while the drain is being performed.
+/// It will wait not only for the pending work-queue to empty, but also
 /// for all writers to have completed.
-///
-/// Warning: This will deadlock if it is called from within a writer!
 ///
 template<typename Writer, typename Element>
 void async_buffer<Writer, Element>::barrier()
 {
 	std::unique_lock<std::mutex> lock(_enqueue_mutex);
-	bool save_stall = _stall_writers;
-	_stall_writers = false;
-	_flush_count++;
 
-	// XXX TODO - when C++20 becomes widely available,
-	// replace this loop by _pending.wait(0)
-	while (0 < _pending)
+	// We cannot poll _pending in a writer thread, as it will never
+	// drop to zero, resulting in a deadlock.
+	std::thread::id tid = std::this_thread::get_id();
+	for (const auto& th : _write_threads)
 	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		// usleep(1000);
+		if (th.get_id() == tid)
+		{
+			flush();
+			return;
+		}
 	}
-	_stall_writers = save_stall;
+
+	drain();
 }
 
 /// A single write thread. Reads elements from set, and invokes the
@@ -411,6 +431,21 @@ void async_buffer<Writer, Element>::write_loop()
 
 
 /* ================================================================ */
+
+/// Insert, no matter what. Private, unsafe for external use.
+template<typename Writer, typename Element>
+void async_buffer<Writer, Element>::do_insert(const Element& elt)
+{
+	_pending ++;
+	bool inserted = _store_set.insert(elt);
+	_item_count++;
+	if (not inserted)
+	{
+		_duplicate_count++;
+		_pending --;
+	}
+}
+
 /**
  * Insert the given element.  Returns immediately after inserting.
  * Thread-safe: this may be called concurrently from multiple threads.
@@ -438,20 +473,28 @@ void async_buffer<Writer, Element>::insert(const Element& elt)
 		return;
 	}
 
+	// Must not honor the enqueue mutex when in a writer thread,
+	// as otherwise a deadlock will result.
+	bool need_insert = true;
+	std::thread::id tid = std::this_thread::get_id();
+	for (const auto& th : _write_threads)
+	{
+		if (th.get_id() == tid)
+		{
+			do_insert(elt);
+			need_insert = false;
+			break;
+		}
+	}
+
 	// The _store_set.insert(elt) does not need a lock, itself; its
 	// perfectly thread-safe. However, the flush barrier does need to
 	// be able to halt everyone else from enqueing more stuff, so we
 	// do need to use a lock for that.
+	if (need_insert)
 	{
 		std::unique_lock<std::mutex> lock(_enqueue_mutex);
-		_pending ++;
-		bool inserted = _store_set.insert(elt);
-		_item_count++;
-		if (not inserted)
-		{
-			_duplicate_count++;
-			_pending --;
-		}
+		do_insert(elt);
 	}
 
 	// If the writer threads are falling behind, mitigate.
