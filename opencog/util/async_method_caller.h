@@ -123,6 +123,8 @@ class async_caller
 		void stop_writer_threads();
 		void write_loop();
 
+		void drain();
+
 	public:
 		async_caller(Writer*, void (Writer::*)(const Element&), int nthreads=4);
 		~async_caller();
@@ -278,6 +280,25 @@ void async_caller<Writer, Element>::stop_writer_threads()
 }
 
 
+/// Drain the queue.  Non-synchronizing.
+///
+/// This will deadlock, if called from a writer thread.
+/// Thus, not for public use.
+template<typename Writer, typename Element>
+void async_caller<Writer, Element>::drain()
+{
+	_flush_count++;
+
+	// XXX TODO - when C++20 becomes widely available,
+	// replace this loop by _pending.wait(0)
+	while (0 < _pending)
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		// usleep(1000);
+	}
+}
+
+
 /// Drain the pending queue.  Non-synchronizing.
 ///
 /// This is NOT synchronizing! It does NOT prevent other threads from
@@ -288,8 +309,6 @@ void async_caller<Writer, Element>::stop_writer_threads()
 template<typename Writer, typename Element>
 void async_caller<Writer, Element>::flush_queue()
 {
-	std::this_thread::sleep_for(std::chrono::microseconds(10));
-	// usleep(10);
 	_flush_count++;
 	while (0 < _store_queue.size())
 	{
@@ -301,7 +320,10 @@ void async_caller<Writer, Element>::flush_queue()
 /// Drain the pending queue.  Synchronizing.
 ///
 /// This forces a drain of the pending work queue. It prevents other
-/// threads from adding to the queue, while this is being done.
+/// threads from adding to the queue, while the drain is being performed.
+/// It will wait not only for the pending work-queue to empty, but also
+/// for all writers to have completed.
+///
 /// Forward progress is guaranteed: this method will return in finite
 /// time.
 ///
@@ -309,15 +331,19 @@ template<typename Writer, typename Element>
 void async_caller<Writer, Element>::barrier()
 {
 	std::unique_lock<std::mutex> lock(_enqueue_mutex);
-	_flush_count++;
 
-	// XXX TODO - when C++20 becomes widely available,
-	// replace this loop by _pending.wait(0)
-	while (0 < _pending)
+	// We cannot poll _pending in a writer thread, as it will never
+	// drop to zero, resulting in a deadlock.
+	std::thread::id tid = std::this_thread::get_id();
+	for (const auto& th : _write_threads)
 	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		// usleep(1000);
+		if (th.get_id() == tid)
+		{
+			flush_queue();
+			return;
+		}
 	}
+	drain();
 }
 
 /// A single write thread. Reads elements from queue, and invokes the
@@ -372,10 +398,27 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 		return;
 	}
 
+	// Must not honor the enqueue mutex when in a writer thread,
+	// as otherwise a deadlock will result.
+	bool need_insert = true;
+	std::thread::id tid = std::this_thread::get_id();
+	for (const auto& th : _write_threads)
+	{
+		if (th.get_id() == tid)
+		{
+			_pending ++;
+			_store_queue.push(elt);
+			_item_count++;
+			need_insert = false;
+			break;
+		}
+	}
+
 	// The _store_queue.push(elt) does not need a lock, itself; its
 	// perfectly thread-safe. However, the flush barrier does need to
 	// be able to halt everyone else from enqueing more stuff, so we
 	// do need to use a lock for that.
+	if (need_insert)
 	{
 		std::unique_lock<std::mutex> lock(_enqueue_mutex);
 		_pending ++;
