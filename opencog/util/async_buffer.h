@@ -344,7 +344,7 @@ void async_buffer<Writer, Element>::flush()
 	// std::this_thread::sleep_for(std::chrono::microseconds(10));
 	usleep(10);
 	_flush_count++;
-	while (0 < _store_set.size());
+	while (0 < _store_set.size())
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		// usleep(1000);
@@ -372,7 +372,7 @@ void async_buffer<Writer, Element>::barrier()
 
 	// XXX TODO - when C++20 becomes widely available,
 	// replace this loop by _pending.wait(0)
-	while (0 < _pending);
+	while (0 < _pending)
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		// usleep(1000);
