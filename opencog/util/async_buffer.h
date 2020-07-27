@@ -3,7 +3,7 @@
  * Multi-threaded asynchronous write buffer.
  *
  * HISTORY:
- * Copyright (c) 2013, 2015, 2017 Linas Vepstas <linasvepstas@gmail.com>
+ * Copyright (c) 2013, 2015, 2017, 2020 Linas Vepstas <linasvepstas@gmail.com>
  *
  * LICENSE:
  * This program is free software; you can redistribute it and/or modify
@@ -294,7 +294,7 @@ void async_buffer<Writer, Element>::stop_writer_threads()
 	_stopping_writers = true;
 
 	// Spin a while, until the writer threads are (mostly) done.
-	while (not _store_set.is_empty())
+	while (0 < _pending)
 	{
 		// std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		usleep(1000);
