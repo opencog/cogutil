@@ -3,7 +3,7 @@
  * Multi-threaded asynchronous write buffer.
  *
  * HISTORY:
- * Copyright (c) 2013, 2015, 2017 Linas Vepstas <linasvepstas@gmail.com>
+ * Copyright (c) 2013, 2015, 2017, 2020 Linas Vepstas <linasvepstas@gmail.com>
  *
  * LICENSE:
  * This program is free software; you can redistribute it and/or modify
@@ -67,7 +67,7 @@ namespace opencog
  * queued up before processing starts.
  *
  * In other respects, it provides the same advantages that the
- * async_caller calss does: The buffering helps, if each call
+ * async_caller class does: The buffering helps, if each call
  * takes a long time to run, or if it blocks waiting on I/O.  By
  * running in a different thread, it allows the current thread to
  * return immediately.  It also enables concurrency: a large number of
@@ -77,12 +77,13 @@ namespace opencog
  * You'd think that there would be some BOOST function for this, but
  * there doesn't seem to be ...
  *
- * This class allows a simple implmentation of a thread-safe, multi-
- * threaded de-duplicating write buffer. It is currently used by the
- * persistant storage class, to write atoms out to disk.
+ * This class allows a simple implementation of a thread-safe, multi-
+ * threaded de-duplicating write buffer. It is currently used by
+ * several different storage classes, to write atoms out to disk,
+ * or to do async network I/O.
  *
  * What actually happens is this: The given elements are placed in a
- * set (in a thread-safe manner -- thie enqueue function can be safely
+ * set (in a thread-safe manner -- the enqueue function can be safely
  * called from multiple threads.) This set is then serviced and
  * drained by a pool of active threads, which remove the elements, and
  * call the method on each one.
@@ -103,9 +104,21 @@ namespace opencog
  * instance somewhere, and the overhead of creating threads is to be
  * avoided. (For example, temporary AtomTables used during evaluation.)
  *
- * Note that setting the number of threads to the number of hardware
- * cores is not necessarily a good idea; there are situations where
- * this seems to slow the system down.
+ * Setting the number of threads equal to the number of hardware cores
+ * is probably a bad idea; there are situations where this seems to slow
+ * the system down.
+ *
+ * Issues: This is a good but minimalist implementation, and thus has a
+ * few issues.  One is that the barrier() call is stronger than it needs
+ * to be, and thus can deadlock if called within a writer. All that the
+ * barrier() call needs to do is to be a fence, ensuring that everything
+ * before really is before everything after. It didn't need to actually
+ * drain everything.
+ *
+ * Another issue is that the assorted loops to drain queues use
+ * spin-loops and usleeps. I think this is mostly harmless, but is
+ * impure, and should be replaced by CV's. Doing so becomes much easier
+ * once C++20 is widely available, as it has CV's on std::atomic ints.
  */
 template<typename Writer, typename Element>
 class async_buffer
@@ -116,6 +129,7 @@ class async_buffer
 		std::mutex _write_mutex;
 		std::mutex _enqueue_mutex;
 		std::atomic<unsigned long> _busy_writers;
+		std::atomic<unsigned long> _pending;
 		size_t _high_watermark;
 		size_t _low_watermark;
 
@@ -130,6 +144,9 @@ class async_buffer
 		void start_writer_thread();
 		void stop_writer_threads();
 		void write_loop();
+
+		void do_insert(const Element&);
+		void drain();
 
 	public:
 		async_buffer(Writer*, void (Writer::*)(const Element&), int nthreads=4);
@@ -157,7 +174,7 @@ class async_buffer
 		std::atomic<unsigned long> _drain_concurrent;
 
 		unsigned long get_busy_writers() const { return _busy_writers; }
-		unsigned long get_size() const { return _store_set.size(); }
+		unsigned long get_size() const { return _pending; }
 		unsigned long get_high_watermark() const { return _high_watermark; }
 		unsigned long get_low_watermark() const { return _low_watermark; }
 		bool stalling() const { return _stall_writers; }
@@ -187,6 +204,7 @@ async_buffer<Writer, Element>::async_buffer(Writer* wr,
 	_stopping_writers = false;
 	_thread_count = 0;
 	_busy_writers = 0;
+	_pending = 0;
 	_stall_writers = false;
 	_in_drain = false;
 
@@ -279,7 +297,7 @@ void async_buffer<Writer, Element>::stop_writer_threads()
 	_stopping_writers = true;
 
 	// Spin a while, until the writer threads are (mostly) done.
-	while (not _store_set.is_empty())
+	while (0 < _pending)
 	{
 		// std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		usleep(1000);
@@ -312,25 +330,41 @@ void async_buffer<Writer, Element>::stop_writer_threads()
 
 /// Drain the set.  Non-synchronizing.
 ///
+/// This will deadlock, if called from a writer thread.
+/// Thus, not for public use.
+template<typename Writer, typename Element>
+void async_buffer<Writer, Element>::drain()
+{
+	bool save_stall = _stall_writers;
+	_stall_writers = false;
+	_flush_count++;
+
+	// XXX TODO - when C++20 becomes widely available,
+	// replace this loop by _pending.wait(0)
+	while (0 < _pending)
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		// usleep(1000);
+	}
+
+	_stall_writers = save_stall;
+}
+
+/// Drain the set.  Non-synchronizing.
+///
 /// This is NOT synchronizing! It does NOT prevent other threads from
 /// concurrently adding to the queue! Thus, if these other threads are
 /// adding at a high rate, this call might not return for a long time;
-/// it might never return! There is no gaurantee of forward progress!
+/// it might never return! There is no guarantee of forward progress!
 ///
-/// Even if there are no other threads adding to the queue, the code
-/// here is slightly racey; a writer could still be busy, even though
-/// this returns. This is because there is a small window in write_loop,
-/// between the dequeue, and the busy_writer increment. I guess we
-/// should fix this...
 template<typename Writer, typename Element>
 void async_buffer<Writer, Element>::flush()
 {
 	bool save_stall = _stall_writers;
 	_stall_writers = false;
-	// std::this_thread::sleep_for(std::chrono::microseconds(10));
-	usleep(10);
 	_flush_count++;
-	while (0 < _store_set.size() or 0 < _busy_writers);
+
+	while (0 < _store_set.size())
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		// usleep(1000);
@@ -342,28 +376,28 @@ void async_buffer<Writer, Element>::flush()
 /// Drain the set.  Synchronizing.
 ///
 /// This forces a drain of the pending work-set. It prevents other
-/// threads from adding to the set, while this is being done.
-/// Forward progress is guaranteed: this method will return in finite
-/// time.
+/// threads from adding to the set, while the drain is being performed.
+/// It will wait not only for the pending work-queue to empty, but also
+/// for all writers to have completed.
 ///
-/// Caution: the code here is slightly racey; a writer could still be
-/// busy, even though this returns. This is because there is a small
-/// window in write_loop, between the dequeue, and the busy_writer
-/// increment. I guess we should fix this...
-
 template<typename Writer, typename Element>
 void async_buffer<Writer, Element>::barrier()
 {
 	std::unique_lock<std::mutex> lock(_enqueue_mutex);
-	bool save_stall = _stall_writers;
-	_stall_writers = false;
-	_flush_count++;
-	while (0 < _store_set.size() or 0 < _busy_writers);
+
+	// We cannot poll _pending in a writer thread, as it will never
+	// drop to zero, resulting in a deadlock.
+	std::thread::id tid = std::this_thread::get_id();
+	for (const auto& th : _write_threads)
 	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		// usleep(1000);
+		if (th.get_id() == tid)
+		{
+			flush();
+			return;
+		}
 	}
-	_stall_writers = save_stall;
+
+	drain();
 }
 
 /// A single write thread. Reads elements from set, and invokes the
@@ -382,9 +416,10 @@ void async_buffer<Writer, Element>::write_loop()
 			}
 
 			Element elt = _store_set.value_get();
-			_busy_writers ++; // Bad -- window after get returns, before increment!
+			_busy_writers ++;
 			(_writer->*_do_write)(elt);
 			_busy_writers --;
+			_pending --;
 		}
 	}
 	catch (typename concurrent_set<Element>::Canceled& e)
@@ -396,6 +431,21 @@ void async_buffer<Writer, Element>::write_loop()
 
 
 /* ================================================================ */
+
+/// Insert, no matter what. Private, unsafe for external use.
+template<typename Writer, typename Element>
+void async_buffer<Writer, Element>::do_insert(const Element& elt)
+{
+	_pending ++;
+	bool inserted = _store_set.insert(elt);
+	_item_count++;
+	if (not inserted)
+	{
+		_duplicate_count++;
+		_pending --;
+	}
+}
+
 /**
  * Insert the given element.  Returns immediately after inserting.
  * Thread-safe: this may be called concurrently from multiple threads.
@@ -423,16 +473,28 @@ void async_buffer<Writer, Element>::insert(const Element& elt)
 		return;
 	}
 
+	// Must not honor the enqueue mutex when in a writer thread,
+	// as otherwise a deadlock will result.
+	bool need_insert = true;
+	std::thread::id tid = std::this_thread::get_id();
+	for (const auto& th : _write_threads)
+	{
+		if (th.get_id() == tid)
+		{
+			do_insert(elt);
+			need_insert = false;
+			break;
+		}
+	}
+
 	// The _store_set.insert(elt) does not need a lock, itself; its
 	// perfectly thread-safe. However, the flush barrier does need to
 	// be able to halt everyone else from enqueing more stuff, so we
 	// do need to use a lock for that.
+	if (need_insert)
 	{
 		std::unique_lock<std::mutex> lock(_enqueue_mutex);
-		size_t before = _store_set.size();
-		_store_set.insert(elt);
-		_item_count++;
-		if (before == _store_set.size()) _duplicate_count++;
+		do_insert(elt);
 	}
 
 	// If the writer threads are falling behind, mitigate.

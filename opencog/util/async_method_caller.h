@@ -3,7 +3,7 @@
  * Multi-threaded asynchronous write queue.
  *
  * HISTORY:
- * Copyright (c) 2013, 2015 Linas Vepstas <linasvepstas@gmail.com>
+ * Copyright (c) 2013, 2015, 2020 Linas Vepstas <linasvepstas@gmail.com>
  *
  * LICENSE:
  * This program is free software; you can redistribute it and/or modify
@@ -63,7 +63,7 @@ namespace opencog
  * class, to write atoms out to disk.
  *
  * What actually happens is this: The given elements are placed on a
- * queue (in a thread-safe manner -- thie enqueue function can be safely
+ * queue (in a thread-safe manner -- the enqueue function can be safely
  * called from multiple threads.) This queue is then serviced and
  * drained by a pool of active threads, which dequeue the elements, and
  * call the method on each one.
@@ -84,9 +84,21 @@ namespace opencog
  * instance somewhere, and the overhead of creating threads is to be
  * avoided. (For example, temporary AtomTables used during evaluation.)
  *
- * Note that setting the number of threads to the number of hardware
- * cores is not necessarily a good idea; there are situations where
- * this seems to slow the system down.
+ * Setting the number of threads equal to the number of hardware cores
+ * is probably a bad idea; there are situations where this seems to slow
+ * the system down.
+ *
+ * Issues: This is a good but minimalist implementation, and thus has a
+ * few issues.  One is that the barrier() call is stronger than it needs
+ * to be, and thus can deadlock if called within a writer. All that the
+ * barrier() call needs to do is to be a fence, ensuring that everything
+ * before really is before everything after. It didn't need to actually
+ * drain everything.
+ *
+ * Another issue is that the assorted loops to drain queues use
+ * spin-loops and usleeps. I think this is mostly harmless, but is
+ * impure, and should be replaced by CV's. Doing so becomes much easier
+ * once C++20 is widely available, as it has CV's on std::atomic ints.
  */
 template<typename Writer, typename Element>
 class async_caller
@@ -97,6 +109,7 @@ class async_caller
 		std::mutex _write_mutex;
 		std::mutex _enqueue_mutex;
 		std::atomic<unsigned long> _busy_writers;
+		std::atomic<unsigned long> _pending;
 		size_t _high_watermark;
 		size_t _low_watermark;
 
@@ -109,6 +122,8 @@ class async_caller
 		void start_writer_thread();
 		void stop_writer_threads();
 		void write_loop();
+
+		void drain();
 
 	public:
 		async_caller(Writer*, void (Writer::*)(const Element&), int nthreads=4);
@@ -133,7 +148,7 @@ class async_caller
 		std::atomic<unsigned long> _drain_concurrent;
 
 		unsigned long get_busy_writers() const { return _busy_writers; }
-		unsigned long get_queue_size() const { return _store_queue.size(); }
+		unsigned long get_queue_size() const { return _pending; }
 		unsigned long get_high_watermark() const { return _high_watermark; }
 		unsigned long get_low_watermark() const { return _low_watermark; }
 		void clear_stats();
@@ -161,6 +176,7 @@ async_caller<Writer, Element>::async_caller(Writer* wr,
 	_stopping_writers = false;
 	_thread_count = 0;
 	_busy_writers = 0;
+	_pending = 0;
 	_in_drain = false;
 
 	_high_watermark = DEFAULT_HIGH_WATER_MARK;
@@ -233,7 +249,7 @@ void async_caller<Writer, Element>::stop_writer_threads()
 	_stopping_writers = true;
 
 	// Spin a while, until the writer threads are (mostly) done.
-	while (not _store_queue.is_empty())
+	while (0 < _pending)
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		// usleep(1000);
@@ -264,6 +280,25 @@ void async_caller<Writer, Element>::stop_writer_threads()
 }
 
 
+/// Drain the queue.  Non-synchronizing.
+///
+/// This will deadlock, if called from a writer thread.
+/// Thus, not for public use.
+template<typename Writer, typename Element>
+void async_caller<Writer, Element>::drain()
+{
+	_flush_count++;
+
+	// XXX TODO - when C++20 becomes widely available,
+	// replace this loop by _pending.wait(0)
+	while (0 < _pending)
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		// usleep(1000);
+	}
+}
+
+
 /// Drain the pending queue.  Non-synchronizing.
 ///
 /// This is NOT synchronizing! It does NOT prevent other threads from
@@ -271,18 +306,11 @@ void async_caller<Writer, Element>::stop_writer_threads()
 /// adding at a high rate, this call might not return for a long time;
 /// it might never return! There is no gaurantee of forward progress!
 ///
-/// Even if there are no other threads adding to the queue, the code
-/// here is slightly racey; a writer could still be busy, even though
-/// this returns. This is because there is a small window in write_loop,
-/// between the dequeue, and the busy_writer increment. I guess we
-/// should fix this...
 template<typename Writer, typename Element>
 void async_caller<Writer, Element>::flush_queue()
 {
-	std::this_thread::sleep_for(std::chrono::microseconds(10));
-	// usleep(10);
 	_flush_count++;
-	while (0 < _store_queue.size() or 0 < _busy_writers)
+	while (0 < _store_queue.size())
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		// usleep(1000);
@@ -292,25 +320,30 @@ void async_caller<Writer, Element>::flush_queue()
 /// Drain the pending queue.  Synchronizing.
 ///
 /// This forces a drain of the pending work queue. It prevents other
-/// threads from adding to the queue, while this is being done.
+/// threads from adding to the queue, while the drain is being performed.
+/// It will wait not only for the pending work-queue to empty, but also
+/// for all writers to have completed.
+///
 /// Forward progress is guaranteed: this method will return in finite
 /// time.
 ///
-/// Caution: the code here is slightly racey; a writer could still be
-/// busy, even though this returns. This is because there is a small
-/// window in write_loop, between the dequeue, and the busy_writer
-/// increment. I guess we should fix this...
-
 template<typename Writer, typename Element>
 void async_caller<Writer, Element>::barrier()
 {
 	std::unique_lock<std::mutex> lock(_enqueue_mutex);
-	_flush_count++;
-	while (0 < _store_queue.size() or 0 < _busy_writers)
+
+	// We cannot poll _pending in a writer thread, as it will never
+	// drop to zero, resulting in a deadlock.
+	std::thread::id tid = std::this_thread::get_id();
+	for (const auto& th : _write_threads)
 	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		// usleep(1000);
+		if (th.get_id() == tid)
+		{
+			flush_queue();
+			return;
+		}
 	}
+	drain();
 }
 
 /// A single write thread. Reads elements from queue, and invokes the
@@ -323,9 +356,10 @@ void async_caller<Writer, Element>::write_loop()
 		while (true)
 		{
 			Element elt = _store_queue.value_pop();
-			_busy_writers ++; // Bad -- window after pop returns, before increment!
+			_busy_writers ++;
 			(_writer->*_do_write)(elt);
 			_busy_writers --;
+			_pending --;
 		}
 	}
 	catch (typename concurrent_queue<Element>::Canceled& e)
@@ -364,12 +398,30 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 		return;
 	}
 
+	// Must not honor the enqueue mutex when in a writer thread,
+	// as otherwise a deadlock will result.
+	bool need_insert = true;
+	std::thread::id tid = std::this_thread::get_id();
+	for (const auto& th : _write_threads)
+	{
+		if (th.get_id() == tid)
+		{
+			_pending ++;
+			_store_queue.push(elt);
+			_item_count++;
+			need_insert = false;
+			break;
+		}
+	}
+
 	// The _store_queue.push(elt) does not need a lock, itself; its
 	// perfectly thread-safe. However, the flush barrier does need to
 	// be able to halt everyone else from enqueing more stuff, so we
 	// do need to use a lock for that.
+	if (need_insert)
 	{
 		std::unique_lock<std::mutex> lock(_enqueue_mutex);
+		_pending ++;
 		_store_queue.push(elt);
 		_item_count++;
 	}
