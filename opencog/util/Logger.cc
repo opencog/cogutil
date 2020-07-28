@@ -147,8 +147,7 @@ std::map<std::string, Logger::LogWriter*> Logger::_loggers;
 Logger::~Logger()
 {
     // Do NOT destroy/delete the LogWriter; other logger instances
-    // might be using it! Just drain it's write queue.
-    if (_log_writer) _log_writer->flush();
+    // might be using it! Do not touch it; it may no longer exist.
     _log_writer = nullptr;
 }
 
