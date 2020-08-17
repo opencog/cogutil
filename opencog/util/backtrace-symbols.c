@@ -115,7 +115,7 @@ static void find_address_in_section(bfd *abfd, asection *section, void *data)
 
     if (spot->found) return;
 
-#ifdef bfd_section_flags
+#ifndef bfd_get_section_flags
     #define NEW_BFD_API 1
 #endif
 #ifdef NEW_BFD_API
