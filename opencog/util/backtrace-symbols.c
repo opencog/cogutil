@@ -127,12 +127,12 @@ static void find_address_in_section(bfd *abfd, asection *section, void *data)
     size = bfd_section_size(section);
     if (spot->pc >= vma + size) return;
 #else
-    if ((bfd_get_section_flags(abfd, section) & SEC_ALLOC) == 0) return;
+    if ((bfd_section_flags(section) & SEC_ALLOC) == 0) return;
 
-    vma = bfd_get_section_vma(abfd, section);
+    vma = bfd_section_vma(section);
     if (spot->pc < vma) return;
 
-    size = bfd_section_size(abfd, section);
+    size = bfd_section_size(section);
     if (spot->pc >= vma + size) return;
 #endif
     spot->found = bfd_find_nearest_line(abfd, section, spot->syms, spot->pc - vma,
