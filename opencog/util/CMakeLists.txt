@@ -10,6 +10,9 @@ ELSE (APPLE)
 	SET(APPLE_STRNDUP_FILES)
 ENDIF (APPLE)
 
+include(CheckSymbolExists)
+include(CheckCSourceCompiles)
+
 # The below are used to automatically find module load paths
 ADD_DEFINITIONS(
    -DCMAKE_INSTALL_PREFIX="\\"${CMAKE_INSTALL_PREFIX}\\""
