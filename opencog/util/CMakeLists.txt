@@ -111,6 +111,27 @@ IF (HAVE_BFD AND HAVE_IBERTY)
 		)
 	endif()
 
+	# Check if bfd_section_vma takes one or two arguments.
+	check_c_source_compiles(
+		"#include <bfd.h>
+ 		int main(int argc, char** argv) {
+ 			asection *sec = malloc(sizeof(*sec));
+ 			bfd_section_vma(sec);
+ 			free(sec);
+ 			return 0;
+ 		}"
+		HAVE_1_ARG_BFD_SECTION_VMA
+	)
+	if(HAVE_1_ARG_BFD_SECTION_VMA)
+		add_compile_definitions(
+			HAVE_1_ARG_BFD_SECTION_VMA
+		)
+	else()
+		add_compile_definitions(
+			HAVE_2_ARG_BFD_SECTION_VMA
+		)
+	endif()
+
 	INCLUDE_DIRECTORIES(${IBERTY_INCLUDE_DIR})
 	TARGET_LINK_LIBRARIES(cogutil
 		${BFD_LIBRARY}

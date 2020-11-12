@@ -124,7 +124,13 @@ static void find_address_in_section(bfd *abfd, asection *section, void *data)
 #endif
 
 #ifdef HAVE_DECL_BFD_SECTION_VMA
+    #ifdef HAVE_1_ARG_BFD_SECTION_VMA
     vma = bfd_section_vma(section);
+    #elif defined HAVE_2_ARG_BFD_SECTION_VMA
+    vma = bfd_section_vma(abfd, section);
+    #else
+    #error "Unsupported BFD API"
+    #endif
 #elif defined HAVE_DECL_BFD_GET_SECTION_VMA
     vma = bfd_get_section_vma(abfd, section);
 #else
