@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <set>
 #include <boost/lexical_cast.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <algorithm>
 
@@ -274,6 +274,8 @@ Set set_symmetric_difference(const Set& s1, const Set& s2) {
 template<typename It, typename Pred, typename Out>
 Out n_way_partition(It begin, It end, const Pred p, int n, Out out)
 {
+	using namespace boost::placeholders;
+
 	// could be made more efficient if needed
 	for (int i = 0;i < n - 1;++i)
 		*out++ = begin = std::partition(begin, end, boost::bind(p, _1) == i);
