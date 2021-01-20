@@ -100,10 +100,10 @@ ENDIF (CYGWIN)
 SET(Boost_USE_STATIC_LIBS OFF)
 SET(Boost_USE_MULTITHREADED ON)
 # The minimum boost version required for building.
-SET(MIN_BOOST 1.46)
+SET(MIN_BOOST 1.60)
 
 # Required boost packages
-# 1.46 is minimum for required filesystem support
+# 1.60 is minimum for required filesystem support
 FIND_PACKAGE(Boost ${MIN_BOOST} COMPONENTS filesystem program_options system thread REQUIRED)
 
 IF (Boost_FOUND)
