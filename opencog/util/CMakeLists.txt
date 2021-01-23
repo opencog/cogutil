@@ -10,6 +10,9 @@ ELSE (APPLE)
 	SET(APPLE_STRNDUP_FILES)
 ENDIF (APPLE)
 
+include(CheckSymbolExists)
+include(CheckCSourceCompiles)
+
 # The below are used to automatically find module load paths
 ADD_DEFINITIONS(
    -DCMAKE_INSTALL_PREFIX="\\"${CMAKE_INSTALL_PREFIX}\\""
@@ -59,6 +62,76 @@ TARGET_LINK_LIBRARIES(cogutil
 )
 
 IF (HAVE_BFD AND HAVE_IBERTY)
+	check_symbol_exists(bfd_get_section_flags "bfd.h" HAVE_DECL_BFD_GET_SECTION_FLAGS)
+	check_symbol_exists(bfd_section_flags "bfd.h" HAVE_DECL_BFD_SECTION_FLAGS)
+
+	check_symbol_exists(bfd_get_section_vma "bfd.h" HAVE_DECL_BFD_GET_SECTION_VMA)
+	check_symbol_exists(bfd_section_vma "bfd.h" HAVE_DECL_BFD_SECTION_VMA)
+
+	if(HAVE_DECL_BFD_GET_SECTION_FLAGS)
+		add_compile_definitions(
+			HAVE_DECL_BFD_GET_SECTION_FLAGS
+		)
+	endif()
+	if(HAVE_DECL_BFD_SECTION_FLAGS)
+		add_compile_definitions(
+			HAVE_DECL_BFD_SECTION_FLAGS
+		)
+	endif()
+	if(HAVE_DECL_BFD_GET_SECTION_VMA)
+		add_compile_definitions(
+			HAVE_DECL_BFD_GET_SECTION_VMA
+		)
+	endif()
+	if(HAVE_DECL_BFD_SECTION_VMA)
+		add_compile_definitions(
+			HAVE_DECL_BFD_SECTION_VMA
+		)
+	endif()
+
+	# Check if bfd_section_size takes one or two arguments.
+	set(CMAKE_REQUIRED_LIBRARIES ${BFD_LIBRARY})
+	check_c_source_compiles(
+		"#include <bfd.h>
+ 		int main(int argc, char** argv) {
+ 			asection *sec = malloc(sizeof(*sec));
+ 			bfd_section_size(sec);
+ 			free(sec);
+ 			return 0;
+ 		}"
+		HAVE_1_ARG_BFD_SECTION_SIZE
+	)
+	if(HAVE_1_ARG_BFD_SECTION_SIZE)
+		add_compile_definitions(
+			HAVE_1_ARG_BFD_SECTION_SIZE
+		)
+	else()
+		add_compile_definitions(
+			HAVE_2_ARG_BFD_SECTION_SIZE
+		)
+	endif()
+
+	# Check if bfd_section_vma takes one or two arguments.
+	check_c_source_compiles(
+		"#include <bfd.h>
+ 		int main(int argc, char** argv) {
+ 			asection *sec = malloc(sizeof(*sec));
+ 			bfd_section_vma(sec);
+ 			free(sec);
+ 			return 0;
+ 		}"
+		HAVE_1_ARG_BFD_SECTION_VMA
+	)
+	if(HAVE_1_ARG_BFD_SECTION_VMA)
+		add_compile_definitions(
+			HAVE_1_ARG_BFD_SECTION_VMA
+		)
+	else()
+		add_compile_definitions(
+			HAVE_2_ARG_BFD_SECTION_VMA
+		)
+	endif()
+
 	INCLUDE_DIRECTORIES(${IBERTY_INCLUDE_DIR})
 	TARGET_LINK_LIBRARIES(cogutil
 		${BFD_LIBRARY}

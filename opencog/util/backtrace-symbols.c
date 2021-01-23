@@ -115,26 +115,39 @@ static void find_address_in_section(bfd *abfd, asection *section, void *data)
 
     if (spot->found) return;
 
-#ifdef bfd_section_flags
-    #define NEW_BFD_API 1
-#endif
-#ifdef NEW_BFD_API
+#ifdef HAVE_DECL_BFD_SECTION_FLAGS
     if ((bfd_section_flags(section) & SEC_ALLOC) == 0) return;
-
-    vma = bfd_section_vma(section);
-    if (spot->pc < vma) return;
-
-    size = bfd_section_size(section);
-    if (spot->pc >= vma + size) return;
-#else
+#elif defined HAVE_DECL_BFD_GET_SECTION_FLAGS
     if ((bfd_get_section_flags(abfd, section) & SEC_ALLOC) == 0) return;
+#else
+#error "Unsupported BFD API"
+#endif
 
+#ifdef HAVE_DECL_BFD_SECTION_VMA
+    #ifdef HAVE_1_ARG_BFD_SECTION_VMA
+    vma = bfd_section_vma(section);
+    #elif defined HAVE_2_ARG_BFD_SECTION_VMA
+    vma = bfd_section_vma(abfd, section);
+    #else
+    #error "Unsupported BFD API"
+    #endif
+#elif defined HAVE_DECL_BFD_GET_SECTION_VMA
     vma = bfd_get_section_vma(abfd, section);
+#else
+#error "Unsupported BFD API"
+#endif
+
     if (spot->pc < vma) return;
 
+#ifdef HAVE_1_ARG_BFD_SECTION_SIZE
+    size = bfd_section_size(section);
+#elif defined HAVE_2_ARG_BFD_SECTION_SIZE
     size = bfd_section_size(abfd, section);
-    if (spot->pc >= vma + size) return;
+#else
+#error "Unsupported BFD API"
 #endif
+
+    if (spot->pc >= vma + size) return;
     spot->found = bfd_find_nearest_line(abfd, section, spot->syms, spot->pc - vma,
                                         &(spot->filename), &(spot->functionname), &(spot->line));
 }
