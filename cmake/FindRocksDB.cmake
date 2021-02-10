@@ -20,7 +20,7 @@ else()
 
   find_library(
     ROCKSDB_LIBRARY
-    NAMES librocksdb.a
+    NAMES librocksdb.so
     HINTS ${ROCKSDB_ROOT_DIR})
 
   set(ROCKSDB_LIBRARIES ${ROCKSDB_LIBRARY})
