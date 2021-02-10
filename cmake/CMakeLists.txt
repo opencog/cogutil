@@ -25,6 +25,7 @@ INSTALL(FILES
         FindLinkGrammar.cmake
         FindMOSES.cmake
         FindOctomap.cmake
+        FindRocksDB.cmake
         FindUUID.cmake
         Findcpprest.cmake
         Summary.cmake
