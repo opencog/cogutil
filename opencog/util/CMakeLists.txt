@@ -69,24 +69,20 @@ IF (HAVE_BFD AND HAVE_IBERTY)
 	check_symbol_exists(bfd_section_vma "bfd.h" HAVE_DECL_BFD_SECTION_VMA)
 
 	if(HAVE_DECL_BFD_GET_SECTION_FLAGS)
-		add_compile_definitions(
-			HAVE_DECL_BFD_GET_SECTION_FLAGS
-		)
+		# This should be
+		# add_compile_definitions(HAVE_DECL_BFD_GET_SECTION_FLAGS)
+		# except that requires CMake version 3.12 which is not available
+		# in Ubuntu 18.04 LTS -- FIXME someday...
+		add_definitions(-DHAVE_DECL_BFD_GET_SECTION_FLAGS=1)
 	endif()
 	if(HAVE_DECL_BFD_SECTION_FLAGS)
-		add_compile_definitions(
-			HAVE_DECL_BFD_SECTION_FLAGS
-		)
+		add_definitions(-DHAVE_DECL_BFD_SECTION_FLAGS=1)
 	endif()
 	if(HAVE_DECL_BFD_GET_SECTION_VMA)
-		add_compile_definitions(
-			HAVE_DECL_BFD_GET_SECTION_VMA
-		)
+		add_definitions(-DHAVE_DECL_BFD_GET_SECTION_VMA=1)
 	endif()
 	if(HAVE_DECL_BFD_SECTION_VMA)
-		add_compile_definitions(
-			HAVE_DECL_BFD_SECTION_VMA
-		)
+		add_definitions(-DHAVE_DECL_BFD_SECTION_VMA=1)
 	endif()
 
 	# Check if bfd_section_size takes one or two arguments.
@@ -102,13 +98,9 @@ IF (HAVE_BFD AND HAVE_IBERTY)
 		HAVE_1_ARG_BFD_SECTION_SIZE
 	)
 	if(HAVE_1_ARG_BFD_SECTION_SIZE)
-		add_compile_definitions(
-			HAVE_1_ARG_BFD_SECTION_SIZE
-		)
+		add_definitions(-DHAVE_1_ARG_BFD_SECTION_SIZE=1)
 	else()
-		add_compile_definitions(
-			HAVE_2_ARG_BFD_SECTION_SIZE
-		)
+		add_definitions(-DHAVE_2_ARG_BFD_SECTION_SIZE=1)
 	endif()
 
 	# Check if bfd_section_vma takes one or two arguments.
@@ -123,13 +115,9 @@ IF (HAVE_BFD AND HAVE_IBERTY)
 		HAVE_1_ARG_BFD_SECTION_VMA
 	)
 	if(HAVE_1_ARG_BFD_SECTION_VMA)
-		add_compile_definitions(
-			HAVE_1_ARG_BFD_SECTION_VMA
-		)
+		add_definitions(-DHAVE_1_ARG_BFD_SECTION_VMA=1)
 	else()
-		add_compile_definitions(
-			HAVE_2_ARG_BFD_SECTION_VMA
-		)
+		add_definitions(-DHAVE_2_ARG_BFD_SECTION_VMA=1)
 	endif()
 
 	INCLUDE_DIRECTORIES(${IBERTY_INCLUDE_DIR})
