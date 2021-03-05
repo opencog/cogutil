@@ -392,6 +392,9 @@ jobs:
           name: Install AtomSpace
           command: cd /ws/atomspace/build && make install && ldconfig
       - run:
+          name: Install URE
+          command: cd /ws/ure/build && make install && ldconfig
+      - run:
           name: Checkout AS-MOSES
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/asmoses .
       - run:
