@@ -526,6 +526,7 @@ workflows:
           requires:
             - cogutil
             - atomspace
+            - ure
       - opencog:
           requires:
             - atomspace
