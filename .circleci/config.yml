@@ -403,6 +403,10 @@ jobs:
       - run:
           name: Build
           command: cd build && make
+      # Temporary fix: install asmoses to please the unit tests
+      - run:
+          name: Install
+          command: cd build && make install
       - run:
           name: Build tests
           command: cd build && make tests
