@@ -392,6 +392,9 @@ jobs:
           name: Install AtomSpace
           command: cd /ws/atomspace/build && make install && ldconfig
       - run:
+          name: Install URE
+          command: cd /ws/ure/build && make install && ldconfig
+      - run:
           name: Checkout AS-MOSES
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/asmoses .
       - run:
@@ -400,6 +403,10 @@ jobs:
       - run:
           name: Build
           command: cd build && make
+      # Temporary fix: install asmoses to please the unit tests
+      - run:
+          name: Install
+          command: cd build && make install
       - run:
           name: Build tests
           command: cd build && make tests
@@ -523,6 +530,7 @@ workflows:
           requires:
             - cogutil
             - atomspace
+            - ure
       - opencog:
           requires:
             - atomspace
