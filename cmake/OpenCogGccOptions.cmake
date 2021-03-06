@@ -2,11 +2,11 @@
 # Detect different compilers and OS'es, tweak flags as necessary.
 
 IF (CMAKE_COMPILER_IS_GNUCXX)
-	# Version 6.0 of gcc is required for C++17 support.
+	# Version 7.0 of gcc is required for full C++17 support.
 
-	IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
-		MESSAGE(FATAL_ERROR "GCC version must be at least 6.0!")
-	ENDIF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
+	IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.0)
+		MESSAGE(FATAL_ERROR "GCC version must be at least 7.0!")
+	ENDIF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.0)
 
 	IF (APPLE)
 		CMAKE_POLICY(SET CMP0042 NEW)  # Something about MACOSX_RPATH
