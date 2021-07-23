@@ -3158,12 +3158,9 @@ void tree_convert(const treeT1& src, treeT2& dst)
 
 // Not really lexicographic, but a valid ordering.
 // This can be changed if it's important...
-template<typename T,typename compare=std::less<T> >
+template<typename T, typename compare=std::less<T>>
 struct lexicographic_subtree_order {
-    lexicographic_subtree_order() { }
-    lexicographic_subtree_order(const compare& comp_) : comp(comp_) { }
-
-    compare comp; // @todo comp is not used???
+    lexicographic_subtree_order() {}
 
     template<typename iter>
     bool operator()(const tree<T>& tr1, const iter& it2) const {
