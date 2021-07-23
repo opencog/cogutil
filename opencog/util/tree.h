@@ -558,7 +558,7 @@ private:
     public:
         compare_nodes(StrictWeakOrdering comp) : comp_(comp) {};
 
-        bool operator()(const tree_node *a, const tree_node *b)
+        bool operator()(const tree_node *a, const tree_node *b) const
         {
             return comp_(a->data, b->data);
         }
@@ -570,7 +570,7 @@ private:
     public:
         compare_nodes_pre_it(StrictWeakOrdering comp) : comp_(comp) {};
 
-        bool operator()(const tree_node *a, const tree_node *b)
+        bool operator()(const tree_node *a, const tree_node *b) const
         {
             return comp_(pre_order_iterator(const_cast<tree_node*>(a)),
                          pre_order_iterator(const_cast<tree_node*>(b)));
@@ -3166,7 +3166,7 @@ struct lexicographic_subtree_order {
     compare comp; // @todo comp is not used???
 
     template<typename iter>
-    bool operator()(const tree<T>& tr1,iter it2) const {
+    bool operator()(const tree<T>& tr1, const iter& it2) const {
         return (cmp(iter(tr1.begin()),it2)>0);
     }
 
