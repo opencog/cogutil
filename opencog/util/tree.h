@@ -558,7 +558,7 @@ private:
     public:
         compare_nodes(StrictWeakOrdering comp) : comp_(comp) {};
 
-        bool operator()(const tree_node *a, const tree_node *b)
+        bool operator()(const tree_node *a, const tree_node *b) const
         {
             return comp_(a->data, b->data);
         }
@@ -570,7 +570,7 @@ private:
     public:
         compare_nodes_pre_it(StrictWeakOrdering comp) : comp_(comp) {};
 
-        bool operator()(const tree_node *a, const tree_node *b)
+        bool operator()(const tree_node *a, const tree_node *b) const
         {
             return comp_(pre_order_iterator(const_cast<tree_node*>(a)),
                          pre_order_iterator(const_cast<tree_node*>(b)));
@@ -3158,20 +3158,17 @@ void tree_convert(const treeT1& src, treeT2& dst)
 
 // Not really lexicographic, but a valid ordering.
 // This can be changed if it's important...
-template<typename T,typename compare=std::less<T> >
+template<typename T, typename compare=std::less<T>>
 struct lexicographic_subtree_order {
-    lexicographic_subtree_order() { }
-    lexicographic_subtree_order(const compare& comp_) : comp(comp_) { }
-
-    compare comp; // @todo comp is not used???
+    lexicographic_subtree_order() {}
 
     template<typename iter>
-    bool operator()(const tree<T>& tr1,iter it2) const {
+    bool operator()(const tree<T>& tr1, const iter& it2) const {
         return (cmp(iter(tr1.begin()),it2)>0);
     }
 
     template<typename iter>
-    bool operator()(const iter& it1,const tree<T>& tr2) const {
+    bool operator()(const iter& it1, const tree<T>& tr2) const {
         return (cmp(it1,iter(tr2.begin()))>0);
     }
 
@@ -3181,12 +3178,12 @@ struct lexicographic_subtree_order {
     }
 
     template<typename iter>
-    bool operator()(const iter& it1,const iter& it2) const {
+    bool operator()(const iter& it1, const iter& it2) const {
         return (cmp(it1,it2)>0);
     }
 
     template<typename iter>
-    int cmp(const iter& it1,const iter& it2) const {
+    int cmp(const iter& it1, const iter& it2) const {
         typedef typename iter::sibling_iterator sib_it;
 
         if (*it1<*it2)
@@ -3194,7 +3191,7 @@ struct lexicographic_subtree_order {
         else if (*it2<*it1)
             return -1;
 
-        sib_it sib1=it1.begin(),sib2=it2.begin();
+        sib_it sib1=it1.begin(), sib2=it2.begin();
         while (true) {
             if (sib1==it1.end()) {
                 if (sib2==it2.end())
@@ -3203,7 +3200,7 @@ struct lexicographic_subtree_order {
             } else if (sib2==it2.end()) {
                 return -1;
             }
-            int res=cmp(sib1++,sib2++);
+            int res=cmp(sib1++, sib2++);
             if (res)
                 return res;
         }
