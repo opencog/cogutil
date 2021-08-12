@@ -378,8 +378,8 @@ Seq seq_filtered(const Seq& seq, const Indices& indices)
  * TODO: Use T::contains instead once we move to C++20.
  */
 template<typename T>
-bool is_in(const typename std::set<T>::value_type& el,
-           const typename std::set<T>& set)
+bool contains(const typename std::set<T>& set,
+              const typename std::set<T>::value_type& el)
 {
 	return set.find(el) != set.end();
 }
@@ -388,7 +388,7 @@ bool is_in(const typename std::set<T>::value_type& el,
  * Return true if el is in c where c is not a set.
  */
 template<typename Container>
-bool is_in(const typename Container::value_type& el, const Container& c)
+bool contains(const Container& c, const typename Container::value_type& el)
 {
 	return std::find(c.begin(), c.end(), el) != c.end();
 }
