@@ -302,7 +302,7 @@ void Logger::LogWriter::write_msg(const std::string &msg)
     if ((int) msg.size() != rc)
     {
         fprintf(stderr,
-            "[ERROR] failed write to logfile, rc=%d sz=%lu\n",
+            "[ERROR] failed write to logfile, rc=%d sz=%zu\n",
             rc, msg.size());
         exit(1);
     }
