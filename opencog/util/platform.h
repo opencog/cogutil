@@ -39,30 +39,6 @@
 #include <string>
 #include <stdint.h>
 
-namespace opencog
-{
-/** \addtogroup grp_cogutil
- *  @{
- */
-
-struct eqstr {
-    bool operator()(char *s1, char *s2) const {
-        return strcmp(s1, s2) == 0;
-    }
-};
-
-struct eqconststr {
-    bool operator()(const char *s1, const char *s2) const {
-        return strcmp(s1, s2) == 0;
-    }
-};
-
-struct eqint {
-    bool operator()(int s1, int s2) const {
-        return s1 == s2;
-    }
-};
-
 #ifdef __APPLE__
 char*              __strtok_r(char *s1, const char *s2, char **lasts);
 #endif
@@ -84,6 +60,12 @@ unsigned long long atoll(const char *str);
 unsigned int       sleep(unsigned seconds);
 
 #endif // ~WIN32_NOT_UNIX
+
+namespace opencog
+{
+/** \addtogroup grp_cogutil
+ *  @{
+ */
 
 //! Return the total amount of heap allocated (according to sbrk, on unix).
 size_t getMemUsage();
