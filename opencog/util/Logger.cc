@@ -40,7 +40,7 @@
 #include <strings.h>
 #include <time.h>
 #include <unistd.h>
-#include <sys/prctl.h>
+#include "platform.h"
 
 
 #ifdef WIN32_NOT_UNIX
@@ -196,7 +196,7 @@ void Logger::LogWriter::stop_write_loop()
 
 void Logger::LogWriter::writing_loop()
 {
-    prctl(PR_SET_NAME, "opencog:logger", 0, 0, 0);
+    set_thread_name("opencog:logger");
 
     // When the thread exits, make sure that all pending messages have
     // been written to the logfile. This code is here because the usual
