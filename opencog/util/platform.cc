@@ -183,6 +183,7 @@ size_t opencog::getMemUsage()
 #ifdef __APPLE__
 #include <sys/sysctl.h>
 #include <sys/types.h>
+#include <pthread.h>
 
 uint64_t opencog::getTotalRAM()
 {
@@ -202,10 +203,16 @@ uint64_t opencog::getFreeRAM()
     return getTotalRAM() - getMemUsage();
 }
 
+void set_thread_name(const char* name)
+{
+    pthread_setname_np(name);
+}
+
 #else // __APPLE__
 
 // If not Apple, then Linux.
 #include <sys/sysinfo.h>
+#include <sys/prctl.h>
 
 uint64_t opencog::getTotalRAM()
 {
@@ -217,5 +224,10 @@ uint64_t opencog::getFreeRAM()
 {
     // return getpagesize() * get_avphys_pages();
     return getpagesize() * sysconf(_SC_AVPHYS_PAGES);
+}
+
+void set_thread_name(const char* name)
+{
+    prctl(PR_SET_NAME, name, 0, 0, 0)
 }
 #endif // __APPLE__

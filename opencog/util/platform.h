@@ -79,6 +79,8 @@ uint64_t getFreeRAM();
 //! Return the OS username
 const char* getUserName();
 
+void set_thread_name(const char* name);
+
 /** @}*/
 } // namespace opencog
 
