@@ -73,5 +73,6 @@ ENDIF (CMAKE_COMPILER_IS_GNUCXX)
 IF (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 	SET(CMAKE_SHARED_LINKER_FLAGS "-undefined dynamic_lookup")
 	SET(CMAKE_EXE_LINKER_FLAGS "-lstdc++")
-	SET(CMAKE_CXX_FLAGS "-std=c++17 -fopenmp=libiomp5")
+	#Refer to this page https://clang.llvm.org/docs/OpenMPSupport.html to see which version of OpenMP Clang supports.
+	SET(CMAKE_CXX_FLAGS "-std=c++17 -fopenmp")
 ENDIF (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
