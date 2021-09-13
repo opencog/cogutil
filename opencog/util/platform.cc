@@ -228,6 +228,6 @@ uint64_t opencog::getFreeRAM()
 
 void set_thread_name(const char* name)
 {
-    prctl(PR_SET_NAME, name, 0, 0, 0)
+    prctl(PR_SET_NAME, name, 0, 0, 0);
 }
 #endif // __APPLE__
