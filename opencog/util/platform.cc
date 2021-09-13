@@ -203,7 +203,7 @@ uint64_t opencog::getFreeRAM()
     return getTotalRAM() - getMemUsage();
 }
 
-void set_thread_name(const char* name)
+void opencog::set_thread_name(const char* name)
 {
     pthread_setname_np(name);
 }
@@ -226,7 +226,7 @@ uint64_t opencog::getFreeRAM()
     return getpagesize() * sysconf(_SC_AVPHYS_PAGES);
 }
 
-void set_thread_name(const char* name)
+void opencog::set_thread_name(const char* name)
 {
     prctl(PR_SET_NAME, name, 0, 0, 0);
 }

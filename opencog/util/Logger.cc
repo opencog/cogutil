@@ -40,7 +40,6 @@
 #include <strings.h>
 #include <time.h>
 #include <unistd.h>
-#include "platform.h"
 
 
 #ifdef WIN32_NOT_UNIX
