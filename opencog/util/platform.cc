@@ -39,15 +39,12 @@ const char* getUserName() {
 
 } // ~namespace opencog
 
+// ===========================================
+
 #ifdef __APPLE__
 
 #include <sys/timeb.h>
 #include <math.h>
-
-#include "platform.h"
-
-namespace opencog
-{
 
 #ifndef HAVE_STRTOK_R
 #define HAVE_STRTOK_R 1
@@ -72,9 +69,9 @@ char* __strtok_r(char *s1, const char *s2, char **lasts)
 }
 
 #endif /* HAVE_STRTOK_R */
-} // namespace opencog
-#endif
+#endif /* __APPLE__ */
 
+// ======================================================
 #ifdef WIN32_NOT_UNIX
 
 #include <sys/timeb.h>
@@ -83,16 +80,12 @@ char* __strtok_r(char *s1, const char *s2, char **lasts)
 #include <math.h>
 #include <io.h>
 
-#include "platform.h"
-
-using namespace opencog;
-
-int opencog::round(float x)
+int round(float x)
 {
     return ((x -(int)(x)) < 0.5 ) ? (int)x : (int)x + 1;
 }
 
-int opencog::gettimeofday(struct timeval* tp, void* tzp)
+int gettimeofday(struct timeval* tp, void* tzp)
 {
     struct _timeb timebuffer;
     _ftime(&timebuffer);
@@ -102,7 +95,7 @@ int opencog::gettimeofday(struct timeval* tp, void* tzp)
     return 0;
 }
 
-void opencog::usleep(unsigned useconds)
+void usleep(unsigned useconds)
 {
     // Sleep is in milliseconds
     // If 0 is passed to Sleep()
@@ -112,7 +105,7 @@ void opencog::usleep(unsigned useconds)
     Sleep((int)(useconds / 1000));
 }
 
-unsigned opencog::sleep(unsigned seconds)
+unsigned sleep(unsigned seconds)
 {
     Sleep(seconds * 1000);
     return 0;
@@ -121,7 +114,7 @@ unsigned opencog::sleep(unsigned seconds)
 #ifndef HAVE_STRTOK_R
 #define HAVE_STRTOK_R 1
 
-char* opencog::__strtok_r(char *s1, const char *s2, char **lasts)
+char* __strtok_r(char *s1, const char *s2, char **lasts)
 {
     char *ret;
 
@@ -142,24 +135,24 @@ char* opencog::__strtok_r(char *s1, const char *s2, char **lasts)
 
 #endif /* HAVE_STRTOK_R */
 
-int opencog::__getpid(void)
+int __getpid(void)
 {
     return _getpid();
 }
 
-double opencog::rint(double nr)
+double rint(double nr)
 {
     double f = floor(nr);
     double c = ceil(nr);
     return (((c -nr) >= (nr - f)) ? f : c);
 }
 
-int opencog::__dup2(int fd1, int fd2)
+int __dup2(int fd1, int fd2)
 {
     return _dup2(fd1, fd2);
 }
 
-unsigned long long opencog::atoll(const char *str)
+unsigned long long atoll(const char *str)
 {
     unsigned long long la = 0;
     sscanf(str, "%Lu", &la);
@@ -168,9 +161,10 @@ unsigned long long opencog::atoll(const char *str)
 
 #endif // WIN32_NOT_UNIX
 
+// ==========================================================
+
 #include <stdlib.h>
 #include <unistd.h>   // for sbrk(), sysconf()
-#include "platform.h"
 
 // Return memory usage per sbrk system call.
 size_t opencog::getMemUsage()
@@ -209,6 +203,8 @@ uint64_t opencog::getFreeRAM()
 }
 
 #else // __APPLE__
+
+// If not Apple, then Linux.
 #include <sys/sysinfo.h>
 
 uint64_t opencog::getTotalRAM()

@@ -97,7 +97,7 @@ public:
 		meansq *= 1.0 / n;
 		double rms = sqrt(meansq);
 
-		printf("Dist: n=%d s=%4.3f q=%4.2f cnt=%lu "
+		printf("Dist: n=%d s=%4.3f q=%4.2f cnt=%zu "
 		       "mean=%6.4g rms=%5.3g\n",
 			n, s, q, cnt, mean, rms);
 
@@ -142,7 +142,7 @@ public:
 	void check_zipf(size_t ndraw, int n, double s, double q, double sigma)
 	{
 		zipf_distribution<> zipf(n, s, q);
-		printf("Init rejection-inversion: n=%d s=%4.3f q=%4.2f draw=%lu\n",
+		printf("Init rejection-inversion: n=%d s=%4.3f q=%4.2f draw=%zu\n",
 			n, s, q, ndraw);
 
 		std::vector<size_t> pdf;
@@ -167,7 +167,7 @@ public:
 	void check_table(size_t ndraw, int n, double s, double q)
 	{
 		zipf_table_distribution<> zipf(n, s);
-		printf("Init table: n=%d s=%4.3f q=%4.2f draw=%lu\n",
+		printf("Init table: n=%d s=%4.3f q=%4.2f draw=%zu\n",
 			n, s, q, ndraw);
 
 		std::vector<size_t> pdf;

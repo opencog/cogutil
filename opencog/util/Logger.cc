@@ -40,6 +40,8 @@
 #include <strings.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/prctl.h>
+
 
 #ifdef WIN32_NOT_UNIX
 #include <winsock2.h>
@@ -194,6 +196,8 @@ void Logger::LogWriter::stop_write_loop()
 
 void Logger::LogWriter::writing_loop()
 {
+    prctl(PR_SET_NAME, "opencog:logger", 0, 0, 0);
+
     // When the thread exits, make sure that all pending messages have
     // been written to the logfile. This code is here because the usual
     // case is that the singleton logger() has continued to live on
@@ -298,7 +302,7 @@ void Logger::LogWriter::write_msg(const std::string &msg)
     if ((int) msg.size() != rc)
     {
         fprintf(stderr,
-            "[ERROR] failed write to logfile, rc=%d sz=%lu\n",
+            "[ERROR] failed write to logfile, rc=%d sz=%zu\n",
             rc, msg.size());
         exit(1);
     }
