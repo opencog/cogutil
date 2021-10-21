@@ -29,10 +29,10 @@
 find_package(PythonInterp)
 if(PYTHONINTERP_FOUND)
 	get_filename_component( _python_path ${PYTHON_EXECUTABLE} PATH)
-	find_program( CYTHON_EXECUTABLE NAMES cython cython.bat
+	find_program( CYTHON_EXECUTABLE NAMES cython cython3 cython.bat
 		HINTS ENV PATH ${_python_path})
 else()
-	find_program( CYTHON_EXECUTABLE NAMES cython cython.bat)
+	find_program( CYTHON_EXECUTABLE NAMES cython cython3 cython.bat)
 endif()
 
 
