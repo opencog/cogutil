@@ -119,7 +119,7 @@ const char * StandardException::get_message() const
     return message;
 }
 
-void StandardException::set_message(const char * msg)
+void StandardException::set_message(const char * msg) const
 {
     // clear msg
     delete [] message;

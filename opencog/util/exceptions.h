@@ -48,7 +48,7 @@ private:
     /**
      * c-string error message
      */
-    char * message;
+    mutable char * message;
 
 protected:
     /**
@@ -82,10 +82,14 @@ public:
     /**
      * Set the error message.
      * @param A c-string representing the error message. The caller is
-     *    responsable to free the memory allocated in the c-string
+     *    responsable for freeing the memory allocated in the c-string
      *    parameter.
+     *
+     * This is marked const, even though it mutates the error message.
+     * This allows this function to be called from within exception
+     * handlers, so as to mutate the message.
      */
-    void set_message(const char *);
+    void set_message(const char *) const;
 
 }; // StandardException
 
