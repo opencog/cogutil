@@ -276,7 +276,8 @@ public:
 /**
  * Exception to be called when an assertion fails.
  * Unlike almost all other exceptions, this one does not
- * log the called location. (Why not??)
+ * log the called location; that is done by OC_ASSERT,
+ * which is the only user of this exception.
  */
 class AssertionException : public StandardException
 {
