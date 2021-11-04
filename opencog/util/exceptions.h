@@ -195,8 +195,8 @@ public:
  * Exception to be thrown when an invalid parameter is used within a
  * function or an object initalization.
  *
- * This exception will not log an error when throwed, because the error
- * must be handled inside the code.
+ * This exception will not log an error when thrown, because the
+ * exception must be handled inside the code.
  */
 class InvalidParamException : public RuntimeException
 {
@@ -363,7 +363,6 @@ public:
  */
 class NotFoundException : public SilentException
 {
-    void init(const char*, const char*, va_list);
 public:
     /**
      * Constructor

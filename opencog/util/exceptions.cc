@@ -299,32 +299,17 @@ NetworkException::NetworkException(const char* trace, const char* fmt, va_list a
  * NotFoundException class
  * ----------------------------------------------------------------------
  */
-void NotFoundException::init(const char* trace, const char* fmt, va_list ap)
-{
-    char * concatMsg = new char[strlen(get_message()) + strlen(trace) + 1];
-    *concatMsg = '\0'; // empty c-string
-
-    strcat(concatMsg, get_message());
-    strcat(concatMsg, trace);
-
-    char buf[MAX_MSG_LENGTH];
-    vsnprintf(buf, MAX_MSG_LENGTH, concatMsg, ap);
-    set_message(buf);
-
-    delete [] concatMsg;
-}
-
 NotFoundException::NotFoundException(const char * trace, const char * fmt, ...)
 {
     va_list  ap;
     va_start(ap, fmt);
-    init(trace, fmt, ap);
+    parse_error_message(trace, fmt, ap, false);
     va_end(ap);
 }
 
 NotFoundException::NotFoundException(const char* trace, const char* fmt, va_list ap)
 {
-    init(trace, fmt, ap);
+    parse_error_message(trace, fmt, ap, false);
 }
 
 /*
@@ -334,22 +319,13 @@ NotFoundException::NotFoundException(const char* trace, const char* fmt, va_list
  */
 AssertionException::AssertionException(const char* fmt, ...)
 {
-    char    buf[MAX_MSG_LENGTH];
-
-    va_list ap;
+    va_list  ap;
     va_start(ap, fmt);
-    vsnprintf(buf, sizeof(buf), fmt, ap);
+    parse_error_message(nullptr, fmt, ap, true);
     va_end(ap);
-
-    set_message(buf);
-    opencog::logger().error("%s", buf);
 }
 
 AssertionException::AssertionException(const char* fmt, va_list ap)
 {
-    char    buf[MAX_MSG_LENGTH];
-
-    vsnprintf(buf, sizeof(buf), fmt, ap);
-    set_message(buf);
-    opencog::logger().error("%s", buf);
+    parse_error_message(nullptr, fmt, ap, true);
 }
