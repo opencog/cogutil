@@ -195,8 +195,8 @@ public:
  * Exception to be thrown when an invalid parameter is used within a
  * function or an object initalization.
  *
- * This exception will not log an error when throwed, because the error
- * must be handled inside the code.
+ * This exception will not log an error when thrown, because the
+ * exception must be handled inside the code.
  */
 class InvalidParamException : public RuntimeException
 {
@@ -275,8 +275,8 @@ public:
 
 /**
  * Exception to be called when an assertion fails.
- * When this exception is caught, a stack trace must be generated
- * and provided to the user (e.g. saved to a log file).
+ * Unlike almost all other exceptions, this one does not
+ * log the called location. (Why not??)
  */
 class AssertionException : public StandardException
 {
@@ -363,7 +363,6 @@ public:
  */
 class NotFoundException : public SilentException
 {
-    void init(const char*, const char*, va_list);
 public:
     /**
      * Constructor
