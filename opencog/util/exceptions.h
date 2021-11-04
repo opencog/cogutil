@@ -275,8 +275,8 @@ public:
 
 /**
  * Exception to be called when an assertion fails.
- * When this exception is caught, a stack trace must be generated
- * and provided to the user (e.g. saved to a log file).
+ * Unlike almost all other exceptions, this one does not
+ * log the called location. (Why not??)
  */
 class AssertionException : public StandardException
 {
