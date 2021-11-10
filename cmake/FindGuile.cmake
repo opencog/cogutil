@@ -32,6 +32,7 @@ FIND_PATH(GUILE_INCLUDE_DIR libguile.h
 
 	/usr/include
 	/usr/local/include
+	NO_DEFAULT_PATH
 )
 
 # Look for the library
