@@ -3,37 +3,38 @@
 INSTALL(FILES
         AddCxxtest.cmake        
         FindBFD.cmake
+        Findcpprest.cmake
         FindCxxtest.cmake
         FindCython.cmake
+        FindGHC.cmake
         FindGTK3.cmake
         FindGuile.cmake
         FindHyperTable.cmake
         FindIberty.cmake
         FindLibGearman.cmake
-        FindMsgPack.cmake
-        FindPthreads.cmake
-        FindStack.cmake
-        FindSTLPort.cmake
-        FindVALGRIND.cmake
-        FindZMQ.cmake
-        FindSIGAR.cmake
-        FindPython3Interp.cmake
-        FindPGSQL.cmake
-        FindTBB.cmake
-        FindBFD.cmake
-        FindGHC.cmake
         FindLinkGrammar.cmake
         FindMOSES.cmake
+        FindMsgPack.cmake
+        FindOCaml.cmake
         FindOctomap.cmake
+        FindPGSQL.cmake
+        FindPthreads.cmake
+        FindPython3Interp.cmake
         FindRocksDB.cmake
+        FindSIGAR.cmake
+        FindStack.cmake
+        FindSTLPort.cmake
+        FindTBB.cmake
         FindUUID.cmake
-        Findcpprest.cmake
-        Summary.cmake
-        OpenCogGccOptions.cmake
-        OpenCogLibOptions.cmake
-        OpenCogInstallOptions.cmake
+        FindVALGRIND.cmake
+        FindZMQ.cmake
         OpenCogFindPython.cmake
         OpenCogFindGuile.cmake
+        OpenCogGccOptions.cmake
+        OpenCogInstallOptions.cmake
+        OpenCogLibOptions.cmake
+        Summary.cmake
+        UseOCaml.cmake
         COPYING-CMAKE-SCRIPTS
         DESTINATION
         ${DATADIR}/cmake/)
