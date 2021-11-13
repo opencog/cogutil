@@ -28,6 +28,7 @@ INSTALL(FILES
         FindUUID.cmake
         FindVALGRIND.cmake
         FindZMQ.cmake
+        OCamlDep.cmake
         OpenCogFindPython.cmake
         OpenCogFindGuile.cmake
         OpenCogGccOptions.cmake
