@@ -32,6 +32,18 @@
 #   Sets the OCAML_${name}_NATIVE variable.
 #   To specify the include directories, use the standard macro include_directories.
 #
+# Attention: The above has been modified from the "original" to support
+# shared (dynamic) libraries. Example usage:
+#
+# ADD_OCAML_LIBRARY(foo SOURCES foo.mli foo.ml C_LIBRARIES foowrap)
+# ADD_LIBRARY(foowrap FooWrap.cc)
+# SET_TARGET_PROPERTIES(foowrap PROPERTIES PREFIX "dll"
+#                       INSTALL_PATH "lib/foo")
+# TARGET_LINK_LIBRARIES(foowrap foo_shared_lib)
+#
+# where libfoo_shared_lib.so is the library being wrapped.
+# Note that setting PREFIX "dll" is key; nothing works without this!
+#
 # target_link_ocaml_libraries (<name> lib1 lib2 ... libN)
 #   There are four ways to add a library :
 #   - If it is another library of the current project, just specify its name.
@@ -636,7 +648,6 @@ macro (target_link_ocaml_libraries target)
     # A static library cannot link to a dynamic library, so declaring
     # custom is pointless.
     # set (custom TRUE)
-    #
     if (${CMAKE_MAJOR_VERSION} LESS 3)
         get_target_property (location ${library} LOCATION)
     else (${CMAKE_MAJOR_VERSION} LESS 3)
@@ -645,6 +656,9 @@ macro (target_link_ocaml_libraries target)
     if (location) # It is a target from this project
       get_target_property (name ${library} OUTPUT_NAME)
       get_filename_component (path ${location} PATH)
+      get_target_property (instpath ${library} INSTALL_PATH)
+      set(pfx ${CMAKE_INSTALL_PREFIX})
+      set(path ${pfx}/${instpath})
       if (NOT name)
           set (name ${library})
       endif (NOT name)
