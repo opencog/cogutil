@@ -108,8 +108,9 @@ option (CMAKE_OCaml_USE_OCAML_TRACE "Run the script UseOCaml.cmake in trace mode
 
 set(MSGC "Command used for bytecode targets")
 set(MSGOC "Command used for optimized targets")
+set(MSGLB "Command used for linking libraries")
 set(MSGDP "Command used to generate dependencies")
-set(MSGQ "Command used to find OCaml librairies")
+set(MSGQ "Command used to find OCaml libraries")
 
 if(CMAKE_OCaml_FIND)
   set(CMAKE_OCaml_CMD_COMPILER ${CMAKE_OCaml_FIND} ocamlc CACHE STRING ${MSGC})
@@ -119,6 +120,7 @@ if(CMAKE_OCaml_FIND)
 else()
   set(CMAKE_OCaml_CMD_COMPILER ${CMAKE_OCaml_COMPILER} CACHE STRING ${MSGC})
   set(CMAKE_OCaml_CMD_OPT_COMPILER ${CMAKE_OCaml_OPT_COMPILER} CACHE STRING ${MSGOC})
+  set(CMAKE_OCaml_CMD_MKLIB ${CMAKE_OCaml_MKLIB} CACHE STRING ${MSGLB})
   set(CMAKE_OCaml_CMD_DEP ${CMAKE_OCaml_DEP} CACHE STRING ${MSGDP})
 endif()
 
