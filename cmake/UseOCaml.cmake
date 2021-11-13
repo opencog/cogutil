@@ -29,7 +29,6 @@
 #
 # add_ocaml_library (<name> [NATIVE | BYTECODE] source1 source2 ... sourceN)
 #   sourcefiles should be mli or ml files.
-#   To generate the library, you have to call target_link_ocaml_libraries.
 #   Sets the OCAML_${name}_NATIVE variable.
 #   To specify the include directories, use the standard macro include_directories.
 #
@@ -628,10 +627,16 @@ macro (target_link_ocaml_libraries target)
     endif (IS_ABSOLUTE ${library})
   endforeach (library)
 
+  # The below has been modified to work with *dynamic libraries only*!
+  # If you want both dynamic and static lib support, you'll have to
+  # rewrite this. See https://github.com/ocaml-cmake/ocaml-cmake/issues/2
   set (custom FALSE)
   set (clibraries)
   foreach (library ${OCAML_${target}_C_LIBRARIES})
-    set (custom TRUE)
+    # A static library cannot link to a dynamic library, so declaring
+    # custom is pointless.
+    # set (custom TRUE)
+    #
     if (${CMAKE_MAJOR_VERSION} LESS 3)
         get_target_property (location ${library} LOCATION)
     else (${CMAKE_MAJOR_VERSION} LESS 3)
@@ -643,7 +648,12 @@ macro (target_link_ocaml_libraries target)
       if (NOT name)
           set (name ${library})
       endif (NOT name)
-      set (opt ${opt} -cclib -L${path} -cclib -l${name})
+      # Attention: must use -dllib here, because static libraries cannot
+      # find dynamic library dependents.
+      # Also, the library must be called `dllfoo.so`
+      # I don't know why ... but it just is like that.
+      # set (opt ${opt} -ccopt -L${path} -cclib -l${name})
+      set (opt ${opt} -dllpath ${path} -dllib -l${name})
       list (APPEND clibraries ${library})
     else (location)
       get_filename_component (name_we ${library} NAME_WE)
