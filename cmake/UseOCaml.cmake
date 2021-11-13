@@ -23,7 +23,6 @@
 #
 # add_ocaml_executable (<name> [NATIVE | BYTECODE] source1 source2 ... sourceN)
 #   sourcefiles should be mli or ml files.
-#   To generate the executable, you have to call target_link_ocaml_libraries.
 #   Sets the OCAML_${name}_NATIVE variable.
 #   To specify the include directories, use the standard macro include_directories.
 #
