@@ -6,6 +6,7 @@ INSTALL(FILES
         Findcpprest.cmake
         FindCxxtest.cmake
         FindCython.cmake
+        FindFolly.cmake
         FindGHC.cmake
         FindGTK3.cmake
         FindGuile.cmake
