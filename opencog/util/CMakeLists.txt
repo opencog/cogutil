@@ -19,38 +19,38 @@ ADD_DEFINITIONS(
 )
 
 ADD_LIBRARY(cogutil SHARED
-	ansi
-	algorithm
-	backtrace-symbols
-	based_variant
-	cluster
-	comprehension
-	Config
-	Cover_Tree
-	digraph
-	dorepeat
-	exceptions
-	files
+	ansi.cc
+	algorithm.h
+	backtrace-symbols.c
+	based_variant.h
+	cluster.c
+	comprehension.h
+	Config.cc
+	Cover_Tree.h
+	digraph.h
+	dorepeat.h
+	exceptions.cc
+	files.cc
 	functional.h
-	iostreamContainer
-	KLD
-	lazy_normal_selector
-	lazy_random_selector
-	lazy_selector
-	log_prog_name
-	Logger
-	lru_cache
-	MannWhitneyU
-	misc
-	mt19937ar
-	oc_assert
-	oc_omp
-	octime
-	platform
-	random
-	ranking
-	StringTokenizer
-	tree
+	iostreamContainer.h
+	KLD.h
+	lazy_normal_selector.cc
+	lazy_random_selector.cc
+	lazy_selector.cc
+	log_prog_name.cc
+	Logger.cc
+	lru_cache.h
+	MannWhitneyU.h
+	misc.cc
+	mt19937ar.cc
+	oc_assert.cc
+	oc_omp.cc
+	octime.cc
+	platform.cc
+	random.h
+	ranking.h
+	StringTokenizer.cc
+	tree.cc
 	${WIN32_GETOPT_FILES}
 	${APPLE_STRNDUP_FILES}
 )
