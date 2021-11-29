@@ -109,9 +109,14 @@ class SigSlot
 		// Call everything that's connected.
 		void emit(ARGS... p)
 		{
+			// Avoid taking the lock if there's nothing to deliver.
+			if (0 == _slots.size()) return;
 			std::lock_guard<std::mutex> lck(_mtx);
-			for(auto it : _slots) it.second(p...);
+			for (auto it : _slots) it.second(p...);
 		}
+
+		// Do not take a lock. We want this to be fast.
+		size_t size() { return _slots.size(); }
 };
 
 #endif /* __COGUTIL_SIGSLOT_H__ */
