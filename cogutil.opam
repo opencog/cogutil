@@ -3,9 +3,7 @@
 (** This is in the root directory because I cannot figure out *)
 (** how to tell opam to look for it somewhere else. Sigh. *)
 (** *)
-(** To build, say: `sudo ls -la` and provide your password. *)
-(** Then say `opam install .` in the root git directory. *)
-(** I have no clue how to get this to build without the sudo step. *)
+(** To build, say: `opam install .` in the root git directory. *)
 (** Finally, say `eval $(opam env)` *)
 
 opam-version: "2.0"
@@ -25,7 +23,7 @@ bug-reports: "https://github.com/opencog/cogutil/issues"
 dev-repo: "git+https://github.com/opencog/cogutil/"
 depends: [ "g++" "cmake" "libboost-dev" "libboost-program-options-dev" "libboost-system-dev" "libboost-thread-dev" "binutils-dev" "libiberty-dev" "ocaml" "ocamlfind" ]
 build: [
-  ["cmake" "."]
+  ["cmake" "-DCMAKE_INSTALL_PREFIX:PATH=~/.opencog/usr" "."]
   [make]
 ]
-install: ["sudo" "make" "install"]
+install: ["make" "install"]
