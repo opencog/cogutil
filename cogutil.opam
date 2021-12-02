@@ -19,7 +19,7 @@ OpenCog modules.
 """
 maintainer: "linasvepstas@gmail.com"
 authors: "Linas Vepstas"
-license: "AGPLv3"
+license: "AGPL-3.0-or-later"
 homepage: "https://opencog.org"
 bug-reports: "https://github.com/opencog/cogutil/issues"
 dev-repo: "git+https://github.com/opencog/cogutil/"
