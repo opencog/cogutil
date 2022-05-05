@@ -27,7 +27,7 @@ else()
   set(ROCKSDB_INCLUDE_DIRS ${ROCKSDB_INCLUDE_DIR})
 
   find_package_handle_standard_args(
-    rocksdb
+    RocksDB
     DEFAULT_MSG
     ROCKSDB_LIBRARY
     ROCKSDB_INCLUDE_DIR)
