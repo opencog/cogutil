@@ -25,13 +25,14 @@ IF (CMAKE_COMPILER_IS_GNUCXX)
 	ELSE (APPLE)
 		SET(CMAKE_C_FLAGS "-Wall -fPIC -fstack-protector")
 		# SET(CMAKE_C_FLAGS "-Wl,--copy-dt-needed-entries")
+		SET(CMAKE_C_FLAGS_ASAN "-O3 -g -fsanitize=address,undefined -Wformat -Werror=format-security -Werror=array-bounds")
 		SET(CMAKE_C_FLAGS_DEBUG "-O0 -ggdb3")
 		SET(CMAKE_C_FLAGS_PROFILE "-O2 -g3 -pg")
 
 		# -flto is good for performance, but wow is it slow to link...
 		# XXX disable for now ... its just to painful, in daily life.
-		SET(CMAKE_C_FLAGS_RELEASE "-O3 -g")
-		# SET(CMAKE_C_FLAGS_RELEASE "-O3 -g -flto")
+		# SET(CMAKE_C_FLAGS_RELEASE "-O3 -g")
+		SET(CMAKE_C_FLAGS_RELEASE "-O3 -g -flto")
 		# SET(CMAKE_C_FLAGS_RELEASE "-O3 -g -flto=8")
 
 		# NO_AS_NEEDED is used to resolve circular dependency problems.
@@ -57,9 +58,14 @@ IF (CMAKE_COMPILER_IS_GNUCXX)
 	# 3) -std=gnu++17 for C++17 and GNU extensions support
 	SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wno-variadic-macros -fopenmp -std=gnu++17")
 
+	SET(CMAKE_CXX_FLAGS_ASAN ${CMAKE_C_FLAGS_ASAN})
 	SET(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
 	SET(CMAKE_CXX_FLAGS_PROFILE ${CMAKE_C_FLAGS_PROFILE})
 	SET(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_C_FLAGS_RELEASE})
+
+	SET(CMAKE_EXE_LINKER_FLAGS_INIT_ASAN "-fsanitize=address,undefined")
+	SET(CMAKE_SHARED_LINKER_FLAGS_INIT_ASAN "-fsanitize=address,undefined")
+	SET(CMAKE_MODULE_LINKER_FLAGS_INIT_ASAN "-fsanitize=address,undefined")
 
 	# Options for generating gcov code coverage output
 	SET(CMAKE_C_FLAGS_COVERAGE "-O0 -g -fprofile-arcs -ftest-coverage -fno-inline")
