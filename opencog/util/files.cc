@@ -194,7 +194,7 @@ bool opencog::load_text_file(const std::string &fname, std::string& dest)
     return true;
 }
 
-std::string get_exe_name()
+std::string opencog::get_exe_name()
 {
     static char buf[PATH_MAX];
     int rslt = readlink("/proc/self/exe", buf, PATH_MAX);
@@ -207,9 +207,8 @@ std::string get_exe_name()
         return std::string(buf);
 }
 
-std::string get_exe_dir()
+std::string opencog::get_exe_dir()
 {
     std::string exeName = get_exe_name();
     return exeName.substr(0, exeName.rfind("/")+1);
 }
-
