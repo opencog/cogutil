@@ -78,6 +78,9 @@
     /* 150 isn't special; it's just an arbitrary non-ASCII char value.  */
     #define OPTION_DEMANGLER (150)
 
+    #ifndef PTR
+        #define PTR void*
+    #endif
 /* Read in the symbol table.  */
 
 static void slurp_symtab(bfd *abfd, asymbol **syms)
