@@ -158,6 +158,9 @@ class async_buffer
 		void set_watermarks(size_t, size_t);
 		void stall(bool);
 
+		void open(int nthreads=4);
+		void close();
+
 		// Utilities for monitoring performance.
 		// _item_count == number of attempted insertions;
 		// _duplicate_count == number of duplicates dropped.
@@ -214,13 +217,35 @@ async_buffer<Writer, Element>::async_buffer(Writer* wr,
 	clear_stats();
 
 	for (int i=0; i<nthreads; i++)
-	{
 		start_writer_thread();
-	}
+}
+
+/// Create writer threads. By default, the buffer is created with
+/// four intial threads; these can be changed by closing and reopening
+/// with a different thread count.
+template<typename Writer, typename Element>
+void async_buffer<Writer, Element>::open(int nthreads)
+{
+	if (0 < _thread_count) return;
+
+	for (int i=0; i<nthreads; i++)
+		start_writer_thread();
 }
 
 template<typename Writer, typename Element>
 async_buffer<Writer, Element>::~async_buffer()
+{
+	stop_writer_threads();
+}
+
+/// Stop all of the writer threads. This does not truly close the
+/// queue, it remains operational in synchronous, single-threaded
+/// mode. So perhaps we need a better name for this function?
+/// The goal of allowing the user to close the buffer is to free
+/// any resources acquired in the writer threads e.g. open sockets
+/// or open files.
+template<typename Writer, typename Element>
+void async_buffer<Writer, Element>::close()
 {
 	stop_writer_threads();
 }
@@ -294,6 +319,10 @@ void async_buffer<Writer, Element>::stop_writer_threads()
 
 	// logger().info("async_buffer: stopping all writer threads");
 	std::unique_lock<std::mutex> lock(_write_mutex);
+
+	// Perhaps we are already stopped!?
+	if (0 == _thread_count) return;
+
 	_stopping_writers = true;
 
 	// Spin a while, until the writer threads are (mostly) done.
