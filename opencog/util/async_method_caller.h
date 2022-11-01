@@ -399,8 +399,9 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 	}
 
 	// Must not honor the enqueue mutex when in a writer thread,
-	// as otherwise a deadlock will result.
-	bool need_insert = true;
+	// as otherwise a deadlock will result. Also, must return
+	// immediately, to avoid the high-watermark drain, as this
+	// too may deadlock if all the queues are full.
 	std::thread::id tid = std::this_thread::get_id();
 	for (const auto& th : _write_threads)
 	{
@@ -409,8 +410,7 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 			_pending ++;
 			_store_queue.push(elt);
 			_item_count++;
-			need_insert = false;
-			break;
+			return;
 		}
 	}
 
@@ -418,7 +418,6 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 	// perfectly thread-safe. However, the flush barrier does need to
 	// be able to halt everyone else from enqueing more stuff, so we
 	// do need to use a lock for that.
-	if (need_insert)
 	{
 		std::unique_lock<std::mutex> lock(_enqueue_mutex);
 		_pending ++;

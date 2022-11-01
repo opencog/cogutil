@@ -504,17 +504,15 @@ void async_buffer<Writer, Element>::insert(const Element& elt)
 	}
 
 	// Must not honor the enqueue mutex when in a writer thread,
-	// as otherwise a deadlock will result.
-	bool need_insert = true;
+	// as otherwise a deadlock will result. Also, return immediately;
+	// do NOT continue to the drain code below; it will deadlock
+	// waiting on ourselves to finish draining.
 	std::thread::id tid = std::this_thread::get_id();
 	for (const auto& th : _write_threads)
 	{
 		if (th.get_id() == tid)
 		{
 			do_insert(elt);
-			need_insert = false;
-			// Nothing more to do. Do NOT continue to the drain code
-			// below; it will deadlock waiting on ourselves.
 			return;
 		}
 	}
@@ -523,7 +521,6 @@ void async_buffer<Writer, Element>::insert(const Element& elt)
 	// perfectly thread-safe. However, the flush barrier does need to
 	// be able to halt everyone else from enqueing more stuff, so we
 	// do need to use a lock for that.
-	if (need_insert)
 	{
 		std::unique_lock<std::mutex> lock(_enqueue_mutex);
 		do_insert(elt);
