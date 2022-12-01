@@ -46,7 +46,7 @@ namespace opencog
  * Thread-safe, multi-threaded asynchronous write buffer.
  *
  * This class provides a simple way to write de-duplicated data,
- * asynchornously. It is similar to the async_caller class, in that
+ * asynchronously. It is similar to the async_caller class, in that
  * it calls the indicated method in some different thread, at some
  * later time. Unlike the async caller, it de-duplicates the data
  * before making the call.  That is, if the call is queued multiple
