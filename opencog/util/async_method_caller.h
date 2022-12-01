@@ -58,9 +58,9 @@ namespace opencog
  * You'd think that there would be some BOOST function for this, but
  * there doesn't seem to be ...
  *
- * This class allows a simple implmentation of a thread-safe, multi-
- * threaded write queue. It is currently used by the persistant storage
- * class, to write atoms out to disk.
+ * This class allows a simple implementation of a thread-safe, multi-
+ * threaded write queue. It is currently used by the AtomSpace SQL
+ * PostgresStorageNode, to write atoms out to disk.
  *
  * What actually happens is this: The given elements are placed on a
  * queue (in a thread-safe manner -- the enqueue function can be safely
@@ -185,9 +185,7 @@ async_caller<Writer, Element>::async_caller(Writer* wr,
 	clear_stats();
 
 	for (int i=0; i<nthreads; i++)
-	{
 		start_writer_thread();
-	}
 }
 
 template<typename Writer, typename Element>
@@ -246,6 +244,10 @@ void async_caller<Writer, Element>::stop_writer_threads()
 {
 	// logger().info("async_caller: stopping all writer threads");
 	std::unique_lock<std::mutex> lock(_write_mutex);
+
+	// Perhaps we are already stopped!?
+	if (0 == _thread_count) return;
+
 	_stopping_writers = true;
 
 	// Spin a while, until the writer threads are (mostly) done.
@@ -432,7 +434,9 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 	// to complete, other threads might be filling the queue back up.
 	// If it does over-fill, then those threads will also block, one
 	// by one, until we hit a metastable state, where the active
-	// (non-stalled) fillers and emptiers are in balance.
+	// (non-blocked) fillers and emptiers are in balance. The
+	// queue will always be full (at the high watermark) when this
+	// metastable state is hit.
 
 	if (_high_watermark < _store_queue.size())
 	{
