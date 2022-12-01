@@ -533,7 +533,9 @@ void async_buffer<Writer, Element>::insert(const Element& elt)
 	// to complete, other threads might be filling the set back up.
 	// If it does over-fill, then those threads will also block, one
 	// by one, until we hit a metastable state, where the active
-	// (non-stalled) fillers and emptiers are in balance.
+	// (non-blocked) fillers and emptiers are in balance. The
+	// queue will always be full (at the high watermark) when this
+	// metastable state is hit.
 
 	if (_high_watermark < _store_set.size())
 	{
