@@ -74,6 +74,11 @@ namespace opencog
  * threads can handle the time-consuming work in parallel, while the
  * master thread can zip along.
  *
+ * The order in which the processing is done is the same as the order
+ * used in std::set for the underlying data item. That is, the sort
+ * order provided by std::less_than is used. Note that this means
+ * that the "greatest" elements will be handled last.
+ *
  * You'd think that there would be some BOOST function for this, but
  * there doesn't seem to be ...
  *
