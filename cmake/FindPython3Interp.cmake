@@ -29,6 +29,7 @@ unset(PYTHON_EXECUTABLE CACHE)
 set(PYTHONINTERP_FOUND FALSE)
 
 find_package(PythonInterp 3 QUIET)
+include (FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Python3Interp
                                   REQUIRED_VARS PYTHON_EXECUTABLE)
 

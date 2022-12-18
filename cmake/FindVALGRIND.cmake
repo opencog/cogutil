@@ -18,6 +18,7 @@ find_path(VALGRIND_INCLUDE_DIR memcheck.h
   ${VALGRIND_PREFIX}/include ${VALGRIND_PREFIX}/include/valgrind)
 find_program(VALGRIND_PROGRAM NAMES valgrind PATH /usr/bin /usr/local/bin ${VALGRIND_PREFIX}/bin)
 
+include (FindPackageHandleStandardArgs)
 find_package_handle_standard_args(VALGRIND DEFAULT_MSG
     VALGRIND_INCLUDE_DIR
     VALGRIND_PROGRAM)
