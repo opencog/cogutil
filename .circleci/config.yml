@@ -580,6 +580,9 @@ workflows:
       - attention:
           requires:
             - cogserver
+      - unify:
+          requires:
+            - atomspace
       - ure:
           requires:
             - atomspace
