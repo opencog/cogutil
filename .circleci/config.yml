@@ -126,14 +126,6 @@ jobs:
       - run:
           name: Install CogUtil
           command: cd /ws/cogutil/build && make -j2 install && ldconfig
-      - restore_cache:
-          name: Restore GHC Cache
-          keys:
-            - ghc-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{ arch }}
-      - restore_cache:
-          name: Restore Haskell Deps Cache
-          keys:
-            - haskelldeps-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{checksum "/ws/atomspace/opencog/haskell/opencog-atomspace.cabal"}}-{{ arch }}
       - run:
           name: Install AtomSpace
           command: cd /ws/atomspace/build && make install && ldconfig
@@ -151,7 +143,7 @@ jobs:
           command: cd build && make tests
       - run:
           name: Run tests
-          command: cd build && make test ARGS="$MAKEFLAGS"
+          command: cd build && make check
       - run:
           name: Install CogServer
           command: cd build && make install && ldconfig
