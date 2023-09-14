@@ -373,42 +373,6 @@ jobs:
             - miner
             - ccache
 
-  moses:
-    docker:
-      - image: $CIRCLE_PROJECT_USERNAME/opencog-deps
-        user: root
-        environment:
-          CCACHE_DIR: /ws/ccache
-    working_directory: /ws/moses
-    steps:
-      - attach_workspace:
-          at: /ws
-      - run:
-          name: Set number of make jobs
-          command: echo "export MAKEFLAGS=-j2" >> $BASH_ENV
-      - run:
-          name: Install CogUtil
-          command: cd /ws/cogutil/build && make install && ldconfig
-      - run:
-          name: Checkout MOSES
-          command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/moses .
-      - run:
-          name: CMake Configure
-          command: mkdir build && cd build && cmake ..
-      - run:
-          name: Build
-          command: cd build && make
-      - run:
-          name: Build tests
-          command: cd build && make tests
-      - run:
-          name: Run tests
-          command: cd build && make test ARGS="$MAKEFLAGS"
-      - run:
-          name: Print test log
-          command: cat build/tests/Testing/Temporary/LastTest.log
-          when: always
-
   asmoses:
     docker:
       - image: $CIRCLE_PROJECT_USERNAME/opencog-deps
@@ -577,9 +541,6 @@ workflows:
       - miner:
           requires:
             - ure
-      - moses:
-          requires:
-            - cogutil
       - asmoses:
           requires:
             - cogutil
