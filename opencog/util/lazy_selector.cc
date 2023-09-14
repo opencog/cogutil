@@ -30,36 +30,38 @@
 #include <algorithm>
 #include <functional>
 #include <vector>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/iterator/counting_iterator.hpp>
 
 namespace opencog
 {
 
-using std::make_pair;
-using std::count_if;
-using boost::counting_iterator;
-using boost::bind;
-
 lazy_selector::lazy_selector(unsigned int u, unsigned int l)
-    : _u(u), _l(l) {
+    : _u(u), _l(l)
+{
     OC_ASSERT(u - l > 0, "you cannot select any thing from an empty list");
 }
 
-bool lazy_selector::empty() const {
+bool lazy_selector::empty() const
+{
     return _l >= _u;
 }
 
-unsigned int lazy_selector::count_n_free() const {
-    return count_if(counting_iterator<unsigned int>(_l),
-                    counting_iterator<unsigned int>(_u),
-                    bind(&lazy_selector::is_free, this, _1));
+unsigned int lazy_selector::count_n_free() const
+{
+    return std::count_if(
+                    boost::counting_iterator<unsigned int>(_l),
+                    boost::counting_iterator<unsigned int>(_u),
+                    boost::bind(&lazy_selector::is_free, this, boost::placeholders::_1));
 }
 
-void lazy_selector::reset_range(unsigned int new_u) {
+void lazy_selector::reset_range(unsigned int new_u)
+{
     _u = new_u;
 }
-void lazy_selector::reset_range(unsigned int new_u, unsigned int new_l) {
+
+void lazy_selector::reset_range(unsigned int new_u, unsigned int new_l)
+{
 	OC_ASSERT(new_l >= _l,
 	          "You cannot reset the lower bound by a lower number, "
 	          "due to the workings of the algorithm.");
@@ -97,11 +99,13 @@ unsigned int lazy_selector::operator()()
     return res;
 }
 
-bool lazy_selector::is_free(unsigned int idx) const {
+bool lazy_selector::is_free(unsigned int idx) const
+{
     return _picked.find(idx) == _picked.end();
 }
 
-void lazy_selector::increase_l_till_free() {
+void lazy_selector::increase_l_till_free()
+{
     do {
         _l++;
     } while(!is_free(_l));
