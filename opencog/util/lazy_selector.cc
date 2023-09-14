@@ -30,7 +30,7 @@
 #include <algorithm>
 #include <functional>
 #include <vector>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/iterator/counting_iterator.hpp>
 
 namespace opencog
@@ -39,7 +39,6 @@ namespace opencog
 using std::make_pair;
 using std::count_if;
 using boost::counting_iterator;
-using boost::bind;
 
 lazy_selector::lazy_selector(unsigned int u, unsigned int l)
     : _u(u), _l(l) {
@@ -53,7 +52,7 @@ bool lazy_selector::empty() const {
 unsigned int lazy_selector::count_n_free() const {
     return count_if(counting_iterator<unsigned int>(_l),
                     counting_iterator<unsigned int>(_u),
-                    bind(&lazy_selector::is_free, this, _1));
+                    boost::bind(&lazy_selector::is_free, this, boost::placeholders::_1));
 }
 
 void lazy_selector::reset_range(unsigned int new_u) {
