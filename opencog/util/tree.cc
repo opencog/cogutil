@@ -6,6 +6,9 @@ using namespace boost::spirit::classic;
 using std::string;
 using namespace opencog;
 
+// XXX FIXME This is clearly not thread-safe.
+// Who is using this thing ???
+// Can we get rid of this file, entirely?
 tree<string> tr;
 tree<string>::iterator at = tr.begin();
 
@@ -59,23 +62,11 @@ struct TreeGrammar : public grammar<TreeGrammar>
     };
 };
 
-tree<std::string> parse_string_tree(const std::string& str)
-{
-    TreeGrammar tg;
-    tr.clear();
-    at = tr.begin();
-    parse(str.c_str(), tg, space_p);
-
-    tree<std::string> tmp(tr);
-    tr.clear();
-    return tmp;
-}
-
 } // ~namespace
 
 namespace std {
 
-std::istream& operator>>(std::istream& in,opencog::tree<std::string>& t)
+std::istream& operator>>(std::istream& in, opencog::tree<std::string>& t)
 {
     t.clear();
     std::string str, tmp;
@@ -128,7 +119,15 @@ std::istream& operator>>(std::istream& in,opencog::tree<std::string>& t)
     }
     str[j] = 0x0; // null terminate
 
-    t = parse_string_tree(str);
+    // parse_string_tree(str);
+    TreeGrammar tg;
+    tr.clear();
+    at = tr.begin();
+    parse(str.c_str(), tg, space_p);
+
+    t = tr;
+    tr.clear();
+
     return in;
 }
 
