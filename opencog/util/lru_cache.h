@@ -23,13 +23,10 @@
 #ifndef _OPENCOG_LRU_CACHE_H
 #define _OPENCOG_LRU_CACHE_H
 
-#include <list>
-#include <limits>
 #include <atomic>
-
-#include <boost/unordered_map.hpp>
-#include <boost/thread.hpp>
-#include <boost/numeric/conversion/cast.hpp>
+#include <limits>
+#include <list>
+#include <shared_mutex>
 
 #include <opencog/util/exceptions.h>
 #include <opencog/util/hashing.h>
@@ -92,7 +89,7 @@ protected:
 //! Least Recently Used Cache. Non thread safe, use
 //! lru_cache_threaded for that.
 template<typename F,
-         typename Hash=boost::hash<typename F::argument_type>,
+         typename Hash=std::hash<typename F::argument_type>,
          typename Equals=std::equal_to<typename F::argument_type> >
 struct lru_cache : public F, public cache_base
 {
@@ -100,7 +97,7 @@ struct lru_cache : public F, public cache_base
     typedef typename F::result_type result_type;
     typedef typename std::list<argument_type> list;
     typedef typename list::iterator list_iter;
-    typedef boost::unordered_map<list_iter,result_type,
+    typedef std::unordered_map<list_iter,result_type,
                                  deref_hash<list_iter,Hash>,
                                  deref_equals<list_iter,Equals> > map;
     typedef typename map::iterator map_iter;
@@ -219,15 +216,15 @@ protected:
 //! Least Recently Used Cache with thread safety (this isn't really
 //! thread safe yet, it's still buggy)
 template<typename F,
-         typename Hash=boost::hash<typename F::argument_type>,
+         typename Hash=std::hash<typename F::argument_type>,
          typename Equals=std::equal_to<typename F::argument_type> >
 struct lru_cache_threaded : public lru_cache<F, Hash, Equals>
 {
 private:
     typedef lru_cache<F, Hash, Equals> super;
-    typedef boost::shared_mutex cache_mutex;
-    typedef boost::shared_lock<cache_mutex> shared_lock;
-    typedef boost::unique_lock<cache_mutex> unique_lock;
+    typedef std::shared_mutex cache_mutex;
+    typedef std::shared_lock<cache_mutex> shared_lock;
+    typedef std::unique_lock<cache_mutex> unique_lock;
 public:
     typedef typename F::argument_type argument_type;
     typedef typename F::result_type result_type;
@@ -359,13 +356,13 @@ protected:
 //! removes the first element of the hash table when the cache is
 //! full. No thread safety, use prr_cache_threaded for that.
 template<typename F,
-         typename Hash=boost::hash<typename F::argument_type>,
+         typename Hash=std::hash<typename F::argument_type>,
          typename Equals=std::equal_to<typename F::argument_type> >
 struct prr_cache : public F, public cache_base
 {
     typedef typename F::argument_type argument_type;
     typedef typename F::result_type result_type;
-    typedef boost::unordered_map<argument_type, result_type, Hash, Equals> map;
+    typedef std::unordered_map<argument_type, result_type, Hash, Equals> map;
     typedef typename map::iterator map_iter;
 
     prr_cache(size_type n, const F& f=F(), const std::string name = "prr_cache")
@@ -425,15 +422,15 @@ protected:
 
 //! Pseudo Random Replacement Cache with thread safety
 template<typename F,
-         typename Hash=boost::hash<typename F::argument_type>,
+         typename Hash=std::hash<typename F::argument_type>,
          typename Equals=std::equal_to<typename F::argument_type> >
 struct prr_cache_threaded : public prr_cache<F, Hash, Equals>
 {
 private:
     typedef prr_cache<F, Hash, Equals> super;
-    typedef boost::shared_mutex cache_mutex;
-    typedef boost::shared_lock<cache_mutex> shared_lock;
-    typedef boost::unique_lock<cache_mutex> unique_lock;
+    typedef std::shared_mutex cache_mutex;
+    typedef std::shared_lock<cache_mutex> shared_lock;
+    typedef std::unique_lock<cache_mutex> unique_lock;
 
 public:
     typedef typename F::argument_type argument_type;
@@ -518,16 +515,16 @@ protected:
  * Unlimited cache, will grow as much as necessary. Thread safe!!!
  */
 template<typename F,
-         typename Hash=boost::hash<typename F::argument_type>,
+         typename Hash=std::hash<typename F::argument_type>,
          typename Equals=std::equal_to<typename F::argument_type> >
 struct inf_cache : public F, public inf_cache_base {
     typedef typename F::argument_type argument_type;
     typedef typename F::result_type result_type;
-    typedef boost::unordered_map<argument_type, result_type, Hash, Equals> map;
+    typedef std::unordered_map<argument_type, result_type, Hash, Equals> map;
     typedef typename map::iterator map_iter;
-    typedef boost::shared_mutex cache_mutex;
-    typedef boost::shared_lock<cache_mutex> shared_lock;
-    typedef boost::unique_lock<cache_mutex> unique_lock;
+    typedef std::shared_mutex cache_mutex;
+    typedef std::shared_lock<cache_mutex> shared_lock;
+    typedef std::unique_lock<cache_mutex> unique_lock;
 
     inf_cache(const F& f=F(), const std::string name = "inf_cache")
         : F(f), inf_cache_base(name) {}
@@ -584,9 +581,6 @@ struct adaptive_cache {
           _ulimit(ulimit), _ufrac(ufrac) {}
 
     result_type operator()(const argument_type& x) const {
-        using boost::numeric_cast;
-        using boost::numeric::positive_overflow;
-        using std::numeric_limits;
 
         if(_counter++ % _ncycles == 0) {
             float tram = getTotalRAM();
@@ -594,12 +588,12 @@ struct adaptive_cache {
             float free_mem_ratio = 1 - fram/tram;
             if(free_mem_ratio < _llimit && _cache.full()) {
                 try {
-                    _cache.resize(numeric_cast<unsigned>(_cache.max_size()*_lfact));
-                } catch(positive_overflow&) {
-                    _cache.resize(numeric_limits<unsigned>::max());
+                    _cache.resize(static_cast<unsigned>(_cache.max_size()*_lfact));
+                } catch(const std::exception&) {
+                    _cache.resize(std::numeric_limits<unsigned>::max());
                 }
             }
-            else if(free_mem_ratio > _ulimit) {
+            else if (free_mem_ratio > _ulimit) {
                 _cache.resize(std::max(1U, (unsigned)(_cache.max_size()/_ufrac)));
             }
         }
@@ -633,11 +627,11 @@ template<typename ARG, typename RESULT>
 struct lru_cache_arg_result {
       typedef ARG argument_type;
       typedef RESULT result_type;
-      typedef typename boost::hash<argument_type> Hash;
+      typedef typename std::hash<argument_type> Hash;
       typedef typename std::equal_to<argument_type> Equals;
       typedef typename std::list<argument_type> list;
       typedef typename list::iterator list_iter;
-      typedef boost::unordered_map<list_iter,result_type,
+      typedef std::unordered_map<list_iter,result_type,
                                    deref_hash<list_iter,Hash>,
                                    deref_equals<list_iter,Equals> > map;
     typedef typename map::iterator map_iter;
