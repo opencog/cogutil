@@ -3,10 +3,7 @@
 
 #include <algorithm>
 #include <set>
-#include <boost/lexical_cast.hpp>
 #include <boost/bind/bind.hpp>
-
-#include <algorithm>
 
 #include <opencog/util/numeric.h>
 #include <opencog/util/exceptions.h>
@@ -16,14 +13,6 @@ namespace opencog
 /** \addtogroup grp_cogutil
  *  @{
  */
-
-/// @todo these needs to be changed for non-gcc
-// using std::copy_n;
-// using std::lexicographical_compare_3way;
-// using std::random_sample_n;
-// using std::random_sample;
-// using std::is_heap;
-using std::is_sorted;
 
 //! binary for_each
 template<typename It1, typename It2, typename F>
@@ -274,11 +263,9 @@ Set set_symmetric_difference(const Set& s1, const Set& s2) {
 template<typename It, typename Pred, typename Out>
 Out n_way_partition(It begin, It end, const Pred p, int n, Out out)
 {
-	using namespace boost::placeholders;
-
 	// could be made more efficient if needed
 	for (int i = 0;i < n - 1;++i)
-		*out++ = begin = std::partition(begin, end, boost::bind(p, _1) == i);
+		*out++ = begin = std::partition(begin, end, boost::bind(p, boost::placeholders::_1) == i);
 	return out;
 }
 
@@ -360,8 +347,6 @@ std::set<std::vector<typename C::value_type>> cartesian_product(const C& c,
  * Given a sequence of indexes, and a sequence of elements, return a
  * sequence of all elements corresponding to the indexes (in the order
  * of the indexes).
- *
- * Maybe boost offers something like that already but I can't find it.
  */
 template<typename Indices, typename Seq>
 Seq seq_filtered(const Seq& seq, const Indices& indices)
