@@ -31,7 +31,7 @@ jobs:
           command: cd build && make tests
       - run:
           name: Run tests
-          command: cd build && make test ARGS="$MAKEFLAGS"
+          command: cd build && make check ARGS="$MAKEFLAGS"
       - run:
           name: Print test log
           command: cat build/tests/Testing/Temporary/LastTest.log
@@ -201,7 +201,7 @@ jobs:
           command: cd build && make tests
       - run:
           name: Run tests
-          command: cd build && make test ARGS="$MAKEFLAGS"
+          command: cd build && make check ARGS="$MAKEFLAGS"
       - run:
           name: Install Attention
           command: cd build && make install && ldconfig
@@ -248,7 +248,7 @@ jobs:
           command: cd build && make tests
       - run:
           name: Run tests
-          command: cd build && make test ARGS="$MAKEFLAGS"
+          command: cd build && make check ARGS="$MAKEFLAGS"
       - run:
           name: Install Unify
           command: cd build && make install && ldconfig
@@ -298,7 +298,7 @@ jobs:
           command: cd build && make tests
       - run:
           name: Run tests
-          command: cd build && make test ARGS="$MAKEFLAGS"
+          command: cd build && make check ARGS="$MAKEFLAGS"
       - run:
           name: Install URE
           command: cd build && make install && ldconfig
@@ -359,7 +359,7 @@ jobs:
           command: cd build && make tests
       - run:
           name: Run tests
-          command: cd build && make test ARGS="$MAKEFLAGS"
+          command: cd build && make check ARGS="$MAKEFLAGS"
       - run:
           name: Install Miner
           command: cd build && make install && ldconfig
@@ -416,7 +416,7 @@ jobs:
           command: cd build && make tests
       - run:
           name: Run tests
-          command: cd build && make test ARGS="$MAKEFLAGS"
+          command: cd build && make check ARGS="$MAKEFLAGS"
       - run:
           name: Print test log
           command: cat build/tests/Testing/Temporary/LastTest.log
