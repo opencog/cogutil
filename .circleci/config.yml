@@ -86,7 +86,7 @@ jobs:
       - run:
           name: Run tests
           # Run single-threaded to *maybe* help ParallelUTest not fail
-          command: cd build && make test
+          command: cd build && make check
       - run:
           name: Install AtomSpace
           command: cd build && make install && ldconfig
