@@ -20,7 +20,6 @@ INSTALL(FILES
         FindOctomap.cmake
         FindPGSQL.cmake
         FindPthreads.cmake
-        FindPython3Interp.cmake
         FindRocksDB.cmake
         FindSIGAR.cmake
         FindStack.cmake
