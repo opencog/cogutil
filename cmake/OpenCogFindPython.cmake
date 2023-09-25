@@ -54,10 +54,11 @@ IF(HAVE_PY_INTERP)
 			#
 			# If the bug is fixed, most of this script could be replaced by:
 			#
-			# from distutils.sysconfig import get_python_lib; print(get_python_lib(plat_specific=True, prefix=prefix))
+			# from distutils.sysconfig import get_python_lib;
+			# print(get_python_lib(plat_specific=True, prefix=prefix))
 			#
-			# However, using this would not respect a python virtual
-			# environments, so in a way this is better!
+			# However, using this would not respect python virtual
+			# environments, so the below is still better!
 			FILE(WRITE ${PROJECT_BINARY_DIR}/scripts/get_python_lib.py
 				"import sys\n"
 				"import sysconfig\n"
@@ -81,7 +82,9 @@ IF(HAVE_PY_INTERP)
 			# Find python destination dir for python bindings
 			# because it may differ on each operating system.
 			EXECUTE_PROCESS(
-				COMMAND ${PYTHON_EXECUTABLE} "${PROJECT_BINARY_DIR}/scripts/get_python_lib.py" "${CMAKE_INSTALL_PREFIX}"
+				COMMAND ${PYTHON_EXECUTABLE}
+				"${PROJECT_BINARY_DIR}/scripts/get_python_lib.py"
+				"${CMAKE_INSTALL_PREFIX}"
 				OUTPUT_VARIABLE PYTHON_DEST
 				)
 
