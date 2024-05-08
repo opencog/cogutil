@@ -126,6 +126,15 @@ public:
         return before < after;
     }
 
+    /// Remove the Element from the set. Return number of Elements
+    /// removed, i.e. 1 or 0, depending on whether the item was found
+    /// (or not) in the set.
+    size_t erase(Element&& item)
+    {
+        std::unique_lock<std::mutex> lock(the_mutex);
+        return the_set.erase(item);
+    }
+
     /// Return true if the set is empty at this instant in time.
     /// Since other threads may have inserted or removed immediately
     /// after this call, the emptiness of the set may have
