@@ -129,7 +129,7 @@ public:
     /// Remove the Element from the set. Return number of Elements
     /// removed, i.e. 1 or 0, depending on whether the item was found
     /// (or not) in the set.
-    size_t erase(Element&& item)
+    size_t erase(const Element& item)
     {
         std::unique_lock<std::mutex> lock(the_mutex);
         return the_set.erase(item);
