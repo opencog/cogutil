@@ -174,8 +174,8 @@ public:
 
         if (reverse)
         {
-            // Frick-n-frack, cannot case reverse iterators to
-            // forward iterators. Also there is no erase() that
+            // Frick-n-frack, cannot cast reverse iterators to
+            // forward iterators. Also, there is no erase() that
             // accepts a reverse iterator. This means that
             // fetches from the end actually run slower. Dang.
             typename std::set<Element>::const_reverse_iterator it = the_set.crbegin();

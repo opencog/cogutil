@@ -43,7 +43,7 @@ namespace opencog {
  * http://en.wikipedia.org/wiki/List_comprehension#C.2B.2B
  *
  * Though the solution involing Boost.Range is nearly satisfactory, I
- * want to be able to construct and assing the list at once.
+ * want to be able to construct and assign the list at once.
  *
  * The usage is extremely simple:
  *

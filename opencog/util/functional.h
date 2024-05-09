@@ -232,7 +232,7 @@ const_function<T> make_const_function(const T& t)
     return const_function<T>(t);
 }
 
-//! turn a modifer into a unary function
+//! turn a modifier into a unary function
 /**
  * The modifier should be as follows
  * struct M {

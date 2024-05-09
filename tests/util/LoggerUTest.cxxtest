@@ -149,7 +149,7 @@ public:
         _logger.flush();
 
         // Hmm. I don't get it. Logger::flush calls fdatasync(),
-        // appearently this is not enough to prevent a race condition
+        // apparently this is not enough to prevent a race condition
         // between the logger write, and the read to count the lines.
         // I really don't get it .. the fdatasync should have been enough.
         // To work around this, force a sync() below to avoid spurious

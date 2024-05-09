@@ -245,12 +245,12 @@ namespace opencog {
      *
      * @note left or right should not contain white-space and
      * non-white-space characters in the same string, for instance ",
-     * ." is forbiden.  The other assumption is that the string
+     * ." is forbidden.  The other assumption is that the string
      * contains at least one element.
      *
      * In case things or in are not as expected an OC_ASSERT is
      * raised.
-     * @todo it may be more appropriate to throw an expection rather
+     * @todo it may be more appropriate to throw an exception rather
      * than raising an OC_ASSERT
      */
     template<class In, class OutIt>

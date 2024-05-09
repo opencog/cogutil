@@ -163,7 +163,7 @@ static inline bool is_approx_eq_ulp(double x, double y, int64_t max_ulps)
 
 	// The dereferencing is below is explicitly called out as
 	// "undefined behavior" by the C++ spec.  However, the spec
-	// also tells us how to do with correcly, when C++20 becomes
+	// also tells us how to do with correctly, when C++20 becomes
 	// available:
 	// std::abs(std::bit_cast<std::int64_t>(x) - std::bit_cast<std::int64_t>(y))
 
@@ -353,7 +353,7 @@ Float p_norm_distance(const Vec& a, const Vec& b, Float p=1.0)
  *
  * Indeed the Tanimoto distance is considered as a generalization of
  * the Jaccard distance over multisets (where the weights are the
- * number of occurences, therefore never negative). See
+ * number of occurrences, therefore never negative). See
  * http://en.wikipedia.org/wiki/Talk%3AJaccard_index
  */
 template<typename Vec, typename Float>

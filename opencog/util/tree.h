@@ -515,7 +515,7 @@ public:
     /// Determine whether the iterator is an 'end' iterator and thus not actually pointing to a node.
     bool     is_valid(const iterator_base&) const;
 
-	// for debuging
+	// for debugging
     void validate(const iterator_base& it) const;
     void validate() const { validate(begin()); }
 
@@ -3286,7 +3286,7 @@ std::string subtree_to_string(iter it)
 
 // Instantiate a string-specific converter first, as we need this for
 // the general case, below. Note that it is being instantiated in the
-// std namespace.  We do ths because we want to use the std variants
+// std namespace.  We do this because we want to use the std variants
 // to create the tree. It is then used in the code below, to first
 // convert a string to a string-tree, and then the string-tree to the
 // final, desired typename-tree. Without this, operator>>() would be

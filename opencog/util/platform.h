@@ -73,7 +73,7 @@ size_t getMemUsage();
 //! Return the total number of bytes of physical RAM installed.
 uint64_t getTotalRAM();
 
-//! Return the total number of free bytes avaiable in RAM (excluding OS caches)
+//! Return the total number of free bytes available in RAM (excluding OS caches)
 uint64_t getFreeRAM();
 
 //! Return the OS username

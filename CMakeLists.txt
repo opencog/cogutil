@@ -84,7 +84,7 @@ IF (CYGWIN)
 ENDIF (CYGWIN)
 
 # ===================================================================
-# Check for existance of various required, optional packages.
+# Check for existence of various required, optional packages.
 
 # Check for boost. We need dynamic-linked, threaded libs by default.
 SET(Boost_USE_STATIC_LIBS OFF)

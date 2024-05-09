@@ -98,7 +98,7 @@ std::istream& operator>>(std::istream& in, opencog::tree<std::string>& t)
     while (i<sz and (str[i] == ' ' or str[i] == '\t')) i++;
     while (i<sz) {
        int ix = i;
-       // Skip all whitespace that preceeds an open paren.
+       // Skip all whitespace that precedes an open paren.
        while (str[ix] == ' ' or str[ix] == '\t') ix++;
        if (str[ix] == '(') {
           i = ix;

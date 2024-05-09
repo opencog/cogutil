@@ -40,7 +40,7 @@ namespace opencog {
  */
 
 /** @name Generic caches
- * A colection of generic caches. Please be careful if you add more
+ * A collection of generic caches. Please be careful if you add more
  * caches that they do not break when the function to cache raises an
  * exception.
  */
@@ -340,7 +340,7 @@ protected:
         return xs_f(x);
     }
 
-    // expection safe call
+    // exception safe call
     inline result_type x_f(const argument_type& x) const {
         try {
             return _f(x);

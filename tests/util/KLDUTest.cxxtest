@@ -104,7 +104,7 @@ public:
         // TS_ASSERT_DELTA(expected_res, computed_res, delta);
         TS_ASSERT_DELTA(-1, computed_res, delta); // why ???
     }
-    // same distribution (guassian)
+    // same distribution (gaussian)
     void test_gaussian_same_sample() {
         cout << "test_gaussian_same_sample" << endl;
 

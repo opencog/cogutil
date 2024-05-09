@@ -77,7 +77,7 @@ public:
 
     /**
      * Return the next token from the string. If the end of the string is
-     * reached the method retuns a empty string ""
+     * reached the method returns a empty string ""
      */
     const std::string next_token();
 

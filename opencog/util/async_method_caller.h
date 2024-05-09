@@ -306,7 +306,7 @@ void async_caller<Writer, Element>::drain()
 /// This is NOT synchronizing! It does NOT prevent other threads from
 /// concurrently adding to the queue! Thus, if these other threads are
 /// adding at a high rate, this call might not return for a long time;
-/// it might never return! There is no gaurantee of forward progress!
+/// it might never return! There is no guarantee of forward progress!
 ///
 template<typename Writer, typename Element>
 void async_caller<Writer, Element>::flush_queue()
@@ -418,7 +418,7 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 
 	// The _store_queue.push(elt) does not need a lock, itself; its
 	// perfectly thread-safe. However, the flush barrier does need to
-	// be able to halt everyone else from enqueing more stuff, so we
+	// be able to halt everyone else from enqueuing more stuff, so we
 	// do need to use a lock for that.
 	{
 		std::unique_lock<std::mutex> lock(_enqueue_mutex);

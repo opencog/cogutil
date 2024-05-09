@@ -57,7 +57,7 @@
 
 namespace opencog {
 
-//! cassert complet with message and trace info
+//! cassert complete with message and trace info
 void cassert(const char * trace,  bool condition, const char * msg, ...);
 
 //! cassert with a string instead of const char* and vaargs

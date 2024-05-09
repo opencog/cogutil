@@ -52,7 +52,7 @@ struct tournament_selection
      * element is the winner of a random selection of t_size elements
      * in [from, to).  That is, a tournament is played n_select times.
      * The winner of each tournament is the largest element from a set
-     * of t_size randomly choosen elements.
+     * of t_size randomly chosen elements.
      *
      * The winners of each tournament are appended to dst.
      */

@@ -51,7 +51,7 @@
 
 /**
  * The file paths here have to be able to find both shared libraries
- * (dynamicaly loadable libraries) as well as scheme modules and files.
+ * (dynamically loadable libraries) as well as scheme modules and files.
  *
  * The basic search algo is that anything in the user's directory is
  * explored first, before anything in the system directories.

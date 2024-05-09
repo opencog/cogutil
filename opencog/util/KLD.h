@@ -39,7 +39,7 @@ namespace opencog {
 
     /** @name KLD
      * Functions to compute the Kullback-Leibler Divergence of discrete
-     * and continouous distirbution
+     * and continouous distribution
      */
     ///@{
 
@@ -63,7 +63,7 @@ struct KLDS {
     typedef typename pdf_t::const_iterator pdf_cit;
 
     //! set the density function of P given a counter of the number of
-    //! occurences of each observations of P
+    //! occurrences of each observations of P
     void set_p_pdf(const pdf_t& p_counter, FloatT p_s_ = -1) {
         p_pdf = p_counter;
         p_s = p_s_ < 0 ? boost::accumulate(p_pdf | map_values, 0) : p_s_;
@@ -97,7 +97,7 @@ struct KLDS {
 
     /**
      * @param p_counter mapping between values and number of
-     *                  occurences (sampled according to P)
+     *                  occurrences (sampled according to P)
      * @param p_s_      total number of observations of p_counter
      *
      * If p_s_ is negative then it is automatically calculated. One
@@ -128,7 +128,7 @@ struct KLDS {
     //! computes the components log(delta_p / delta_q) once at a time.
     /**
      * This is useful when one want to treat each component as a
-     * seperate optimization of a multi-optimization problem.
+     * separate optimization of a multi-optimization problem.
      */
     FloatT next(const pdf_t& q_counter, FloatT q_s, FloatT& q_x_pre,
                 pdf_cit& cit_p, pdf_cit& cit_q) {
@@ -177,7 +177,7 @@ struct KLDS {
     }
 
 private:
-    //! replace the occurence count in p_pdf by delta_p
+    //! replace the occurrence count in p_pdf by delta_p
     void precompute_delta_p() {
         FloatT p_x_pre(x_very_first);
         for (typename pdf_t::value_type& v : p_pdf) {

@@ -168,7 +168,7 @@ static char **translate_addresses_buf(bfd *abfd, bfd_vma *addr, int naddr, asymb
     struct spotty spot;
     spot.syms = syms;
 
-    /* iterate over the formating twice.
+    /* iterate over the formatting twice.
      * the first time we count how much space we need
      * the second time we do the actual printing */
     for (state = Count; state <= Print; state++) {

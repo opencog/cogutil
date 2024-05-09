@@ -37,10 +37,10 @@
 #define TOSTRING(x) STRINGIFY(x)
 //! indicate current file and line using (file:line) format
 #define TRACE_INFO " (" __FILE__ ":" TOSTRING(__LINE__) ")"
-//! supress compiler warnings about unused variables
+//! suppress compiler warnings about unused variables
 #define OC_UNUSED(varname)	(void)varname;
 //! check the return value of a fread; sets b_read local variable
-//! to false for failure; b_read must have beed declared before:
+//! to false for failure; b_read must have been declared before:
 //! bool b_read = true;
 #define FREAD_CK(ptr,size,count,stream) \
     b_read = b_read && (fread(ptr,size,count,stream)==(size_t)count)
