@@ -161,18 +161,33 @@ public:
 
     /// Try to get an element in the set. Return true if success,
     /// else return false. The element is removed from the set.
-    bool try_get(Element& value)
+    /// The reverse flag, if set, returns an element from the end
+    /// of the set. Since elements of the set are ordered, sampling
+    /// from both ends helps prevent stagnant elements accumulating
+    /// at the end of the set.
+    bool try_get(Element& value, bool reverse = false)
     {
         std::lock_guard<std::mutex> lock(the_mutex);
         if (is_canceled) throw Canceled();
         if (the_set.empty())
-        {
             return false;
-        }
 
-        auto it = the_set.begin();
-        value = *it;
-        the_set.erase(it);
+        if (reverse)
+        {
+            // Frick-n-frack, cannot case reverse iterators to
+            // forward iterators. Also there is no erase() that
+            // accepts a reverse iterator. This means that
+            // fetches from the end actually run slower. Dang.
+            typename std::set<Element>::const_reverse_iterator it = the_set.crbegin();
+            value = *it;
+            the_set.erase(value);
+        }
+        else
+        {
+            typename std::set <Element>::const_iterator it = the_set.cbegin();
+            value = *it;
+            the_set.erase(it);
+        }
         return true;
     }
 
