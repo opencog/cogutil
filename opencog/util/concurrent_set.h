@@ -159,6 +159,13 @@ public:
         return the_set.size();
     }
 
+    /// Erase all elements from the container.
+    void clear()
+    {
+        std::lock_guard<std::mutex> lock(the_mutex);
+        return the_set.clear();
+    }
+
     /// Try to get an element in the set. Return true if success,
     /// else return false. The element is removed from the set.
     /// The reverse flag, if set, returns an element from the end
