@@ -198,6 +198,47 @@ public:
         return true;
     }
 
+    /// Same as above, but tries to get at most `nelt` of them. If there
+    /// are fewer, then fewer are returned. The goal here is to reduce the
+    /// number of locks taken.
+    std::vector<Element> try_get(size_t nelt, bool reverse = false)
+    {
+        std::vector<Element> elvec;
+
+        std::lock_guard<std::mutex> lock(the_mutex);
+        if (is_canceled) throw Canceled();
+        if (the_set.empty())
+            return elvec;
+
+        if (the_set.size() < nelt) nelt = the_set.size();
+
+        if (reverse)
+        {
+            for (size_t j=0; j<nelt; j++)
+            {
+                // Frick-n-frack, cannot cast reverse iterators to
+                // forward iterators. Also, there is no erase() that
+                // accepts a reverse iterator. This means that
+                // fetches from the end actually run slower. Dang.
+                typename std::set<Element>::const_reverse_iterator it = the_set.crbegin();
+                Element value = *it;
+                the_set.erase(value);
+                elvec.emplace_back(value);
+            }
+        }
+        else
+        {
+            for (size_t j=0; j<nelt; j++)
+            {
+                typename std::set <Element>::const_iterator it = the_set.cbegin();
+                Element value = *it;
+                the_set.erase(it);
+                elvec.emplace_back(value);
+            }
+        }
+        return elvec;
+    }
+
     /// Get an item from the set. Block if the set is empty.
     /// The element is removed from the set, before this returns.
     void get(Element& value)
