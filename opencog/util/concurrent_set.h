@@ -172,10 +172,12 @@ public:
     /// of the set. Since elements of the set are ordered, sampling
     /// from both ends helps prevent stagnant elements accumulating
     /// at the end of the set.
+    ///
+    /// This works even if the set is closed, and can therefore be
+    /// used to drain a closed set.
     bool try_get(Element& value, bool reverse = false)
     {
         std::lock_guard<std::mutex> lock(the_mutex);
-        if (is_canceled) throw Canceled();
         if (the_set.empty())
             return false;
 
@@ -206,7 +208,6 @@ public:
         std::vector<Element> elvec;
 
         std::lock_guard<std::mutex> lock(the_mutex);
-        if (is_canceled) throw Canceled();
         if (the_set.empty())
             return elvec;
 
