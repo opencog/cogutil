@@ -36,6 +36,11 @@
 
 #include <opencog/util/concurrent_queue.h>
 
+// Some systems try to define DEBUG, which interferes with the below.
+#ifdef DEBUG
+#undef DEBUG
+#endif
+
 namespace opencog
 {
 /** \addtogroup grp_cogutil
