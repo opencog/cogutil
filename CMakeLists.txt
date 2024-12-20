@@ -64,7 +64,18 @@ include(cmake/OpenCogGccOptions.cmake)
 
 # ------------------------------------------------------
 IF (WIN32) # Windows host but not cygwin
-	MESSAGE(FATAL_ERROR "You must use Cygwin if compiling under Windows.")
+	OPTION(WINDOWS_NATIVE "Build natively on Windows using MSVC" OFF)
+	IF (NOT WINDOWS_NATIVE)
+		MESSAGE(FATAL_ERROR "You must use Cygwin if compiling under Windows, or enable WINDOWS_NATIVE option.")
+	ENDIF()
+	
+	IF (WINDOWS_NATIVE)
+		MESSAGE(STATUS "Building natively on Windows with MSVC")
+		ADD_DEFINITIONS(-DWIN32_LEAN_AND_MEAN)
+		ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
+		ADD_DEFINITIONS(-D_SCL_SECURE_NO_WARNINGS)
+		SET(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+	ENDIF()
 
 	# Previous definitions used for win32 (non cygwin) compilation.
 	# For reference only
@@ -73,7 +84,6 @@ IF (WIN32) # Windows host but not cygwin
 	# FIND_PACKAGE(PThreads REQUIRED)
 	# FIND_PACKAGE(STLPort REQUIRED)
 	# INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include/win32" ${PTHREADS_INCLUDE_DIR} ${STLPORT_INCLUDE_DIR})
-	# LINK_LIBRARIES(${PTHREADS_LIBRARY} ${STLPORT_LIBRARIES})
 	# ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE)
 ENDIF (WIN32)
 
@@ -81,6 +91,11 @@ ENDIF (WIN32)
 IF (CYGWIN)
 	ADD_DEFINITIONS(-DCYGWIN)
 	LINK_LIBRARIES(pthread)
+ELSEIF (WINDOWS_NATIVE)
+	# Use Windows native threading
+	ADD_DEFINITIONS(-DWIN32_THREADS)
+	# Windows SDK provides threading support
+	# No need for explicit pthread linkage
 ENDIF (CYGWIN)
 
 # ===================================================================
