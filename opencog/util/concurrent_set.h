@@ -37,6 +37,7 @@
 #include <set>
 #include <exception>
 #include <mutex>
+#include <vector>
 
 /** \addtogroup grp_cogutil
  *  @{
