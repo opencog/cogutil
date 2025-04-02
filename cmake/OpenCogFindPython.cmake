@@ -39,13 +39,6 @@ IF(HAVE_PY_INTERP)
 		ADD_DEFINITIONS(-DHAVE_CYTHON)
 		SET(HAVE_CYTHON 1)
 
-		# Debug circlci insanity
-		MESSAGE(STATUS "Duuude: py install: ${PYTHON_INSTALL_PREFIX}" )
-		MESSAGE(STATUS "Duuude: py sitelib: ${Python3_SITELIB}" )
-		MESSAGE(STATUS "Duuude: py sitearch: ${Python3_SITEARCH}" )
-		MESSAGE(STATUS "Duuude: py exec: ${PYTHON_EXECUTABLE}" )
-		MESSAGE(STATUS "Duuude: py3 ex: ${Python3_EXECUTABLE}" )
-
 		# The CMake interfaces are completely different between
 		# Cmake 3 and CMake 4. Try to be backwards compat, if possible.
 		IF (NOT DEFINED PYTHON_INSTALL_PREFIX)
@@ -125,10 +118,9 @@ IF(HAVE_PY_INTERP)
 	ENDIF (CYTHON_FOUND AND HAVE_PY_LIBS)
 
 	# Nosetests will find and automatically run python tests.
-	IF (PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
-		IF (3.4.0 VERSION_LESS ${PYTHONLIBS_VERSION_STRING})
-			FIND_PROGRAM(NOSETESTS_EXECUTABLE nosetests3)
-		ENDIF ()
+	# IF (Python3_Interpreter_FOUND AND Python3_Development_FOUND)
+	IF (Python3_Interpreter_FOUND)
+		FIND_PROGRAM(NOSETESTS_EXECUTABLE nosetests3)
 	ENDIF ()
 	IF (NOT NOSETESTS_EXECUTABLE)
 		MESSAGE(STATUS "nosetests not found: needed for python tests")
