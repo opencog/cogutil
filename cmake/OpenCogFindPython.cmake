@@ -18,20 +18,14 @@ ENDIF (HAVE_SECURE_GETENV)
 # and for running the FindCython module.
 #
 # Search for Python3
-FIND_PACKAGE(PythonInterp 3 QUIET)
+FIND_PACKAGE(Python3 COMPONENTS Interpreter Development)
 IF (3.4.0 VERSION_LESS "${PYTHON_VERSION_STRING}")
 	SET (HAVE_PY_INTERP 1)
 	MESSAGE(STATUS "Python ${PYTHON_VERSION_STRING} interpreter found.")
 ENDIF()
 
-FIND_PACKAGE(PythonLibs)
-IF (PYTHONLIBS_FOUND)
-	IF (PYTHONINTERP_FOUND AND 3.4.0 VERSION_LESS ${PYTHONLIBS_VERSION_STRING})
-		SET (HAVE_PY_LIBS 1)
-		MESSAGE(STATUS "Python ${PYTHONLIBS_VERSION_STRING} libraries found.")
-	ELSE()
-		MESSAGE(STATUS "Python libraries ${PYTHONLIBS_VERSION_STRING} are too old; want version 3.4.0 or newer.")
-	ENDIF()
+IF (Python3_Development_FOUND)
+	SET (HAVE_PY_LIBS 1)
 ELSE()
 	MESSAGE(STATUS "Python libraries NOT found.")
 ENDIF()
