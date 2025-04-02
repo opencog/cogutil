@@ -39,11 +39,18 @@ IF(HAVE_PY_INTERP)
 		ADD_DEFINITIONS(-DHAVE_CYTHON)
 		SET(HAVE_CYTHON 1)
 
+		# Debug circlci insanity
+		MESSAGE(STATUS "Duuude: py install: ${PYTHON_INSTALL_PREFIX}" )
+		MESSAGE(STATUS "Duuude: py sitelib: ${Python3_SITELIB}" )
+		MESSAGE(STATUS "Duuude: py sitearch: ${Python3_SITEARCH}" )
+		MESSAGE(STATUS "Duuude: py exec: ${PYTHON_EXECUTABLE}" )
+		MESSAGE(STATUS "Duuude: py3 ex: ${Python3_EXECUTABLE}" )
+
 		# The CMake interfaces are completely different between
 		# Cmake 3 and CMake 4. Try to be backwards compat, if possible.
 		IF (NOT DEFINED PYTHON_INSTALL_PREFIX)
 			IF (DEFINED Python3_SITEARCH)
-				SET(PYTHON_INSTALL_PREFIX Python3_SITEARCH)
+				SET(PYTHON_INSTALL_PREFIX ${Python3_SITEARCH})
 			ENDIF()
 		ENDIF()
 
@@ -86,7 +93,7 @@ IF(HAVE_PY_INTERP)
 			# Find python destination dir for python bindings
 			# because it may differ on each operating system.
 			EXECUTE_PROCESS(
-				COMMAND ${PYTHON_EXECUTABLE}
+				COMMAND ${Python3_EXECUTABLE}
 				"${PROJECT_BINARY_DIR}/scripts/get_python_lib.py"
 				"${CMAKE_INSTALL_PREFIX}"
 				OUTPUT_VARIABLE PYTHON_DEST
