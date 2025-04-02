@@ -19,9 +19,9 @@ ENDIF (HAVE_SECURE_GETENV)
 #
 # Search for Python3
 FIND_PACKAGE(Python3 COMPONENTS Interpreter Development)
-IF (3.4.0 VERSION_LESS "${PYTHON_VERSION_STRING}")
+IF (Python3_Interpreter_FOUND)
 	SET (HAVE_PY_INTERP 1)
-	MESSAGE(STATUS "Python ${PYTHON_VERSION_STRING} interpreter found.")
+	MESSAGE(STATUS "Python ${Python3_VERSION} interpreter found.")
 ENDIF()
 
 IF (Python3_Development_FOUND)
