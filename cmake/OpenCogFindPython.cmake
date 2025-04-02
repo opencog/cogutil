@@ -39,6 +39,14 @@ IF(HAVE_PY_INTERP)
 		ADD_DEFINITIONS(-DHAVE_CYTHON)
 		SET(HAVE_CYTHON 1)
 
+		# The CMake interfaces are completely different between
+		# Cmake 3 and CMake 4. Try to be backwards compat, if possible.
+		IF (NOT DEFINED PYTHON_INSTALL_PREFIX)
+			IF (DEFINED Python3_SITEARCH)
+				SET(PYTHON_INSTALL_PREFIX Python3_SITEARCH)
+			ENDIF()
+		ENDIF()
+
 		IF (NOT DEFINED PYTHON_INSTALL_PREFIX)
 			FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/scripts)
 			# Unpack Python install destination detection script into project
