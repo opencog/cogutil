@@ -130,6 +130,13 @@ jobs:
           name: Install AtomSpace
           command: cd /ws/atomspace/build && make install && ldconfig
       - run:
+          name: Checkout AtomSpace Storage
+          command: |
+            git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/atomspace-storage /ws/atomspace-storage
+            mkdir -p /ws/atomspace-storage/build
+            cd /ws/atomspace-storage/build && cmake .. && make -j2 && make -j2 install
+            ldconfig
+      - run:
           name: Checkout CogServer
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/cogserver .
       - run:
@@ -154,6 +161,7 @@ jobs:
       - persist_to_workspace:
           root: /ws/
           paths:
+            - atomspace-storage
             - cogserver
             - ccache
 
@@ -184,6 +192,9 @@ jobs:
       - run:
           name: Install AtomSpace
           command: cd /ws/atomspace/build && make install && ldconfig
+      - run:
+          name: Install AtomSpace Storage
+          command: cd /ws/atomspace-storage/build && make install && ldconfig
       - run:
           name: Install CogServer
           command: cd /ws/cogserver/build && make install && ldconfig
@@ -449,6 +460,9 @@ jobs:
       - run:
           name: Install AtomSpace
           command: cd /ws/atomspace/build && make install && ldconfig
+      - run:
+          name: Install AtomSpace Storage
+          command: cd /ws/atomspace-storage/build && make install && ldconfig
       - run:
           name: Install CogServer
           command: cd /ws/cogserver/build && make install && ldconfig
