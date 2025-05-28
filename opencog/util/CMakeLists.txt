@@ -32,8 +32,6 @@ ADD_LIBRARY(cogutil SHARED
 	functional.h
 	iostreamContainer.h
 	KLD.h
-	lazy_normal_selector.cc
-	lazy_random_selector.cc
 	Logger.cc
 	lru_cache.h
 	MannWhitneyU.h
@@ -54,6 +52,8 @@ IF (HAVE_BOOST)
 	TARGET_SOURCES(cogutil PRIVATE Config.cc)
 	TARGET_SOURCES(cogutil PRIVATE files.cc)
 	TARGET_SOURCES(cogutil PRIVATE lazy_selector.cc)
+	TARGET_SOURCES(cogutil PRIVATE lazy_normal_selector.cc)
+	TARGET_SOURCES(cogutil PRIVATE lazy_random_selector.cc)
 	TARGET_SOURCES(cogutil PRIVATE log_prog_name.cc)
 	TARGET_SOURCES(cogutil PRIVATE tree.cc)
 	TARGET_LINK_LIBRARIES(cogutil
