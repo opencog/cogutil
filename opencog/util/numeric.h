@@ -33,7 +33,6 @@
 
 #include <boost/range/numeric.hpp>
 
-#include <opencog/util/iostreamContainer.h>
 #include <opencog/util/oc_assert.h>
 
 /** \addtogroup grp_cogutil
