@@ -25,19 +25,15 @@ ADD_LIBRARY(cogutil SHARED
 	based_variant.h
 	cluster.c
 	comprehension.h
-	Config.cc
 	Cover_Tree.h
 	digraph.h
 	dorepeat.h
 	exceptions.cc
-	files.cc
 	functional.h
 	iostreamContainer.h
 	KLD.h
 	lazy_normal_selector.cc
 	lazy_random_selector.cc
-	lazy_selector.cc
-	log_prog_name.cc
 	Logger.cc
 	lru_cache.h
 	MannWhitneyU.h
@@ -50,16 +46,22 @@ ADD_LIBRARY(cogutil SHARED
 	random.h
 	ranking.h
 	StringTokenizer.cc
-	tree.cc
 	${WIN32_GETOPT_FILES}
 	${APPLE_STRNDUP_FILES}
 )
 
-TARGET_LINK_LIBRARIES(cogutil
-	${Boost_FILESYSTEM_LIBRARY}
-	${Boost_SYSTEM_LIBRARY}
-	${Boost_THREAD_LIBRARY}
-)
+IF (HAVE_BOOST)
+	TARGET_SOURCES(cogutil PRIVATE Config.cc)
+	TARGET_SOURCES(cogutil PRIVATE files.cc)
+	TARGET_SOURCES(cogutil PRIVATE lazy_selector.cc)
+	TARGET_SOURCES(cogutil PRIVATE log_prog_name.cc)
+	TARGET_SOURCES(cogutil PRIVATE tree.cc)
+	TARGET_LINK_LIBRARIES(cogutil
+		${Boost_FILESYSTEM_LIBRARY}
+		${Boost_SYSTEM_LIBRARY}
+		${Boost_THREAD_LIBRARY}
+	)
+ENDIF (HAVE_BOOST)
 
 IF (HAVE_BFD AND HAVE_IBERTY)
 	check_symbol_exists(bfd_get_section_flags "bfd.h" HAVE_DECL_BFD_GET_SECTION_FLAGS)
