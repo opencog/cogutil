@@ -48,6 +48,10 @@ IF(CYTHON_EXECUTABLE AND CMAKE_VERSION VERSION_GREATER "2.6.0")
 
 	STRING(REGEX MATCH "[^0-9]?[0-9]+\\.[0-9]+\\.?[0-9]?" CYTH_VERSION "${_CVERNO}")
 
+	# cython version 3.0.8 returns leading whitespace that causes
+	# VERSION_LESS to fail. Trim this away.
+	STRING(STRIP ${CYTH_VERSION} CYTH_VERSION)
+
 	# Check found version against required one
 	IF (DEFINED Cython_FIND_VERSION AND ${CYTH_VERSION} VERSION_LESS Cython_FIND_VERSION)
 		SET(CYTHON_FOUND FALSE)
