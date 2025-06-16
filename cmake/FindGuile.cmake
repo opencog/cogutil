@@ -30,6 +30,8 @@ FIND_PATH(GUILE_INCLUDE_DIR libguile.h
 	/usr/local/include/libguile
 	/opt/local/include/guile
 
+	/opt/homebrew/include/guile/3.0
+
 	/usr/include
 	/usr/local/include
 	NO_DEFAULT_PATH
