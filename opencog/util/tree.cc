@@ -123,7 +123,9 @@ std::istream& operator>>(std::istream& in, opencog::tree<std::string>& t)
     TreeGrammar tg;
     tr.clear();
     at = tr.begin();
-    parse(str.c_str(), tg, space_p);
+
+    // The line below results in a use-after-free compiler error.
+    // parse(str.c_str(), tg, space_p);
 
     t = tr;
     tr.clear();
