@@ -25,6 +25,7 @@
 #define _OPENCOG_RANDOM_H
 
 #include <iomanip>
+#include <sstream>
 
 #ifdef HAVE_BOOST
 #include <boost/numeric/conversion/cast.hpp>
