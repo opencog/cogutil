@@ -94,7 +94,7 @@ SET(MIN_BOOST 1.60)
 
 # Required boost packages
 # 1.60 is minimum for required filesystem support
-FIND_PACKAGE(Boost
+FIND_PACKAGE(Boost CONFIG
 	${MIN_BOOST}
 	OPTIONAL_COMPONENTS filesystem program_options system thread)
 
@@ -104,7 +104,7 @@ IF (Boost_FOUND)
 	SET(Boost_FOUND_SAVE 1)
 
 	# Optional boost packages; can build without these. (?? what needs this ??)
-	FIND_PACKAGE(Boost ${MIN_BOOST} COMPONENTS math_c99 QUIET)
+	FIND_PACKAGE(Boost CONFIG ${MIN_BOOST} COMPONENTS math_c99 QUIET)
 
 	# Arghhh. Except cmake is treating above as required, not optional. #$%**&
 	IF (Boost_FOUND_SAVE)
