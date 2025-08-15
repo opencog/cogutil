@@ -311,9 +311,6 @@ void Config::setup_logger()
 
 const bool Config::has(const string &name) const
 {
-    if (_no_config_loaded)
-        logger().warn("No configuration file was loaded! Param=%s",
-                      name.c_str());
     return (_table.find(name) != _table.end());
 }
 
