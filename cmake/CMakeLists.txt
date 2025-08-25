@@ -23,6 +23,7 @@ INSTALL(FILES
 	FindPthreads.cmake
 	FindRocksDB.cmake
 	FindSIGAR.cmake
+	FindSparseHash.cmake
 	FindStack.cmake
 	FindSTLPort.cmake
 	FindTBB.cmake
