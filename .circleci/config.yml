@@ -485,7 +485,8 @@ workflows:
             - ure
       - package:
           requires:
-            - opencog
+            - attention
+            - asmoses
           filters:
             branches:
               only: master
