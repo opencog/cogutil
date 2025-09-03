@@ -121,6 +121,9 @@ jobs:
       - attach_workspace:
           at: /ws
       - run:
+          name: Temp hack until octool percolates into Docker
+          command: apt install libasio-dev
+      - run:
           name: Set number of make jobs
           command: echo "export MAKEFLAGS=-j2" >> $BASH_ENV
       - run:
