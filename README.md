@@ -26,10 +26,6 @@ packages. The Docker containers located at
 simplify the entire install and build process, and casual users are
 encouraged to try those first.
 
-###### boost
-> C++ utilities package
-> http://www.boost.org/ | libboost-dev
-
 ###### cmake
 > Build management tool; v3.12 or higher recommended.
 > http://www.cmake.org/ | cmake
