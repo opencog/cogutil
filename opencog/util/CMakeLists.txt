@@ -106,8 +106,6 @@ IF (HAVE_BFD AND HAVE_IBERTY)
 	)
 ENDIF (HAVE_BFD AND HAVE_IBERTY)
 
-ADD_SUBDIRECTORY(boost_ext)
-
 INSTALL(FILES
 	algorithm.h
 	async_buffer.h
