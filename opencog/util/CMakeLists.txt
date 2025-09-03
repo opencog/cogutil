@@ -15,7 +15,6 @@ ADD_DEFINITIONS(
 ADD_LIBRARY(cogutil SHARED
 	algorithm.h
 	backtrace-symbols.c
-	digraph.h
 	dorepeat.h
 	exceptions.cc
 	Logger.cc
@@ -117,7 +116,6 @@ INSTALL(FILES
 	concurrent_queue.h
 	concurrent_set.h
 	concurrent_stack.h
-	digraph.h
 	dorepeat.h
 	empty_string.h
 	exceptions.h
