@@ -104,10 +104,10 @@ typename C::value_type rand_element_erase(C& c, RandGen& rng=randGen())
 template<typename T>
 T gaussian_rand(T mean, T std_dev, RandGen& rng=randGen())
 {
-#ifdef HAVE_BOOST
     double val = mean + std_dev *
         std::sqrt(-2.0 * std::log(rng.randdouble_one_excluded())) *
         std::cos(2.0 * M_PI * rng.randdouble_one_excluded());
+#ifdef HAVE_BOOST
     T res;
     try {
         res = boost::numeric_cast<T>(val);
@@ -118,7 +118,7 @@ T gaussian_rand(T mean, T std_dev, RandGen& rng=randGen())
     }
     return res;
 #else // HAVE_BOOST
-    throw RuntimeException(TRACE_INFO, "Compiled without boost support");
+    return static_cast<T>(val);
 #endif // HAVE_BOOST
 }
 
