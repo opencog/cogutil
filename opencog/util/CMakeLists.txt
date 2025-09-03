@@ -162,7 +162,6 @@ INSTALL(FILES
 	RandGen.h
 	random.h
 	ranking.h
-	recent_val.h
 	selection.h
 	sigslot.h
 	tree.h
