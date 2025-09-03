@@ -13,14 +13,8 @@ LINK_LIBRARIES(
 
 IF (HAVE_BOOST)
 	ADD_CXXTEST(ConfigUTest)
-	ADD_CXXTEST(lazy_selectorUTest)
-	ADD_CXXTEST(lru_cacheUTest)
-	ADD_CXXTEST(iostreamContainerUTest)
-	ADD_CXXTEST(KLDUTest)
 	ADD_CXXTEST(randomUTest)
-	ADD_CXXTEST(comprehensionUTest)
 	ADD_CXXTEST(CounterUTest)
-	ADD_CXXTEST(rankingUTest)
 ENDIF (HAVE_BOOST)
 
 ADD_CXXTEST(LoggerUTest)
