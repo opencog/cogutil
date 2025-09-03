@@ -19,11 +19,12 @@ The main project site is at http://opencog.org
 
 Prerequisites
 -------------
-To build the OpenCog utilities, the packages listed below are required. With a
-few exceptions, most Linux distributions will provide these packages. Users of
-Ubuntu 14.04 "Trusty Tahr" may use the dependency installer at scripts/octool.
-Users of any version of Linux may use the Dockerfile to quickly build a
-container in which OpenCog will be built and run.
+To build the OpenCog utilities, the packages listed below are required.
+With a few exceptions, most Linux distributions will provide these
+packages. The Docker containers located at
+[https://github.com/opencog/docker](https://github.com/opencog/docker)
+simplify the entire install and build process, and casual users are
+encouraged to try those first.
 
 ###### boost
 > C++ utilities package
