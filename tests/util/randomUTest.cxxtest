@@ -1,4 +1,4 @@
-/** randomUTest.cxxtest --- 
+/** randomUTest.cxxtest ---
  *
  * Copyright (C) 2011 OpenCog Foundation
  *
@@ -8,12 +8,12 @@
  * it under the terms of the GNU Affero General Public License v3 as
  * published by the Free Software Foundation and including the exceptions
  * at http://opencog.org/wiki/Licenses
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program; if not, write to:
  * Free Software Foundation, Inc.,
@@ -22,6 +22,7 @@
 
 #include <opencog/util/random.h>
 #include <opencog/util/mt19937ar.h>
+#include <cmath>
 
 using namespace std;
 using namespace opencog;
@@ -42,13 +43,25 @@ public:
         const double m = 1, s = 10, delta = 0.05;
         size_t size = 10000000;
         MT19937RandGen rng(1);
-        accumulator_set<double, stats<tag::mean, tag::moment<2> > > acc;
-        for (size_t i = 0; i < size; ++i)
-            acc(gaussian_rand(m, s, rng));
+
+        // Calculate mean and variance manually
+        double sum = 0.0;
+        double sum_sq = 0.0;
+
+        for (size_t i = 0; i < size; ++i) {
+            double sample = gaussian_rand(m, s, rng);
+            sum += sample;
+            sum_sq += sample * sample;
+        }
+
+        double calculated_mean = sum / size;
+        double variance = (sum_sq / size) - (calculated_mean * calculated_mean);
+        double calculated_stddev = sqrt(variance);
+
         // check mean
-        TS_ASSERT_DELTA(mean(acc), m, delta);
+        TS_ASSERT_DELTA(calculated_mean, m, delta);
         // check standard deviation
-        TS_ASSERT_DELTA(sqrt(moment<2>(acc)), s, delta);        
+        TS_ASSERT_DELTA(calculated_stddev, s, delta);
     }
 
     void test_discrete() {
