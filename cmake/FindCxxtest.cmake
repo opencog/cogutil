@@ -8,7 +8,7 @@
 # CXXTEST_GEN   - the binary used to generate the tests
 
 # Find path to the cxxtestgen.py script (NB: this stuff should move to FindCXXTEST.cmake)
-# CXXTEST_BIN_DIR enviroment variable must have been defined already
+# CXXTEST_BIN_DIR environment variable must have been defined already
 
 # cxxtest has a Python version and a Perl version. First, look
 # for the Python version.

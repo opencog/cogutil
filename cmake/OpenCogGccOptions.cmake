@@ -79,7 +79,7 @@ IF (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 	SET(CMAKE_EXE_LINKER_FLAGS "-lstdc++")
 	# Refer to this page https://clang.llvm.org/docs/OpenMPSupport.html to see which version of OpenMP Clang supports.
 	# SET(CMAKE_CXX_FLAGS "-std=c++17 -fopenmp")
-	# Appearently, most versions of clang do no support OpenMP.
+	# Apparently, most versions of clang do not support OpenMP.
 	# So disable, by default; MOSES users will need to hack this.
 	SET(CMAKE_CXX_FLAGS "-std=c++17")
 ENDIF (CMAKE_CXX_COMPILER_ID MATCHES "Clang")

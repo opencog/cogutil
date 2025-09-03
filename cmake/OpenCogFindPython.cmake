@@ -14,7 +14,7 @@ IF (HAVE_SECURE_GETENV)
 ENDIF (HAVE_SECURE_GETENV)
 
 # ----------------------------------------------------------
-# NOTE: Python interpreter is needed for runing python unit tests,
+# NOTE: Python interpreter is needed for running python unit tests,
 # and for running the FindCython module.
 #
 # Search for Python3
