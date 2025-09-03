@@ -24,19 +24,16 @@
 #ifndef _OPENCOG_COUNTER_H
 #define _OPENCOG_COUNTER_H
 
-#include <set>
-#include <map>
 #include <initializer_list>
-#include <boost/operators.hpp>
-#include <boost/range/numeric.hpp>
-#include <boost/range/adaptor/map.hpp>
+#include <map>
+#include <numeric>
+#include <ostream>
+#include <set>
 
 namespace opencog {
 /** \addtogroup grp_cogutil
  *  @{
  */
-
-using boost::adaptors::map_values;
 
 //! Class that mimics python Counter container
 /**
@@ -50,9 +47,6 @@ using boost::adaptors::map_values;
  */
 template<typename T, typename CT, typename CMP = std::less<T>>
 class Counter : public std::map<T, CT, CMP>
-	, boost::arithmetic<Counter<T, CT, CMP>>
-	, boost::arithmetic2<Counter<T, CT, CMP>,CT>
-
 {
 protected:
 	/** @todo this will be replaced by C++11 constructor
@@ -105,7 +99,11 @@ public:
 	//! Return the total of all counted elements
 	CT total_count() const
 	{
-		return boost::accumulate(*this | map_values, (CT)0);
+		CT sum = CT(0);
+		for (const auto& pair : *this) {
+			sum += pair.second;
+		}
+		return sum;
 	}
 
 	//! Return the mode, the element that occurs most frequently
@@ -248,6 +246,58 @@ public:
 		for (auto& v : *this)
 			ks.insert(v.first);
 		return ks;
+	}
+
+	// Binary operators with another Counter
+	// These were previously provided by boost::arithmetic
+	Counter operator+(const Counter& other) const {
+		Counter result(*this);
+		result += other;
+		return result;
+	}
+
+	Counter operator-(const Counter& other) const {
+		Counter result(*this);
+		result -= other;
+		return result;
+	}
+
+	Counter operator*(const Counter& other) const {
+		Counter result(*this);
+		result *= other;
+		return result;
+	}
+
+	Counter operator/(const Counter& other) const {
+		Counter result(*this);
+		result /= other;
+		return result;
+	}
+
+	// Binary operators with CT type
+	// These were previously provided by boost::arithmetic2
+	Counter operator+(const CT& num) const {
+		Counter result(*this);
+		result += num;
+		return result;
+	}
+
+	Counter operator-(const CT& num) const {
+		Counter result(*this);
+		result -= num;
+		return result;
+	}
+
+	Counter operator*(const CT& num) const {
+		Counter result(*this);
+		result *= num;
+		return result;
+	}
+
+	Counter operator/(const CT& num) const {
+		Counter result(*this);
+		result /= num;
+		return result;
 	}
 };
 
