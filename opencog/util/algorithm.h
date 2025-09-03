@@ -2,6 +2,7 @@
 #define _OPENCOG_ALGORITHM_H
 
 #include <algorithm>
+#include <functional>
 #include <set>
 #include <opencog/util/exceptions.h>
 #include <opencog/util/numeric.h>
