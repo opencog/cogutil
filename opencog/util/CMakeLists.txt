@@ -32,7 +32,6 @@ ADD_LIBRARY(cogutil SHARED
 	mt19937ar.cc
 	oc_assert.cc
 	oc_omp.cc
-	octime.cc
 	platform.cc
 	random.h
 	ranking.h
@@ -158,7 +157,6 @@ INSTALL(FILES
 	numeric.h
 	oc_assert.h
 	oc_omp.h
-	octime.h
 	platform.h
 	pool.h
 	RandGen.h
