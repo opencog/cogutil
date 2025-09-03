@@ -16,7 +16,6 @@ ADD_LIBRARY(cogutil SHARED
 	algorithm.h
 	backtrace-symbols.c
 	based_variant.h
-	cluster.c
 	comprehension.h
 	digraph.h
 	dorepeat.h
@@ -125,7 +124,6 @@ INSTALL(FILES
 	async_method_caller.h
 	backtrace-symbols.h
 	based_variant.h
-	cluster.h
 	cogutil.h
 	comprehension.h
 	Config.h
