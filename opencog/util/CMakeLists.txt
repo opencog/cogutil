@@ -4,12 +4,6 @@ ELSE (WIN32 AND NOT UNIX)
 	SET(WIN32_GETOPT_FILES)
 ENDIF (WIN32 AND NOT UNIX)
 
-IF (APPLE)
-	SET(APPLE_STRNDUP_FILES strndup strnlen)
-ELSE (APPLE)
-	SET(APPLE_STRNDUP_FILES)
-ENDIF (APPLE)
-
 include(CheckSymbolExists)
 include(CheckCSourceCompiles)
 
