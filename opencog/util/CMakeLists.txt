@@ -15,34 +15,22 @@ ADD_DEFINITIONS(
 ADD_LIBRARY(cogutil SHARED
 	algorithm.h
 	backtrace-symbols.c
-	based_variant.h
-	comprehension.h
-	digraph.h
 	dorepeat.h
 	exceptions.cc
-	functional.h
-	iostreamContainer.h
-	KLD.h
 	Logger.cc
-	lru_cache.h
-	MannWhitneyU.h
 	misc.cc
 	mt19937ar.cc
 	oc_assert.cc
 	oc_omp.cc
 	platform.cc
 	random.h
-	ranking.h
 	${WIN32_GETOPT_FILES}
 )
 
 IF (HAVE_BOOST)
 	TARGET_SOURCES(cogutil PRIVATE Config.cc)
 	TARGET_SOURCES(cogutil PRIVATE lazy_selector.cc)
-	TARGET_SOURCES(cogutil PRIVATE lazy_normal_selector.cc)
 	TARGET_SOURCES(cogutil PRIVATE lazy_random_selector.cc)
-	TARGET_SOURCES(cogutil PRIVATE log_prog_name.cc)
-	TARGET_SOURCES(cogutil PRIVATE tree.cc)
 	TARGET_LINK_LIBRARIES(cogutil
 		${Boost_FILESYSTEM_LIBRARY}
 		${Boost_SYSTEM_LIBRARY}
@@ -116,38 +104,24 @@ IF (HAVE_BFD AND HAVE_IBERTY)
 	)
 ENDIF (HAVE_BFD AND HAVE_IBERTY)
 
-ADD_SUBDIRECTORY(boost_ext)
-
 INSTALL(FILES
 	algorithm.h
 	async_buffer.h
 	async_method_caller.h
 	backtrace-symbols.h
-	based_variant.h
 	cogutil.h
-	comprehension.h
 	Config.h
 	Counter.h
 	concurrent_queue.h
 	concurrent_set.h
 	concurrent_stack.h
-	digraph.h
 	dorepeat.h
 	empty_string.h
 	exceptions.h
-	functional.h
-	hashing.h
-	iostreamContainer.h
-	jaccard_index.h
-	KLD.h
-	lazy_normal_selector.h
 	lazy_random_selector.h
 	lazy_selector.h
-	log_prog_name.h
 	Logger.h
-	lru_cache.h
 	macros.h
-	MannWhitneyU.h
 	misc.h
 	mt19937ar.h
 	numeric.h
@@ -157,10 +131,7 @@ INSTALL(FILES
 	pool.h
 	RandGen.h
 	random.h
-	ranking.h
-	selection.h
 	sigslot.h
-	tree.h
 	zipf.h
 	DESTINATION "include/opencog/util"
 )
