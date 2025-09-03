@@ -15,8 +15,11 @@ ADD_DEFINITIONS(
 ADD_LIBRARY(cogutil SHARED
 	algorithm.h
 	backtrace-symbols.c
+	Config.cc
 	dorepeat.h
 	exceptions.cc
+	lazy_selector.cc
+	lazy_random_selector.cc
 	Logger.cc
 	misc.cc
 	mt19937ar.cc
@@ -26,17 +29,6 @@ ADD_LIBRARY(cogutil SHARED
 	random.h
 	${WIN32_GETOPT_FILES}
 )
-
-IF (HAVE_BOOST)
-	TARGET_SOURCES(cogutil PRIVATE Config.cc)
-	TARGET_SOURCES(cogutil PRIVATE lazy_selector.cc)
-	TARGET_SOURCES(cogutil PRIVATE lazy_random_selector.cc)
-	TARGET_LINK_LIBRARIES(cogutil
-		${Boost_FILESYSTEM_LIBRARY}
-		${Boost_SYSTEM_LIBRARY}
-		${Boost_THREAD_LIBRARY}
-	)
-ENDIF (HAVE_BOOST)
 
 IF (HAVE_BFD AND HAVE_IBERTY)
 	check_symbol_exists(bfd_get_section_flags "bfd.h" HAVE_DECL_BFD_GET_SECTION_FLAGS)

@@ -4,9 +4,7 @@ Instalation and dependency resolution for Gentoo (circa Sep. 2008)
 
 Opencog depends on the following packages:
 
-You might need to eselect the right boost version as well.
-
-----------------------------------------------------------
+  g++
 
 Additionally, it depends on the following non-official packages:
 

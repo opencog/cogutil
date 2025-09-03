@@ -138,7 +138,6 @@ public:
 
     void test_tanimoto_distance()
     {
-#ifdef HAVE_BOOST
         typedef vector<float> Vec;
         // test max distance
         {
@@ -184,12 +183,10 @@ public:
             float dst = tanimoto_distance<Vec, float>(a, b);
             TS_ASSERT_DELTA(dst, 0, 0.000001);
         }
-#endif // HAVE_BOOST
     }
 
     void test_angular_distance()
     {
-#ifdef HAVE_BOOST
         typedef vector<float> Vec;
         // test max distance
         {
@@ -235,6 +232,5 @@ public:
                 float dst = angular_distance<Vec, float>(a, b, false);
             TS_ASSERT_EQUALS(dst, 0);
         }
-#endif // HAVE_BOOST
     }
 };

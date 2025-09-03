@@ -69,8 +69,6 @@ IF (WIN32) # Windows host but not cygwin
 
 	ADD_DEFINITIONS(-DWIN32)
 	ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
-	ADD_DEFINITIONS(-DBOOST_ALL_NO_LIB)
-	ADD_DEFINITIONS(-DBOOST_ALL_DYN_LINK)
 
 	IF (WINDOWS_NATIVE)
 		MESSAGE(STATUS "Building natively on Windows with MSVC")
@@ -106,38 +104,6 @@ ENDIF (CYGWIN)
 # ===================================================================
 # Check for existence of various required, optional packages.
 
-# Check for boost. We need dynamic-linked, threaded libs by default.
-SET(Boost_USE_STATIC_LIBS OFF)
-SET(Boost_USE_MULTITHREADED ON)
-# The minimum boost version required for building.
-SET(MIN_BOOST 1.60)
-
-# Required boost packages
-# 1.60 is minimum for required filesystem support
-FIND_PACKAGE(Boost CONFIG
-	${MIN_BOOST}
-	OPTIONAL_COMPONENTS filesystem program_options system thread)
-
-IF (Boost_FOUND)
-	SET(HAVE_BOOST 1)
-	ADD_DEFINITIONS(-DHAVE_BOOST)
-	SET(Boost_FOUND_SAVE 1)
-
-	# Optional boost packages; can build without these. (?? what needs this ??)
-	FIND_PACKAGE(Boost CONFIG ${MIN_BOOST} COMPONENTS math_c99 QUIET)
-
-	# Arghhh. Except cmake is treating above as required, not optional. #$%**&
-	IF (Boost_FOUND_SAVE)
-		SET(Boost_FOUND 1)
-	ENDIF (Boost_FOUND_SAVE)
-
-	INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
-
-ELSE(Boost_FOUND)
-#	MESSAGE(FATAL_ERROR "Boost ${MIN_BOOST} or newer (package libboost-all-dev if using Ubuntu) is needed to build!")
-ENDIF (Boost_FOUND)
-
-# -------------------------------------------------------------
 FIND_PACKAGE(Cxxtest)
 IF (NOT CXXTEST_FOUND)
 	MESSAGE(STATUS "CxxTest missing: needed for unit tests.")
@@ -241,9 +207,7 @@ SET (MAN_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/share/man")
 # ===================================================================
 # Decide what to build, based on the packages found.
 
-IF (Boost_FOUND)
-	SET(HAVE_UTIL 1)
-ENDIF (Boost_FOUND)
+SET(HAVE_UTIL 1)
 
 ADD_SUBDIRECTORY(cmake)
 ADD_SUBDIRECTORY(etc)
@@ -317,11 +281,6 @@ SET(CPACK_PACKAGING_INSTALL_PREFIX "/usr/local")
 
 ## Debian specific configurations
 SET(DEPENDENCY_LIST
-	"libboost-filesystem-dev (>= ${MIN_BOOST})"
-	"libboost-math-dev (>= ${MIN_BOOST})"
-	"libboost-program-options-dev (>= ${MIN_BOOST})"
-	"libboost-thread-dev (>= ${MIN_BOOST})"
-	"libboost-system-dev (>= ${MIN_BOOST})"
 	"libstdc++6 (>= 4.7)"
 	"binutils-dev"
 	"libiberty-dev"
@@ -341,7 +300,6 @@ ADD_SUBDIRECTORY(doc EXCLUDE_FROM_ALL)
 # ===================================================================
 # Show a summary of what we found, what we will do.
 
-SUMMARY_ADD("Boost" "Components requiring Boost" HAVE_BOOST)
 SUMMARY_ADD("Doxygen" "Code documentation" DOXYGEN_FOUND)
 SUMMARY_ADD("StackPrint" "Pretty printing of stack traces" HAVE_BFD AND HAVE_IBERTY)
 SUMMARY_ADD("Unit tests" "Unit tests" CXXTEST_FOUND)

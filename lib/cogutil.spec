@@ -22,7 +22,7 @@ Source0:        file:///home/gama/rpmbuild/SOURCES/cogutil-%{version}.tar.bz2
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 
-BuildRequires:  cmake >= 2.8.8, make >= 3, gcc-c++ >= 5.0, boost-devel >= 1.46, glibc-devel >= 2.3
+BuildRequires:  cmake >= 2.8.8, make >= 3, gcc-c++ >= 5.0, glibc-devel >= 2.3
 
 %description
 The Open Cognition Framework (OpenCog) utilities provide a collection
@@ -63,7 +63,7 @@ The libcogutil library provides assorted utilities
 Summary: Header files for the libcogutil library
 Group: Development/Libraries
 AutoReqProv: 0
-Requires: libcogutil >= %{version}, gcc-c++ >= 5.0, boost-devel >= 1.46, glibc-devel >= 2.3
+Requires: libcogutil >= %{version}, gcc-c++ >= 5.0, glibc-devel >= 2.3
 %description -n libcogutil-devel
 The libcogutil-devel package contains the header files needed to develop
 programs that use the libcogutil library (which is part of the Open Cognition

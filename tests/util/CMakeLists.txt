@@ -11,11 +11,9 @@ LINK_LIBRARIES(
 	cogutil
 )
 
-IF (HAVE_BOOST)
-	ADD_CXXTEST(ConfigUTest)
-	ADD_CXXTEST(randomUTest)
-	ADD_CXXTEST(CounterUTest)
-ENDIF (HAVE_BOOST)
+ADD_CXXTEST(ConfigUTest)
+ADD_CXXTEST(randomUTest)
+ADD_CXXTEST(CounterUTest)
 
 ADD_CXXTEST(LoggerUTest)
 ADD_CXXTEST(numericUTest)

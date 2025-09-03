@@ -23,14 +23,8 @@
 #include <opencog/util/random.h>
 #include <opencog/util/mt19937ar.h>
 
-#include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics/stats.hpp>
-#include <boost/accumulators/statistics/mean.hpp>
-#include <boost/accumulators/statistics/moment.hpp>
-
 using namespace std;
 using namespace opencog;
-using namespace boost::accumulators;
 
 class randomUTest : public CxxTest::TestSuite
 {
