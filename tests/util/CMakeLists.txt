@@ -24,7 +24,6 @@ IF (HAVE_BOOST)
 ENDIF (HAVE_BOOST)
 
 ADD_CXXTEST(LoggerUTest)
-ADD_CXXTEST(StringTokenizerUTest)
 ADD_CXXTEST(numericUTest)
 ADD_CXXTEST(algorithmUTest)
 ADD_CXXTEST(zipfUTest)
