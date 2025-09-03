@@ -264,7 +264,8 @@ Out n_way_partition(It begin, It end, const Pred p, int n, Out out)
 {
 	// could be made more efficient if needed
 	for (int i = 0;i < n - 1;++i)
-		*out++ = begin = std::partition(begin, end, std::bind(p, std::placeholders::_1) == i);
+		*out++ = begin = std::partition(begin, end,
+			[&p, i](const auto& x) { return p(x) == i; });
 	return out;
 }
 
