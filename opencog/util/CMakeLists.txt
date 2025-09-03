@@ -18,7 +18,6 @@ ADD_LIBRARY(cogutil SHARED
 	based_variant.h
 	cluster.c
 	comprehension.h
-	Cover_Tree.h
 	digraph.h
 	dorepeat.h
 	exceptions.cc
@@ -131,7 +130,6 @@ INSTALL(FILES
 	comprehension.h
 	Config.h
 	Counter.h
-	Cover_Tree.h
 	concurrent_queue.h
 	concurrent_set.h
 	concurrent_stack.h
