@@ -13,7 +13,6 @@ ADD_DEFINITIONS(
 )
 
 ADD_LIBRARY(cogutil SHARED
-	ansi.cc
 	algorithm.h
 	backtrace-symbols.c
 	based_variant.h
@@ -125,7 +124,6 @@ ENDIF (HAVE_BFD AND HAVE_IBERTY)
 ADD_SUBDIRECTORY(boost_ext)
 
 INSTALL(FILES
-	ansi.h
 	algorithm.h
 	async_buffer.h
 	async_method_caller.h
