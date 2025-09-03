@@ -50,7 +50,6 @@ ADD_LIBRARY(cogutil SHARED
 
 IF (HAVE_BOOST)
 	TARGET_SOURCES(cogutil PRIVATE Config.cc)
-	TARGET_SOURCES(cogutil PRIVATE files.cc)
 	TARGET_SOURCES(cogutil PRIVATE lazy_selector.cc)
 	TARGET_SOURCES(cogutil PRIVATE lazy_normal_selector.cc)
 	TARGET_SOURCES(cogutil PRIVATE lazy_random_selector.cc)
@@ -151,7 +150,6 @@ INSTALL(FILES
 	dorepeat.h
 	empty_string.h
 	exceptions.h
-	files.h
 	functional.h
 	hashing.h
 	iostreamContainer.h
