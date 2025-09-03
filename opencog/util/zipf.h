@@ -43,8 +43,8 @@ namespace opencog {
  * ACM TOMACS 6.3 (1996): 169-184
  *
  * Note that the Hörmann & Derflinger paper, and the stackoverflow
- * code base incorrectly names the paramater as `q`, when they mean `s`.
- * Thier `q` has nothing to do with the q-series. The names in the code
+ * code base incorrectly names the parameter as `q`, when they mean `s`.
+ * Their `q` has nothing to do with the q-series. The names in the code
  * below conform to conventions.
  *
  * Example usage:
@@ -125,7 +125,7 @@ class zipf_distribution
 		std::uniform_real_distribution<RealType> dist;  ///< [H(x_1), H(n)]
 
 		// This provides 16 decimal places of precision,
-		// i.e. good to (epsilon)^4 / 24 per expanions log, exp below.
+		// i.e. good to (epsilon)^4 / 24 per expansions log, exp below.
 		static constexpr RealType epsilon = 2e-5;
 
 		/** (exp(x) - 1) / x */
@@ -204,7 +204,7 @@ class zipf_distribution
  * This has a much slower initialization, because of the std::pow()
  * function, and also this will thrash the d-cache for N much greater
  * than N=1000 (because this requires lookup in the std::vector<> array).
- * Results will vary depending on your memory subystem performance.
+ * Results will vary depending on your memory subsystem performance.
  */
 template<class IntType = unsigned long, class RealType = double>
 class zipf_table_distribution

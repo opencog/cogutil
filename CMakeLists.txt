@@ -16,18 +16,7 @@
 include(cmake/Summary.cmake)
 
 # add_compile_definitions shows up in CMake version 3.12
-CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
-IF (COMMAND CMAKE_POLICY)
-	CMAKE_POLICY(SET CMP0003 NEW)
-ENDIF (COMMAND CMAKE_POLICY)
-
-IF (CMAKE_VERSION VERSION_GREATER 3.0.2)
-	CMAKE_POLICY(SET CMP0037 OLD)
-	CMAKE_POLICY(SET CMP0042 NEW)
-ENDIF (CMAKE_VERSION VERSION_GREATER 3.0.2)
-IF (CMAKE_VERSION VERSION_GREATER 3.9.0)
-	CMAKE_POLICY(SET CMP0068 NEW)
-ENDIF (CMAKE_VERSION VERSION_GREATER 3.9.0)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
 
 PROJECT(cogutil)
 
@@ -63,8 +52,6 @@ SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/")
 # NOTE: This is the official semantic-version, as it is derived from
 # a version-control independent means of declaring versioning.
 #
-# TODO: Once CMAKE_MINIMUM_REQUIRED >= 3.0.2 check use of policy CMP0048.
-#
 FILE(READ "${CMAKE_SOURCE_DIR}/opencog/util/cogutil.h" _CU_H_CONTENTS)
 STRING(REGEX MATCH
 	"#define COGUTIL_VERSION_STRING \"([0-9]+[.0-9]+[.0-9]+)\""
@@ -75,7 +62,25 @@ include(cmake/OpenCogGccOptions.cmake)
 
 # ------------------------------------------------------
 IF (WIN32) # Windows host but not cygwin
-	MESSAGE(FATAL_ERROR "You must use Cygwin if compiling under Windows.")
+	OPTION(WINDOWS_NATIVE "Build natively on Windows using MSVC" ON)
+	IF (NOT WINDOWS_NATIVE)
+		MESSAGE(FATAL_ERROR "You must use Cygwin if compiling under Windows, or enable WINDOWS_NATIVE option.")
+	ENDIF()
+
+	ADD_DEFINITIONS(-DWIN32)
+	ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
+	ADD_DEFINITIONS(-DBOOST_ALL_NO_LIB)
+	ADD_DEFINITIONS(-DBOOST_ALL_DYN_LINK)
+
+	IF (WINDOWS_NATIVE)
+		MESSAGE(STATUS "Building natively on Windows with MSVC")
+		ADD_DEFINITIONS(-DWIN32_LEAN_AND_MEAN)
+		ADD_DEFINITIONS(-DNOMINMAX)
+		ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
+		ADD_DEFINITIONS(-D_SCL_SECURE_NO_WARNINGS)
+		ADD_DEFINITIONS(-D_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
+		SET(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+	ENDIF()
 
 	# Previous definitions used for win32 (non cygwin) compilation.
 	# For reference only
@@ -84,7 +89,6 @@ IF (WIN32) # Windows host but not cygwin
 	# FIND_PACKAGE(PThreads REQUIRED)
 	# FIND_PACKAGE(STLPort REQUIRED)
 	# INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include/win32" ${PTHREADS_INCLUDE_DIR} ${STLPORT_INCLUDE_DIR})
-	# LINK_LIBRARIES(${PTHREADS_LIBRARY} ${STLPORT_LIBRARIES})
 	# ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE)
 ENDIF (WIN32)
 
@@ -92,10 +96,15 @@ ENDIF (WIN32)
 IF (CYGWIN)
 	ADD_DEFINITIONS(-DCYGWIN)
 	LINK_LIBRARIES(pthread)
+ELSEIF (WINDOWS_NATIVE)
+	# Use Windows native threading
+	ADD_DEFINITIONS(-DWIN32_THREADS)
+	# Windows SDK provides threading support
+	# No need for explicit pthread linkage
 ENDIF (CYGWIN)
 
 # ===================================================================
-# Check for existance of various required, optional packages.
+# Check for existence of various required, optional packages.
 
 # Check for boost. We need dynamic-linked, threaded libs by default.
 SET(Boost_USE_STATIC_LIBS OFF)
@@ -105,21 +114,28 @@ SET(MIN_BOOST 1.60)
 
 # Required boost packages
 # 1.60 is minimum for required filesystem support
-FIND_PACKAGE(Boost ${MIN_BOOST} COMPONENTS filesystem program_options system thread REQUIRED)
+FIND_PACKAGE(Boost CONFIG
+	${MIN_BOOST}
+	OPTIONAL_COMPONENTS filesystem program_options system thread)
 
 IF (Boost_FOUND)
+	SET(HAVE_BOOST 1)
+	ADD_DEFINITIONS(-DHAVE_BOOST)
 	SET(Boost_FOUND_SAVE 1)
+
+	# Optional boost packages; can build without these. (?? what needs this ??)
+	FIND_PACKAGE(Boost CONFIG ${MIN_BOOST} COMPONENTS math_c99 QUIET)
+
+	# Arghhh. Except cmake is treating above as required, not optional. #$%**&
+	IF (Boost_FOUND_SAVE)
+		SET(Boost_FOUND 1)
+	ENDIF (Boost_FOUND_SAVE)
+
+	INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+
 ELSE(Boost_FOUND)
-	MESSAGE(FATAL_ERROR "Boost ${MIN_BOOST} or newer (package libboost-all-dev if using Ubuntu) is needed to build!")
+#	MESSAGE(FATAL_ERROR "Boost ${MIN_BOOST} or newer (package libboost-all-dev if using Ubuntu) is needed to build!")
 ENDIF (Boost_FOUND)
-
-# Optional boost packages; can build without these. (?? what needs this ??)
-FIND_PACKAGE(Boost ${MIN_BOOST} COMPONENTS math_c99 QUIET)
-
-# Arghhh. Except cmake is treating above as required, not optional. #$%**&
-IF (Boost_FOUND_SAVE)
-	SET(Boost_FOUND 1)
-ENDIF (Boost_FOUND_SAVE)
 
 # -------------------------------------------------------------
 FIND_PACKAGE(Cxxtest)
@@ -170,21 +186,25 @@ ENDIF (PARALLEL_STL_FOUND)
 # Include configuration.
 
 # Set default include paths.
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR} ${Boost_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR})
 
 # -------------------------------------------------
 # Library configuration
 # Small hack to handle unixes that use "/usr/lib64" instead of
 # "/usr/lib" as the default lib path on 64 bit archs.
 IF (NOT DEFINED LIB_DIR_SUFFIX)
-	EXECUTE_PROCESS(COMMAND ${CMAKE_CXX_COMPILER} -print-search-dirs OUTPUT_VARIABLE PRINT_SEARCH_DIRS_OUTPUT)
-	STRING(REGEX MATCH "\r?\nlibraries:.*\r?\n" COMPILER_LIB_SEARCH_DIRS ${PRINT_SEARCH_DIRS_OUTPUT})
-	IF (NOT ${COMPILER_LIB_SEARCH_DIRS} STREQUAL "")
-		STRING(REGEX MATCH "/lib64/:|/lib64:|/lib64\n" HAS_LIB64 ${COMPILER_LIB_SEARCH_DIRS})
-		IF (NOT ${HAS_LIB64} STREQUAL "")
-			SET(LIB_DIR_SUFFIX "64")
-		ENDIF (NOT ${HAS_LIB64} STREQUAL "")
-	ENDIF (NOT ${COMPILER_LIB_SEARCH_DIRS} STREQUAL "")
+	IF (WIN32)
+		# On Windows with MSVC, we don't need this check
+	ELSE (WIN32)
+		EXECUTE_PROCESS(COMMAND ${CMAKE_CXX_COMPILER} -print-search-dirs OUTPUT_VARIABLE PRINT_SEARCH_DIRS_OUTPUT)
+		STRING(REGEX MATCH "\r?\nlibraries:.*\r?\n" COMPILER_LIB_SEARCH_DIRS ${PRINT_SEARCH_DIRS_OUTPUT})
+		IF (NOT ${COMPILER_LIB_SEARCH_DIRS} STREQUAL "")
+			STRING(REGEX MATCH "/lib64/:|/lib64:|/lib64\n" HAS_LIB64 ${COMPILER_LIB_SEARCH_DIRS})
+			IF (NOT ${HAS_LIB64} STREQUAL "")
+				SET(LIB_DIR_SUFFIX "64")
+			ENDIF (NOT ${HAS_LIB64} STREQUAL "")
+		ENDIF (NOT ${COMPILER_LIB_SEARCH_DIRS} STREQUAL "")
+	ENDIF (WIN32)
 ENDIF (NOT DEFINED LIB_DIR_SUFFIX)
 
 # RPATH handling (see https://cmake.org/Wiki/CMake_RPATH_handling)
@@ -227,6 +247,7 @@ ENDIF (Boost_FOUND)
 
 ADD_SUBDIRECTORY(cmake)
 ADD_SUBDIRECTORY(etc)
+ADD_SUBDIRECTORY(lib)
 ADD_SUBDIRECTORY(opencog)
 
 IF (CXXTEST_FOUND)
@@ -234,7 +255,7 @@ IF (CXXTEST_FOUND)
 	ADD_SUBDIRECTORY(tests EXCLUDE_FROM_ALL)
 	IF (CMAKE_BUILD_TYPE STREQUAL "Coverage")
 		# doing coverage stuff while running tests if this is the Coverage build
-		ADD_CUSTOM_TARGET(test
+		ADD_CUSTOM_TARGET(check
 			# TODO lcov should be found by cmake first
 			# TODO set it up so that we can pick to run coverage per test, or
 			# combined across all tests (the latter is MUCH faster). Use a define?
@@ -250,7 +271,7 @@ IF (CXXTEST_FOUND)
 		)
 	ELSE (CMAKE_BUILD_TYPE STREQUAL "Coverage")
 		# If this is a build with coverage enabled then test normally
-		ADD_CUSTOM_TARGET(test
+		ADD_CUSTOM_TARGET(check
 			DEPENDS tests
 			WORKING_DIRECTORY tests
 			COMMAND ${CMAKE_CTEST_COMMAND} --force-new-ctest-process $(ARGS)
@@ -320,6 +341,7 @@ ADD_SUBDIRECTORY(doc EXCLUDE_FROM_ALL)
 # ===================================================================
 # Show a summary of what we found, what we will do.
 
+SUMMARY_ADD("Boost" "Components requiring Boost" HAVE_BOOST)
 SUMMARY_ADD("Doxygen" "Code documentation" DOXYGEN_FOUND)
 SUMMARY_ADD("StackPrint" "Pretty printing of stack traces" HAVE_BFD AND HAVE_IBERTY)
 SUMMARY_ADD("Unit tests" "Unit tests" CXXTEST_FOUND)

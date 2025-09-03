@@ -27,10 +27,10 @@ container in which OpenCog will be built and run.
 
 ###### boost
 > C++ utilities package
-> http://www.boost.org/ | libboost-dev, libboost-filesystem-dev, libboost-program-options-dev, libboost-system-dev, libboost-thread-dev
+> http://www.boost.org/ | libboost-dev
 
 ###### cmake
-> Build management tool; v2.8 or higher recommended.
+> Build management tool; v3.12 or higher recommended.
 > http://www.cmake.org/ | cmake
 
 ###### cxxtest
@@ -78,7 +78,7 @@ Unit tests
 To build and run the unit tests, from the ./build directory enter (after
 building opencog as above):
 ```
-    make test
+    make check
 ```
 
 

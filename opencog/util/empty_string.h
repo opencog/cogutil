@@ -20,12 +20,14 @@
  */
 
 /**
- * The solve purpose of this file is to contain a static empty
- * std::string whenever it is needed (which turns out to be
- * often). Beside that it useful so that oc_to_string (pretty printer
- * for OpenCog C++ objects) can be called with an empty initial
- * indentation within gdb, since the latter isn't able to allocate an
- * empty string.
+ * The sole purpose of this file is to provide a static empty
+ * std::string, to be used as a default function initializer.
+ * This allows gdb to call those functions, as otherwise gdb is
+ * not able to allocate an empty string.
+ *
+ * Example usage:
+ *   int foo(std::string = "");            // BAD gdb cannot call this!
+ *   int foo(std::string = empty_string);  // GOOD gdb can call this.
  */
 
 #include <string>
@@ -39,10 +41,10 @@ namespace opencog {
 // (see
 // https://wiki.opencog.org/w/Development_standards#Pretty_Print_OpenCog_Objects)
 // easier to define.
-const static std::string empty_string = "";
+static inline const std::string empty_string = "";
 
 // Default indentation for oc_to_string when there is some.
-const static std::string oc_to_string_indent = "  ";
+static inline const std::string oc_to_string_indent = "  ";
 
 } // ~namespace opencog
 

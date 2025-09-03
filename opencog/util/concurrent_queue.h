@@ -122,7 +122,7 @@ public:
     /// Since other threads may have pushed or popped immediately
     /// after this call, the size may have become incorrect by
     /// the time the caller looks at it.
-    unsigned int size() const
+    size_t size() const
     {
         std::lock_guard<std::mutex> lock(the_mutex);
         return the_queue.size();

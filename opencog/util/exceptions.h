@@ -62,7 +62,7 @@ protected:
 
 public:
     /**
-     * Construtor and destructor.
+     * Constructor and destructor.
      */
     StandardException();
     StandardException(const StandardException&);
@@ -82,7 +82,7 @@ public:
     /**
      * Set the error message.
      * @param A c-string representing the error message. The caller is
-     *    responsable for freeing the memory allocated in the c-string
+     *    responsible for freeing the memory allocated in the c-string
      *    parameter.
      *
      * This is marked const, even though it mutates the error message.
@@ -193,7 +193,7 @@ public:
 
 /**
  * Exception to be thrown when an invalid parameter is used within a
- * function or an object initalization.
+ * function or an object initialization.
  *
  * This exception will not log an error when thrown, because the
  * exception must be handled inside the code.
@@ -233,7 +233,7 @@ public:
 }; // InconsistenceException
 
 /**
- * Exception to be called when an unrecoverable error has occured.
+ * Exception to be called when an unrecoverable error has occurred.
  * When this exception is caught, a stack trace must be generated
  * and provided to the user (e.g. saved to a log file).
  */
@@ -253,7 +253,7 @@ public:
 }; // FatalErrorException
 
 /**
- * Exception to be called when a network error  has occured.
+ * Exception to be called when a network error  has occurred.
  * When this exception is caught, a stack trace must be generated
  * and provided to the user (e.g. saved to a log file).
  */

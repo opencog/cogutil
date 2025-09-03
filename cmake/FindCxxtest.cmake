@@ -8,12 +8,12 @@
 # CXXTEST_GEN   - the binary used to generate the tests
 
 # Find path to the cxxtestgen.py script (NB: this stuff should move to FindCXXTEST.cmake)
-# CXXTEST_BIN_DIR enviroment variable must have been defined already
+# CXXTEST_BIN_DIR environment variable must have been defined already
 
 # cxxtest has a Python version and a Perl version. First, look
 # for the Python version.
-FIND_PACKAGE(PythonInterp)
-IF (PYTHONINTERP_FOUND)
+FIND_PACKAGE(Python3 COMPONENTS Interpreter)
+IF (Python3_Interpreter_FOUND)
 	# Look for the .py version first.  Some versions of cxxtest have a
 	# non-py version, but it crashes and burns, so, use the .py version
 	# preferentially, in order to maintain compatibility across (all??)
@@ -43,7 +43,7 @@ IF (PYTHONINTERP_FOUND)
 			SET(CXXTEST_GEN "${CXXTEST_PYTHON_BIN_DIR}/cxxtestgen" CACHE FILEPATH "CxxTest binary filepath")
 		ENDIF (CXXTEST_PYTHON_BIN_DIR)
 	ENDIF (NOT CXXTEST_FOUND)
-ENDIF (PYTHONINTERP_FOUND)
+ENDIF (Python3_Interpreter_FOUND)
 
 # If we still haven't found it, try the perl version.
 IF (NOT CXXTEST_FOUND)
@@ -87,6 +87,3 @@ IF(NOT CXXTEST_FOUND)
 		ENDIF(Cxxtest_FIND_REQUIRED)
 	ENDIF(NOT Cxxtest_FIND_QUIETLY)
 ENDIF(NOT CXXTEST_FOUND)
-
-# Leaving this set interfers with the Python3 search.
-UNSET(PYTHONINTERP_FOUND)

@@ -31,9 +31,10 @@
 #include <numeric>
 #include <vector>
 
+#ifdef HAVE_BOOST
 #include <boost/range/numeric.hpp>
+#endif // HAVE_BOOST
 
-#include <opencog/util/iostreamContainer.h>
 #include <opencog/util/oc_assert.h>
 
 /** \addtogroup grp_cogutil
@@ -163,7 +164,7 @@ static inline bool is_approx_eq_ulp(double x, double y, int64_t max_ulps)
 
 	// The dereferencing is below is explicitly called out as
 	// "undefined behavior" by the C++ spec.  However, the spec
-	// also tells us how to do with correcly, when C++20 becomes
+	// also tells us how to do with correctly, when C++20 becomes
 	// available:
 	// std::abs(std::bit_cast<std::int64_t>(x) - std::bit_cast<std::int64_t>(y))
 
@@ -353,7 +354,7 @@ Float p_norm_distance(const Vec& a, const Vec& b, Float p=1.0)
  *
  * Indeed the Tanimoto distance is considered as a generalization of
  * the Jaccard distance over multisets (where the weights are the
- * number of occurences, therefore never negative). See
+ * number of occurrences, therefore never negative). See
  * http://en.wikipedia.org/wiki/Talk%3AJaccard_index
  */
 template<typename Vec, typename Float>
@@ -363,6 +364,7 @@ Float tanimoto_distance(const Vec& a, const Vec& b)
                "Cannot compare unequal-sized vectors!  %d %d\n",
                a.size(), b.size());
 
+#ifdef HAVE_BOOST
     Float ab = boost::inner_product(a, b, Float(0)),
         aa = boost::inner_product(a, a, Float(0)),
         bb = boost::inner_product(b, b, Float(0)),
@@ -372,6 +374,9 @@ Float tanimoto_distance(const Vec& a, const Vec& b)
         return 1 - (ab / numerator);
     else
         return 0;
+#else // HAVE_BOOST
+    throw RuntimeException(TRACE_INFO, "Compiled without boost support");
+#endif // HAVE_BOOST
 }
 
 /**
@@ -399,6 +404,7 @@ Float angular_distance(const Vec& a, const Vec& b, bool pos_n_neg = true)
                "Cannot compare unequal-sized vectors!  %d %d\n",
                a.size(), b.size());
 
+#ifdef HAVE_BOOST
     // XXX FIXME writing out the explicit loop will almost
     // surely be faster than calling boost. Why? Because a single
     // loop allows the compiler to insert instructions into the
@@ -416,6 +422,9 @@ Float angular_distance(const Vec& a, const Vec& b, bool pos_n_neg = true)
     }
     else
         return 0;
+#else // HAVE_BOOST
+    throw RuntimeException(TRACE_INFO, "Compiled without boost support");
+#endif // HAVE_BOOST
 }
 
 // Avoid spewing garbage into the namespace!

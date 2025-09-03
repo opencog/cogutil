@@ -55,7 +55,7 @@
 /// allows cancellation, and other minor utilities. This API is also
 /// most easily understood as a producer-consumer API, with producer
 /// threads adding stuff to the stack, and consumer threads removing
-/// them.  By contrast, teh pool API is a borrow-and-return API, which
+/// them.  By contrast, the pool API is a borrow-and-return API, which
 /// is really more-or-less the same thing, but just uses a different
 /// mindset.  This API also matches the proposed C++ standard for this
 /// basic idea.
@@ -122,7 +122,7 @@ public:
     /// Since other threads may have pushed or popped immediately
     /// after this call, the size may have become incorrect by
     /// the time the caller looks at it.
-    unsigned int size() const
+    size_t size() const
     {
         std::lock_guard<std::mutex> lock(the_mutex);
         return the_stack.size();

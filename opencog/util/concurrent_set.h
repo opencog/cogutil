@@ -37,6 +37,7 @@
 #include <set>
 #include <exception>
 #include <mutex>
+#include <vector>
 
 /** \addtogroup grp_cogutil
  *  @{
@@ -126,6 +127,15 @@ public:
         return before < after;
     }
 
+    /// Remove the Element from the set. Return number of Elements
+    /// removed, i.e. 1 or 0, depending on whether the item was found
+    /// (or not) in the set.
+    size_t erase(const Element& item)
+    {
+        std::unique_lock<std::mutex> lock(the_mutex);
+        return the_set.erase(item);
+    }
+
     /// Return true if the set is empty at this instant in time.
     /// Since other threads may have inserted or removed immediately
     /// after this call, the emptiness of the set may have
@@ -144,27 +154,91 @@ public:
     /// Since other threads may have inserted or removed immediately
     /// after this call, the size may have become incorrect by
     /// the time the caller looks at it.
-    unsigned int size() const
+    size_t size() const
     {
         std::lock_guard<std::mutex> lock(the_mutex);
         return the_set.size();
     }
 
-    /// Try to get an element in the set. Return true if success,
-    /// else return false. The element is removed from the set.
-    bool try_get(Element& value)
+    /// Erase all elements from the container.
+    void clear()
     {
         std::lock_guard<std::mutex> lock(the_mutex);
-        if (is_canceled) throw Canceled();
-        if (the_set.empty())
-        {
-            return false;
-        }
+        return the_set.clear();
+    }
 
-        auto it = the_set.begin();
-        value = *it;
-        the_set.erase(it);
+    /// Try to get an element in the set. Return true if success,
+    /// else return false. The element is removed from the set.
+    /// The reverse flag, if set, returns an element from the end
+    /// of the set. Since elements of the set are ordered, sampling
+    /// from both ends helps prevent stagnant elements accumulating
+    /// at the end of the set.
+    ///
+    /// This works even if the set is closed, and can therefore be
+    /// used to drain a closed set.
+    bool try_get(Element& value, bool reverse = false)
+    {
+        std::lock_guard<std::mutex> lock(the_mutex);
+        if (the_set.empty())
+            return false;
+
+        if (reverse)
+        {
+            // Frick-n-frack, cannot cast reverse iterators to
+            // forward iterators. Also, there is no erase() that
+            // accepts a reverse iterator. This means that
+            // fetches from the end actually run slower. Dang.
+            typename std::set<Element>::const_reverse_iterator it = the_set.crbegin();
+            value = *it;
+            the_set.erase(value);
+        }
+        else
+        {
+            typename std::set <Element>::const_iterator it = the_set.cbegin();
+            value = *it;
+            the_set.erase(it);
+        }
         return true;
+    }
+
+    /// Same as above, but tries to get at most `nelt` of them. If there
+    /// are fewer, then fewer are returned. The goal here is to reduce the
+    /// number of locks taken.
+    std::vector<Element> try_get(size_t nelt, bool reverse = false)
+    {
+        std::vector<Element> elvec;
+
+        std::lock_guard<std::mutex> lock(the_mutex);
+        if (the_set.empty())
+            return elvec;
+
+        if (the_set.size() < nelt) nelt = the_set.size();
+
+        if (reverse)
+        {
+            for (size_t j=0; j<nelt; j++)
+            {
+                // Frick-n-frack, cannot cast reverse iterators to
+                // forward iterators. Also, there is no erase() that
+                // accepts a reverse iterator. This means that
+                // fetches from the end actually run slower. Dang.
+                typename std::set<Element>::const_reverse_iterator it = the_set.crbegin();
+                Element value = *it;
+                the_set.erase(value);
+                elvec.emplace_back(value);
+            }
+        }
+        else
+        {
+            for (size_t j=0; j<nelt; j++)
+            {
+                typename std::set <Element>::const_iterator it = the_set.cbegin();
+                Element value = *it;
+                the_set.erase(it);
+                elvec.emplace_back(value);
+            }
+        }
+        return elvec;
     }
 
     /// Get an item from the set. Block if the set is empty.

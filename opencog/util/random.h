@@ -25,8 +25,11 @@
 #define _OPENCOG_RANDOM_H
 
 #include <iomanip>
+#include <sstream>
 
+#ifdef HAVE_BOOST
 #include <boost/numeric/conversion/cast.hpp>
+#endif // HAVE_BOOST
 
 #include <opencog/util/dorepeat.h>
 #include <opencog/util/RandGen.h>
@@ -101,6 +104,7 @@ typename C::value_type rand_element_erase(C& c, RandGen& rng=randGen())
 template<typename T>
 T gaussian_rand(T mean, T std_dev, RandGen& rng=randGen())
 {
+#ifdef HAVE_BOOST
     double val = mean + std_dev *
         std::sqrt(-2.0 * std::log(rng.randdouble_one_excluded())) *
         std::cos(2.0 * M_PI * rng.randdouble_one_excluded());
@@ -113,6 +117,9 @@ T gaussian_rand(T mean, T std_dev, RandGen& rng=randGen())
         res = std::numeric_limits<T>::min();
     }
     return res;
+#else // HAVE_BOOST
+    throw RuntimeException(TRACE_INFO, "Compiled without boost support");
+#endif // HAVE_BOOST
 }
 
 //! linear biased random bool, b in [0,1] when b tends to 1 the result

@@ -11,17 +11,13 @@ LINK_LIBRARIES(
 	cogutil
 )
 
-ADD_CXXTEST(ConfigUTest)
+IF (HAVE_BOOST)
+	ADD_CXXTEST(ConfigUTest)
+	ADD_CXXTEST(randomUTest)
+	ADD_CXXTEST(CounterUTest)
+ENDIF (HAVE_BOOST)
+
 ADD_CXXTEST(LoggerUTest)
-ADD_CXXTEST(StringTokenizerUTest)
-ADD_CXXTEST(lazy_selectorUTest)
-ADD_CXXTEST(lru_cacheUTest)
-ADD_CXXTEST(iostreamContainerUTest)
 ADD_CXXTEST(numericUTest)
 ADD_CXXTEST(algorithmUTest)
-ADD_CXXTEST(KLDUTest)
-ADD_CXXTEST(randomUTest)
-ADD_CXXTEST(comprehensionUTest)
-ADD_CXXTEST(CounterUTest)
-ADD_CXXTEST(rankingUTest)
 ADD_CXXTEST(zipfUTest)

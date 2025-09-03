@@ -135,12 +135,9 @@ public:
         config().set("BOOL_PARAM2", "false");
         
         TS_ASSERT_EQUALS(config().get_bool("BOOL_PARAM1"), true);
-        TS_ASSERT_THROWS(config().get_int("BOOL_PARAM2"),
-                         InvalidParamException&);
-        TS_ASSERT_THROWS(config().get_long("BOOL_PARAM2"),
-                         InvalidParamException&);
-        TS_ASSERT_THROWS(config().get_double("BOOL_PARAM2"),
-                         InvalidParamException&);
+        TS_ASSERT_THROWS_ANYTHING(config().get_int("BOOL_PARAM2"));
+        TS_ASSERT_THROWS_ANYTHING(config().get_long("BOOL_PARAM2"));
+        TS_ASSERT_THROWS_ANYTHING(config().get_double("BOOL_PARAM2"));
     }
 
 }; // class

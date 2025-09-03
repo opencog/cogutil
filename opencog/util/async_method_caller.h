@@ -129,6 +129,7 @@ class async_caller
 		async_caller(Writer*, void (Writer::*)(const Element&), int nthreads=4);
 		~async_caller();
 		void enqueue(const Element&);
+		void enqueue(Element&&);
 		void flush_queue();
 		void barrier();
 
@@ -306,7 +307,7 @@ void async_caller<Writer, Element>::drain()
 /// This is NOT synchronizing! It does NOT prevent other threads from
 /// concurrently adding to the queue! Thus, if these other threads are
 /// adding at a high rate, this call might not return for a long time;
-/// it might never return! There is no gaurantee of forward progress!
+/// it might never return! There is no guarantee of forward progress!
 ///
 template<typename Writer, typename Element>
 void async_caller<Writer, Element>::flush_queue()
@@ -380,7 +381,7 @@ void async_caller<Writer, Element>::write_loop()
  * mostly drained...
  */
 template<typename Writer, typename Element>
-void async_caller<Writer, Element>::enqueue(const Element& elt)
+void async_caller<Writer, Element>::enqueue(Element&& elt)
 {
 	// Sanity checks.
 	if (_stopping_writers)
@@ -396,7 +397,7 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 		// transient object, and the user wants to avoid the overhead
 		// of creating threads.
 		_item_count++;
-		(_writer->*_do_write)(elt);
+		(_writer->*_do_write)(std::move(elt));
 		return;
 	}
 
@@ -410,7 +411,7 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 		if (th.get_id() == tid)
 		{
 			_pending ++;
-			_store_queue.push(elt);
+			_store_queue.push(std::move(elt));
 			_item_count++;
 			return;
 		}
@@ -418,12 +419,12 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 
 	// The _store_queue.push(elt) does not need a lock, itself; its
 	// perfectly thread-safe. However, the flush barrier does need to
-	// be able to halt everyone else from enqueing more stuff, so we
+	// be able to halt everyone else from enqueuing more stuff, so we
 	// do need to use a lock for that.
 	{
 		std::unique_lock<std::mutex> lock(_enqueue_mutex);
 		_pending ++;
-		_store_queue.push(elt);
+		_store_queue.push(std::move(elt));
 		_item_count++;
 	}
 
@@ -464,6 +465,12 @@ void async_caller<Writer, Element>::enqueue(const Element& elt)
 		_drain_msec += msec;
 		if (_drain_slowest_msec < msec) _drain_slowest_msec = msec;
 	}
+}
+
+template<typename Writer, typename Element>
+void async_caller<Writer, Element>::enqueue(const Element& elt)
+{
+	enqueue(std::move(Element(elt)));
 }
 
 /** @}*/

@@ -30,6 +30,7 @@
 #include <mutex>
 #include <thread>
 #include <vector>
+#include <unistd.h> /* for usleep() */
 
 #include <opencog/util/concurrent_set.h>
 #include <opencog/util/exceptions.h>
@@ -227,7 +228,7 @@ async_buffer<Writer, Element>::async_buffer(Writer* wr,
 }
 
 /// Create writer threads. By default, the buffer is created with
-/// four intial threads; these can be changed by closing and reopening
+/// four initial threads; these can be changed by closing and reopening
 /// with a different thread count.
 template<typename Writer, typename Element>
 void async_buffer<Writer, Element>::open(int nthreads)
@@ -278,7 +279,7 @@ void async_buffer<Writer, Element>::set_watermarks(size_t hi, size_t lo)
 /// Intentionally stall the writer threads, prevent them from writing
 /// until at least _low_watermark elements have accumulated in the pool.
 /// The goal here is to allow the de-duplication services to actually
-/// do thier work.  This has the dangerous side-effect of potentially
+/// do their work.  This has the dangerous side-effect of potentially
 /// leaving eleemnts in the set forever, never quite getting them
 /// written out. Caveat emptor! You may want to flush periodically,
 /// to avoid this situation.
@@ -524,7 +525,7 @@ void async_buffer<Writer, Element>::insert(const Element& elt)
 
 	// The _store_set.insert(elt) does not need a lock, itself; its
 	// perfectly thread-safe. However, the flush barrier does need to
-	// be able to halt everyone else from enqueing more stuff, so we
+	// be able to halt everyone else from enqueuing more stuff, so we
 	// do need to use a lock for that.
 	{
 		std::unique_lock<std::mutex> lock(_enqueue_mutex);
