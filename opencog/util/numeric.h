@@ -31,9 +31,10 @@
 #include <numeric>
 #include <vector>
 
+#ifdef HAVE_BOOST
 #include <boost/range/numeric.hpp>
+#endif // HAVE_BOOST
 
-#include <opencog/util/iostreamContainer.h>
 #include <opencog/util/oc_assert.h>
 
 /** \addtogroup grp_cogutil
@@ -363,6 +364,7 @@ Float tanimoto_distance(const Vec& a, const Vec& b)
                "Cannot compare unequal-sized vectors!  %d %d\n",
                a.size(), b.size());
 
+#ifdef HAVE_BOOST
     Float ab = boost::inner_product(a, b, Float(0)),
         aa = boost::inner_product(a, a, Float(0)),
         bb = boost::inner_product(b, b, Float(0)),
@@ -372,6 +374,9 @@ Float tanimoto_distance(const Vec& a, const Vec& b)
         return 1 - (ab / numerator);
     else
         return 0;
+#else // HAVE_BOOST
+    throw RuntimeException(TRACE_INFO, "Compiled without boost support");
+#endif // HAVE_BOOST
 }
 
 /**
@@ -399,6 +404,7 @@ Float angular_distance(const Vec& a, const Vec& b, bool pos_n_neg = true)
                "Cannot compare unequal-sized vectors!  %d %d\n",
                a.size(), b.size());
 
+#ifdef HAVE_BOOST
     // XXX FIXME writing out the explicit loop will almost
     // surely be faster than calling boost. Why? Because a single
     // loop allows the compiler to insert instructions into the
@@ -416,6 +422,9 @@ Float angular_distance(const Vec& a, const Vec& b, bool pos_n_neg = true)
     }
     else
         return 0;
+#else // HAVE_BOOST
+    throw RuntimeException(TRACE_INFO, "Compiled without boost support");
+#endif // HAVE_BOOST
 }
 
 // Avoid spewing garbage into the namespace!

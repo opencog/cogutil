@@ -52,8 +52,6 @@ SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/")
 # NOTE: This is the official semantic-version, as it is derived from
 # a version-control independent means of declaring versioning.
 #
-# TODO: Once CMAKE_MINIMUM_REQUIRED >= 3.0.2 check use of policy CMP0048.
-#
 FILE(READ "${CMAKE_SOURCE_DIR}/opencog/util/cogutil.h" _CU_H_CONTENTS)
 STRING(REGEX MATCH
 	"#define COGUTIL_VERSION_STRING \"([0-9]+[.0-9]+[.0-9]+)\""
@@ -116,21 +114,28 @@ SET(MIN_BOOST 1.60)
 
 # Required boost packages
 # 1.60 is minimum for required filesystem support
-FIND_PACKAGE(Boost ${MIN_BOOST} COMPONENTS filesystem program_options system thread REQUIRED)
+FIND_PACKAGE(Boost CONFIG
+	${MIN_BOOST}
+	OPTIONAL_COMPONENTS filesystem program_options system thread)
 
 IF (Boost_FOUND)
+	SET(HAVE_BOOST 1)
+	ADD_DEFINITIONS(-DHAVE_BOOST)
 	SET(Boost_FOUND_SAVE 1)
+
+	# Optional boost packages; can build without these. (?? what needs this ??)
+	FIND_PACKAGE(Boost CONFIG ${MIN_BOOST} COMPONENTS math_c99 QUIET)
+
+	# Arghhh. Except cmake is treating above as required, not optional. #$%**&
+	IF (Boost_FOUND_SAVE)
+		SET(Boost_FOUND 1)
+	ENDIF (Boost_FOUND_SAVE)
+
+	INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+
 ELSE(Boost_FOUND)
-	MESSAGE(FATAL_ERROR "Boost ${MIN_BOOST} or newer (package libboost-all-dev if using Ubuntu) is needed to build!")
+#	MESSAGE(FATAL_ERROR "Boost ${MIN_BOOST} or newer (package libboost-all-dev if using Ubuntu) is needed to build!")
 ENDIF (Boost_FOUND)
-
-# Optional boost packages; can build without these. (?? what needs this ??)
-FIND_PACKAGE(Boost ${MIN_BOOST} COMPONENTS math_c99 QUIET)
-
-# Arghhh. Except cmake is treating above as required, not optional. #$%**&
-IF (Boost_FOUND_SAVE)
-	SET(Boost_FOUND 1)
-ENDIF (Boost_FOUND_SAVE)
 
 # -------------------------------------------------------------
 FIND_PACKAGE(Cxxtest)
@@ -181,7 +186,7 @@ ENDIF (PARALLEL_STL_FOUND)
 # Include configuration.
 
 # Set default include paths.
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR} ${Boost_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR})
 
 # -------------------------------------------------
 # Library configuration
@@ -238,6 +243,7 @@ ENDIF (Boost_FOUND)
 
 ADD_SUBDIRECTORY(cmake)
 ADD_SUBDIRECTORY(etc)
+ADD_SUBDIRECTORY(lib)
 ADD_SUBDIRECTORY(opencog)
 
 IF (CXXTEST_FOUND)
@@ -331,6 +337,7 @@ ADD_SUBDIRECTORY(doc EXCLUDE_FROM_ALL)
 # ===================================================================
 # Show a summary of what we found, what we will do.
 
+SUMMARY_ADD("Boost" "Components requiring Boost" HAVE_BOOST)
 SUMMARY_ADD("Doxygen" "Code documentation" DOXYGEN_FOUND)
 SUMMARY_ADD("StackPrint" "Pretty printing of stack traces" HAVE_BFD AND HAVE_IBERTY)
 SUMMARY_ADD("Unit tests" "Unit tests" CXXTEST_FOUND)

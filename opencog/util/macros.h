@@ -25,8 +25,6 @@
 #ifndef _OPENCOG_MACROS_H
 #define _OPENCOG_MACROS_H
 
-// needed by CHECK_FREAD
-#include <boost/current_function.hpp>
 /** \addtogroup grp_cogutil
  *  @{
  */
@@ -47,7 +45,7 @@
 //! check the b_read used for fread function and throw an exception
 //! if b_read is false
 #define CHECK_FREAD \
-    { if ( !b_read ) throw IOException(TRACE_INFO, "%s - failed to read.", BOOST_CURRENT_FUNCTION ); }
+    { if ( !b_read ) throw IOException(TRACE_INFO, "%s - failed to read.", __FUNCTION__ ); }
 
 
 /** @}*/

@@ -30,6 +30,7 @@
 #include <mutex>
 #include <thread>
 #include <vector>
+#include <unistd.h> /* for usleep() */
 
 #include <opencog/util/concurrent_set.h>
 #include <opencog/util/exceptions.h>

@@ -18,20 +18,14 @@ ENDIF (HAVE_SECURE_GETENV)
 # and for running the FindCython module.
 #
 # Search for Python3
-FIND_PACKAGE(PythonInterp 3 QUIET)
-IF (3.4.0 VERSION_LESS "${PYTHON_VERSION_STRING}")
+FIND_PACKAGE(Python3 COMPONENTS Interpreter Development)
+IF (Python3_Interpreter_FOUND)
 	SET (HAVE_PY_INTERP 1)
-	MESSAGE(STATUS "Python ${PYTHON_VERSION_STRING} interpreter found.")
+	MESSAGE(STATUS "Python ${Python3_VERSION} interpreter found.")
 ENDIF()
 
-FIND_PACKAGE(PythonLibs)
-IF (PYTHONLIBS_FOUND)
-	IF (PYTHONINTERP_FOUND AND 3.4.0 VERSION_LESS ${PYTHONLIBS_VERSION_STRING})
-		SET (HAVE_PY_LIBS 1)
-		MESSAGE(STATUS "Python ${PYTHONLIBS_VERSION_STRING} libraries found.")
-	ELSE()
-		MESSAGE(STATUS "Python libraries ${PYTHONLIBS_VERSION_STRING} are too old; want version 3.4.0 or newer.")
-	ENDIF()
+IF (Python3_Development_FOUND)
+	SET (HAVE_PY_LIBS 1)
 ELSE()
 	MESSAGE(STATUS "Python libraries NOT found.")
 ENDIF()
@@ -44,6 +38,14 @@ IF(HAVE_PY_INTERP)
 	IF (CYTHON_FOUND AND HAVE_PY_LIBS)
 		ADD_DEFINITIONS(-DHAVE_CYTHON)
 		SET(HAVE_CYTHON 1)
+
+		# The CMake interfaces are completely different between
+		# Cmake 3 and CMake 4. Try to be backwards compat, if possible.
+		IF (NOT DEFINED PYTHON_INSTALL_PREFIX)
+			IF (DEFINED Python3_SITEARCH)
+				SET(PYTHON_INSTALL_PREFIX ${Python3_SITEARCH})
+			ENDIF()
+		ENDIF()
 
 		IF (NOT DEFINED PYTHON_INSTALL_PREFIX)
 			FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/scripts)
@@ -84,7 +86,7 @@ IF(HAVE_PY_INTERP)
 			# Find python destination dir for python bindings
 			# because it may differ on each operating system.
 			EXECUTE_PROCESS(
-				COMMAND ${PYTHON_EXECUTABLE}
+				COMMAND ${Python3_EXECUTABLE}
 				"${PROJECT_BINARY_DIR}/scripts/get_python_lib.py"
 				"${CMAKE_INSTALL_PREFIX}"
 				OUTPUT_VARIABLE PYTHON_DEST
@@ -116,10 +118,9 @@ IF(HAVE_PY_INTERP)
 	ENDIF (CYTHON_FOUND AND HAVE_PY_LIBS)
 
 	# Nosetests will find and automatically run python tests.
-	IF (PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
-		IF (3.4.0 VERSION_LESS ${PYTHONLIBS_VERSION_STRING})
-			FIND_PROGRAM(NOSETESTS_EXECUTABLE nosetests3)
-		ENDIF ()
+	# IF (Python3_Interpreter_FOUND AND Python3_Development_FOUND)
+	IF (Python3_Interpreter_FOUND)
+		FIND_PROGRAM(NOSETESTS_EXECUTABLE nosetests3)
 	ENDIF ()
 	IF (NOT NOSETESTS_EXECUTABLE)
 		MESSAGE(STATUS "nosetests not found: needed for python tests")

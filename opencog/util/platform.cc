@@ -26,51 +26,6 @@
 #include "platform.h"
 #include <stdlib.h>
 
-namespace opencog {
-
-const char* getUserName() {
-    const char* username = getenv("LOGNAME");
-    if (username == NULL)
-        username = getenv("USER");
-    if (username == NULL)
-        username = "unknown_user";
-    return username;
-}
-
-} // ~namespace opencog
-
-// ===========================================
-
-#ifdef __APPLE__
-
-#include <sys/timeb.h>
-#include <math.h>
-
-#ifndef HAVE_STRTOK_R
-#define HAVE_STRTOK_R 1
-
-char* __strtok_r(char *s1, const char *s2, char **lasts)
-{
-    char *ret;
-
-    if (s1 == NULL)
-        s1 = *lasts;
-    while (*s1 && strchr(s2, *s1))
-        ++s1;
-    if (*s1 == '\0')
-        return NULL;
-    ret = s1;
-    while (*s1 && !strchr(s2, *s1))
-        ++s1;
-    if (*s1)
-        *s1++ = '\0';
-    *lasts = s1;
-    return ret;
-}
-
-#endif /* HAVE_STRTOK_R */
-#endif /* __APPLE__ */
-
 // ======================================================
 #ifdef WIN32_NOT_UNIX
 
@@ -109,47 +64,6 @@ unsigned sleep(unsigned seconds)
 {
     Sleep(seconds * 1000);
     return 0;
-}
-
-#ifndef HAVE_STRTOK_R
-#define HAVE_STRTOK_R 1
-
-char* __strtok_r(char *s1, const char *s2, char **lasts)
-{
-    char *ret;
-
-    if (s1 == NULL)
-        s1 = *lasts;
-    while (*s1 && strchr(s2, *s1))
-        ++s1;
-    if (*s1 == '\0')
-        return NULL;
-    ret = s1;
-    while (*s1 && !strchr(s2, *s1))
-        ++s1;
-    if (*s1)
-        *s1++ = '\0';
-    *lasts = s1;
-    return ret;
-}
-
-#endif /* HAVE_STRTOK_R */
-
-int __getpid(void)
-{
-    return _getpid();
-}
-
-double rint(double nr)
-{
-    double f = floor(nr);
-    double c = ceil(nr);
-    return (((c -nr) >= (nr - f)) ? f : c);
-}
-
-int __dup2(int fd1, int fd2)
-{
-    return _dup2(fd1, fd2);
 }
 
 unsigned long long atoll(const char *str)

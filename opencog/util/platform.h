@@ -39,10 +39,6 @@
 #include <string>
 #include <stdint.h>
 
-#ifdef __APPLE__
-char*              __strtok_r(char *s1, const char *s2, char **lasts);
-#endif
-
 #ifdef WIN32_NOT_UNIX
 
 #define M_PI 3.14159265358979323846
@@ -50,12 +46,8 @@ char*              __strtok_r(char *s1, const char *s2, char **lasts);
 struct timezone {};
 
 int                round(float x);
-char*              __strtok_r(char *s1, const char *s2, char **lasts);
 int                gettimeofday(struct timeval* tp, void* tzp);
 void               usleep(unsigned useconds);
-int                __getpid(void);
-double             rint(double nr);
-int                __dup2(int, int);
 unsigned long long atoll(const char *str);
 unsigned int       sleep(unsigned seconds);
 
@@ -75,9 +67,6 @@ uint64_t getTotalRAM();
 
 //! Return the total number of free bytes available in RAM (excluding OS caches)
 uint64_t getFreeRAM();
-
-//! Return the OS username
-const char* getUserName();
 
 void set_thread_name(const char* name);
 

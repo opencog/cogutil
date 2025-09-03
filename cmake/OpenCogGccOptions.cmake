@@ -30,10 +30,8 @@ IF (CMAKE_COMPILER_IS_GNUCXX)
 		SET(CMAKE_C_FLAGS_PROFILE "-O2 -g3 -pg")
 
 		# -flto is good for performance, but wow is it slow to link...
-		# XXX disable for now ... its just to painful, in daily life.
-		SET(CMAKE_C_FLAGS_RELEASE "-O3 -g")
-		# SET(CMAKE_C_FLAGS_RELEASE "-O3 -g -flto")
-		# SET(CMAKE_C_FLAGS_RELEASE "-O3 -g -flto=8")
+		# SET(CMAKE_C_FLAGS_RELEASE "-O3 -g")
+		SET(CMAKE_C_FLAGS_RELEASE "-O3 -g -flto=auto")
 
 		# NO_AS_NEEDED is used to resolve circular dependency problems.
 		# Current failure is in libquery, which depends on libexecution

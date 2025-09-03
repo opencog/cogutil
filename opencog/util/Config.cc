@@ -26,6 +26,7 @@
 #include "Logger.h"
 
 #include <iostream>
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <cstdio>
@@ -33,19 +34,6 @@
 
 #include <errno.h>
 #include <unistd.h>
-
-// For backward compatibility as from boost 1.46 filesystem 3 is the default
-// as of boost 1.50 there is no version 2, and compiles will fail ;-(
-#include <boost/version.hpp>
-#if BOOST_VERSION > 104900
-#define BOOST_FILESYSTEM_VERSION 3
-#else
-#define BOOST_FILESYSTEM_VERSION 2
-#endif
-#include <boost/filesystem/operations.hpp>
-
-#include <boost/lexical_cast.hpp>
-#include <boost/algorithm/string.hpp>
 
 #include <opencog/util/platform.h>
 #include <opencog/util/exceptions.h>
@@ -131,20 +119,21 @@ const std::vector<std::string> Config::search_paths() const
 void Config::check_for_file(std::ifstream& fin,
                             const char* path_str, const char* filename)
 {
-    boost::filesystem::path configPath(path_str);
+    std::filesystem::path configPath(path_str);
     configPath /= filename;
 
-    if (not boost::filesystem::exists(configPath)) return;
+    if (not std::filesystem::exists(configPath)) return;
 
     // Try to open the config file
     fin.open(configPath.string().c_str());
     if (fin and fin.good() and fin.is_open())
     {
-        // XXX FIXME Allowing boost to search relative paths is
+        // XXX FIXME Searching relative paths is
         // a security bug waiting to happen. Right now, it seems
         // like a very very unlikely thing, but it is a bug!
         if ('/' != configPath.string()[0])
         {
+#define PATH_MAX 4096
             char buff[PATH_MAX+1];
             char *p = getcwd(buff, PATH_MAX);
             if (p) {
@@ -311,9 +300,6 @@ void Config::setup_logger()
 
 const bool Config::has(const string &name) const
 {
-    if (_no_config_loaded)
-        logger().warn("No configuration file was loaded! Param=%s",
-                      name.c_str());
     return (_table.find(name) != _table.end());
 }
 
@@ -342,45 +328,27 @@ const string& Config::operator[](const string &name) const
 int Config::get_int(const string &name, int dfl) const
 {
     if (not has(name)) return dfl;
-    try {
-        return boost::lexical_cast<int>(get(name));
-    } catch (boost::bad_lexical_cast&) {
-        throw InvalidParamException(TRACE_INFO,
-               "[ERROR] invalid integer parameter (%s)",
-               name.c_str());
-    }
+    return std::stoi(get(name));
 }
 
 long Config::get_long(const string &name, long dfl) const
 {
     if (not has(name)) return dfl;
-    try {
-        return boost::lexical_cast<long>(get(name));
-    } catch (boost::bad_lexical_cast&) {
-        throw InvalidParamException(TRACE_INFO,
-               "[ERROR] invalid long integer parameter (%s)",
-               name.c_str());
-    }
+    return std::stol(get(name));
 }
 
 double Config::get_double(const string &name, double dfl) const
 {
     if (not has(name)) return dfl;
-    try {
-        return boost::lexical_cast<double>(get(name));
-    } catch (boost::bad_lexical_cast&) {
-        throw InvalidParamException(TRACE_INFO,
-               "[ERROR] invalid double parameter (%s)",
-               name.c_str());
-    }
+    return std::stod(get(name));
 }
 
 bool Config::get_bool(const string &name, bool dfl) const
 {
     if (not has(name)) return dfl;
-    if (boost::iequals(get(name), "true")) return true;
-    else if (boost::iequals(get(name), "false")) return false;
-    else throw InvalidParamException(TRACE_INFO,
+    if (0 == get(name).compare("true")) return true;
+    if (0 == get(name).compare("false")) return false;
+    throw InvalidParamException(TRACE_INFO,
                 "[ERROR] invalid bool parameter (%s: %s)",
                 name.c_str(), get(name).c_str());
 }
