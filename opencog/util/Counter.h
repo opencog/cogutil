@@ -24,10 +24,11 @@
 #ifndef _OPENCOG_COUNTER_H
 #define _OPENCOG_COUNTER_H
 
-#include <set>
-#include <map>
 #include <initializer_list>
+#include <map>
 #include <numeric>
+#include <ostream>
+#include <set>
 
 namespace opencog {
 /** \addtogroup grp_cogutil
