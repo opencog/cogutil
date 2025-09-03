@@ -31,10 +31,6 @@
 #include <numeric>
 #include <vector>
 
-#ifdef HAVE_BOOST
-#include <boost/range/numeric.hpp>
-#endif // HAVE_BOOST
-
 #include <opencog/util/oc_assert.h>
 
 /** \addtogroup grp_cogutil
@@ -364,19 +360,15 @@ Float tanimoto_distance(const Vec& a, const Vec& b)
                "Cannot compare unequal-sized vectors!  %d %d\n",
                a.size(), b.size());
 
-#ifdef HAVE_BOOST
-    Float ab = boost::inner_product(a, b, Float(0)),
-        aa = boost::inner_product(a, a, Float(0)),
-        bb = boost::inner_product(b, b, Float(0)),
+    Float ab = std::inner_product(a, b, Float(0)),
+        aa = std::inner_product(a, a, Float(0)),
+        bb = std::inner_product(b, b, Float(0)),
         numerator = aa + bb - ab;
 
     if (numerator >= Float(DISTANCE_EPSILON))
         return 1 - (ab / numerator);
     else
         return 0;
-#else // HAVE_BOOST
-    throw RuntimeException(TRACE_INFO, "Compiled without boost support");
-#endif // HAVE_BOOST
 }
 
 /**
@@ -404,15 +396,14 @@ Float angular_distance(const Vec& a, const Vec& b, bool pos_n_neg = true)
                "Cannot compare unequal-sized vectors!  %d %d\n",
                a.size(), b.size());
 
-#ifdef HAVE_BOOST
     // XXX FIXME writing out the explicit loop will almost
-    // surely be faster than calling boost. Why? Because a single
+    // surely be faster. Why? Because a single
     // loop allows the compiler to insert instructions into the
     // pipeline bubbles; whereas three different loops will be more
     // than three times slower!
-    Float ab = boost::inner_product(a, b, Float(0)),
-        aa = boost::inner_product(a, a, Float(0)),
-        bb = boost::inner_product(b, b, Float(0)),
+    Float ab = std::inner_product(a, b, Float(0)),
+        aa = std::inner_product(a, a, Float(0)),
+        bb = std::inner_product(b, b, Float(0)),
         numerator = sqrt(aa * bb);
 
     if (numerator >= Float(DISTANCE_EPSILON)) {
@@ -422,9 +413,6 @@ Float angular_distance(const Vec& a, const Vec& b, bool pos_n_neg = true)
     }
     else
         return 0;
-#else // HAVE_BOOST
-    throw RuntimeException(TRACE_INFO, "Compiled without boost support");
-#endif // HAVE_BOOST
 }
 
 // Avoid spewing garbage into the namespace!
