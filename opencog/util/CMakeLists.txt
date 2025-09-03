@@ -36,9 +36,7 @@ ADD_LIBRARY(cogutil SHARED
 	platform.cc
 	random.h
 	ranking.h
-	StringTokenizer.cc
 	${WIN32_GETOPT_FILES}
-	${APPLE_STRNDUP_FILES}
 )
 
 IF (HAVE_BOOST)
@@ -169,7 +167,6 @@ INSTALL(FILES
 	recent_val.h
 	selection.h
 	sigslot.h
-	StringTokenizer.h
 	tree.h
 	zipf.h
 	DESTINATION "include/opencog/util"
