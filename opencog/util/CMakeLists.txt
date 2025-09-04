@@ -58,12 +58,13 @@ IF (HAVE_BFD AND HAVE_IBERTY)
 	set(CMAKE_REQUIRED_LIBRARIES ${BFD_LIBRARY})
 	check_c_source_compiles(
 		"#include <bfd.h>
- 		int main(int argc, char** argv) {
- 			asection *sec = malloc(sizeof(*sec));
- 			bfd_section_size(sec);
- 			free(sec);
- 			return 0;
- 		}"
+		#include <malloc.h>
+		int main(int argc, char** argv) {
+			asection *sec = (asection*) malloc(sizeof(*sec));
+			bfd_section_size(sec);
+			free(sec);
+			return 0;
+		}"
 		HAVE_1_ARG_BFD_SECTION_SIZE
 	)
 	if(HAVE_1_ARG_BFD_SECTION_SIZE)
@@ -75,12 +76,13 @@ IF (HAVE_BFD AND HAVE_IBERTY)
 	# Check if bfd_section_vma takes one or two arguments.
 	check_c_source_compiles(
 		"#include <bfd.h>
- 		int main(int argc, char** argv) {
- 			asection *sec = malloc(sizeof(*sec));
- 			bfd_section_vma(sec);
- 			free(sec);
- 			return 0;
- 		}"
+		#include <malloc.h>
+		int main(int argc, char** argv) {
+			asection *sec = (asection *) malloc(sizeof(*sec));
+			bfd_section_vma(sec);
+			free(sec);
+			return 0;
+		}"
 		HAVE_1_ARG_BFD_SECTION_VMA
 	)
 	if(HAVE_1_ARG_BFD_SECTION_VMA)
