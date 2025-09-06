@@ -84,12 +84,12 @@ class SigSlot
 			return connect([obj, fn](ARGS... args) { (obj->*fn)(args...); });
 		}
 
-		void disconnect(int id)
+		void disconnect(int slotid)
 		{
 			std::lock_guard<std::mutex> lck(_mtx);
-			auto it = _slots.find(id);
+			auto it = _slots.find(slotid);
 			if (it != _slots.end())
-				_slots.erase(id);
+				_slots.erase(it);
 		}
 
 		void disconnect_all()
