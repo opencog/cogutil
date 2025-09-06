@@ -64,9 +64,7 @@ class SigSlot
 			return _slot_id;
 		}
 
-#if BORKEN_FOR_SOME_REASON
 		// Connect member of a given object.
-		// XXX Something like this should work, but I can't get it to go.
 		//
 		// class Bar { public:
 		//     void baz(int x, std::vector<int> y) {
@@ -77,18 +75,14 @@ class SigSlot
 		// main() {
 		//     Bar bell;
 		//     SigSlot<int, std::vector<int>> siggy;
-		//     siggy.connect_m(&Bar::baz, bell);
+		//     siggy.connect(&Bar::baz, bell);
 		//     siggy.emit(42, {68,69,70});
 		// }
-		template <typename FN, typename... AR>
-		int connect(FN&& fn, AR&& ... ag)
+		template <typename Class>
+		int connect(void (Class::*fn)(ARGS...), Class* obj)
 		{
-			std::lock_guard<std::mutex> lck(_mtx);
-			_slot_id++;
-			_slots.insert({_slot_id, std::bind(fn, ag ...)});
-			return _slot_id;
+			return connect([obj, fn](ARGS... args) { (obj->*fn)(args...); });
 		}
-#endif
 
 		void disconnect(int id)
 		{
