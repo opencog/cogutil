@@ -1,0 +1,257 @@
+/** sigslotUTest.cxxtest ---
+ *
+ * Copyright (C) 2025 OpenCog Foundation
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License v3 as
+ * published by the Free Software Foundation and including the exceptions
+ * at http://opencog.org/wiki/Licenses
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program; if not, write to:
+ * Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#include <opencog/util/sigslot.h>
+#include <opencog/util/Logger.h>
+
+#include <vector>
+#include <string>
+
+using namespace opencog;
+using namespace std;
+
+class sigslotUTest : public CxxTest::TestSuite
+{
+private:
+    // Test counters for verifying signals were received
+    int counter;
+    int last_value;
+    vector<int> received_values;
+    string last_string;
+    
+    // Test class for member function connections
+    class TestReceiver {
+    public:
+        int call_count;
+        int last_x;
+        vector<int> last_vec;
+        
+        TestReceiver() : call_count(0), last_x(0) {}
+        
+        void on_signal(int x, vector<int> y) {
+            call_count++;
+            last_x = x;
+            last_vec = y;
+        }
+        
+        void simple_handler(int x) {
+            call_count++;
+            last_x = x;
+        }
+        
+        void no_args() {
+            call_count++;
+        }
+    };
+
+public:
+    sigslotUTest() {
+        logger().set_print_to_stdout_flag(true);
+        logger().set_level(Logger::INFO);
+    }
+
+    void setUp() {
+        counter = 0;
+        last_value = 0;
+        received_values.clear();
+        last_string.clear();
+    }
+
+    // Test basic signal-slot with function
+    void test_basic_connect() {
+        SigSlot<int> sig;
+        
+        auto handler = [this](int x) {
+            counter++;
+            last_value = x;
+        };
+        
+        int id = sig.connect(handler);
+        TS_ASSERT(id > 0);
+        
+        sig.emit(42);
+        TS_ASSERT_EQUALS(counter, 1);
+        TS_ASSERT_EQUALS(last_value, 42);
+        
+        sig.emit(99);
+        TS_ASSERT_EQUALS(counter, 2);
+        TS_ASSERT_EQUALS(last_value, 99);
+    }
+
+    // Test multiple slots connected to same signal
+    void test_multiple_connections() {
+        SigSlot<int> sig;
+        
+        auto handler1 = [this](int x) {
+            counter++;
+            received_values.push_back(x);
+        };
+        
+        auto handler2 = [this](int x) {
+            counter++;
+            last_value = x * 2;
+        };
+        
+        sig.connect(handler1);
+        sig.connect(handler2);
+        
+        sig.emit(10);
+        TS_ASSERT_EQUALS(counter, 2);
+        TS_ASSERT_EQUALS(received_values.size(), 1);
+        TS_ASSERT_EQUALS(received_values[0], 10);
+        TS_ASSERT_EQUALS(last_value, 20);
+    }
+
+    // Test disconnect
+    void test_disconnect() {
+        SigSlot<int> sig;
+        
+        auto handler = [this](int x) {
+            counter++;
+            last_value = x;
+        };
+        
+        int id = sig.connect(handler);
+        sig.emit(5);
+        TS_ASSERT_EQUALS(counter, 1);
+        
+        sig.disconnect(id);
+        sig.emit(10);
+        TS_ASSERT_EQUALS(counter, 1); // Should still be 1
+        TS_ASSERT_EQUALS(last_value, 5); // Should still be 5
+    }
+
+    // Test disconnect_all
+    void test_disconnect_all() {
+        SigSlot<int> sig;
+        
+        sig.connect([this](int x) { counter++; });
+        sig.connect([this](int x) { counter++; });
+        sig.connect([this](int x) { counter++; });
+        
+        sig.emit(1);
+        TS_ASSERT_EQUALS(counter, 3);
+        
+        sig.disconnect_all();
+        sig.emit(2);
+        TS_ASSERT_EQUALS(counter, 3); // Should still be 3
+    }
+
+    // Test member function connection
+    void test_member_function_connect() {
+        TestReceiver receiver;
+        SigSlot<int, vector<int>> sig;
+        
+        int id = sig.connect(&TestReceiver::on_signal, &receiver);
+        TS_ASSERT(id > 0);
+        
+        vector<int> test_vec = {1, 2, 3};
+        sig.emit(42, test_vec);
+        
+        TS_ASSERT_EQUALS(receiver.call_count, 1);
+        TS_ASSERT_EQUALS(receiver.last_x, 42);
+        TS_ASSERT_EQUALS(receiver.last_vec.size(), 3);
+        TS_ASSERT_EQUALS(receiver.last_vec[0], 1);
+        TS_ASSERT_EQUALS(receiver.last_vec[1], 2);
+        TS_ASSERT_EQUALS(receiver.last_vec[2], 3);
+    }
+
+    // Test multiple types of arguments
+    void test_multiple_arg_types() {
+        SigSlot<int, string, float> sig;
+        
+        int call_count = 0;
+        int recv_int = 0;
+        string recv_str;
+        float recv_float = 0.0f;
+        
+        sig.connect([&](int i, string s, float f) {
+            call_count++;
+            recv_int = i;
+            recv_str = s;
+            recv_float = f;
+        });
+        
+        sig.emit(123, "hello", 3.14f);
+        
+        TS_ASSERT_EQUALS(call_count, 1);
+        TS_ASSERT_EQUALS(recv_int, 123);
+        TS_ASSERT_EQUALS(recv_str, "hello");
+        TS_ASSERT_DELTA(recv_float, 3.14f, 0.001);
+    }
+
+    // Test no-argument signal
+    void test_no_args() {
+        TestReceiver receiver;
+        SigSlot<> sig;
+        
+        sig.connect(&TestReceiver::no_args, &receiver);
+        
+        sig.emit();
+        TS_ASSERT_EQUALS(receiver.call_count, 1);
+        
+        sig.emit();
+        TS_ASSERT_EQUALS(receiver.call_count, 2);
+    }
+
+    // Test that disconnecting invalid ID doesn't crash
+    void test_disconnect_invalid_id() {
+        SigSlot<int> sig;
+        
+        // Should not crash or throw
+        sig.disconnect(9999);
+        sig.disconnect(-1);
+        sig.disconnect(0);
+        
+        // Add a real connection and verify it still works
+        auto handler = [this](int x) { counter++; };
+        sig.connect(handler);
+        sig.emit(1);
+        TS_ASSERT_EQUALS(counter, 1);
+    }
+
+    // Test emit with no connections (should not crash)
+    void test_emit_no_connections() {
+        SigSlot<int> sig;
+        sig.emit(42); // Should not crash
+        
+        SigSlot<int, string, vector<float>> complex_sig;
+        complex_sig.emit(1, "test", {1.0f, 2.0f}); // Should not crash
+    }
+
+    // Test size() method
+    void test_size() {
+        SigSlot<int> sig;
+        TS_ASSERT_EQUALS(sig.size(), 0);
+        
+        int id1 = sig.connect([](int x) {});
+        TS_ASSERT_EQUALS(sig.size(), 1);
+        
+        int id2 = sig.connect([](int x) {});
+        TS_ASSERT_EQUALS(sig.size(), 2);
+        TS_ASSERT_DIFFERS(id1, id2);
+        
+        sig.disconnect(id1);
+        TS_ASSERT_EQUALS(sig.size(), 1);
+        
+        sig.disconnect_all();
+        TS_ASSERT_EQUALS(sig.size(), 0);
+    }
+};

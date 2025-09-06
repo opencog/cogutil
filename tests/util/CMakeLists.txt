@@ -11,11 +11,11 @@ LINK_LIBRARIES(
 	cogutil
 )
 
+ADD_CXXTEST(algorithmUTest)
 ADD_CXXTEST(ConfigUTest)
-ADD_CXXTEST(randomUTest)
 ADD_CXXTEST(CounterUTest)
-
 ADD_CXXTEST(LoggerUTest)
 ADD_CXXTEST(numericUTest)
-ADD_CXXTEST(algorithmUTest)
+ADD_CXXTEST(randomUTest)
+ADD_CXXTEST(sigslotUTest)
 ADD_CXXTEST(zipfUTest)
