@@ -49,10 +49,6 @@ class SigSlot
 
 	private:
 		mutable std::mutex _mtx;
-		// HACK ALERT -- use std::map, not std::set here, for only
-		// one reason: so that we get a natural operator-less, which
-		// is needed for the insert() to work.
-
 		mutable std::map<int, std::function<void(ARGS...)>> _slots;
 		mutable int _slot_id;
 
@@ -97,7 +93,9 @@ class SigSlot
 		void disconnect(int id)
 		{
 			std::lock_guard<std::mutex> lck(_mtx);
-			_slots.erase(id);
+			auto it = _slots.find(id);
+			if (it != _slots.end())
+				_slots.erase(id);
 		}
 
 		void disconnect_all()
