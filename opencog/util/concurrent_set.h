@@ -72,12 +72,15 @@
 /// round-robin or "fair" fetching guarantees of any sort; in fact, the
 /// gets are guaranteed to NOT be fair.  This may result in unexpected
 /// behavior.
+///
+/// The Compare template parameter specifies the comparison function to use
+/// for ordering elements in the set. It defaults to std::less<Element>.
 
-template<typename Element>
+template<typename Element, typename Compare = std::less<Element>>
 class concurrent_set
 {
 private:
-    std::set<Element> the_set;
+    std::set<Element, Compare> the_set;
     mutable std::mutex the_mutex;
     std::condition_variable the_cond;
     bool is_canceled;
