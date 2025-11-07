@@ -278,7 +278,7 @@ public:
         return value;
     }
 
-    std::set<Element> wait_and_take_all()
+    std::set<Element, Compare> wait_and_take_all()
     {
         std::unique_lock<std::mutex> lock(the_mutex);
 
@@ -294,7 +294,7 @@ public:
         }
         while (the_set.empty());
 
-        std::set<Element> retval;
+        std::set<Element, Compare> retval(the_set.key_comp());
         std::swap(retval, the_set);
         return retval;
     }
