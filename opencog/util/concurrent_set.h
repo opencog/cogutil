@@ -92,6 +92,9 @@ public:
     concurrent_set(void)
         : the_set(), the_mutex(), the_cond(), is_canceled(false)
     {}
+    concurrent_set(const Compare& comp)
+        : the_set(comp), the_mutex(), the_cond(), is_canceled(false)
+    {}
     ~concurrent_set()
     { if (not is_canceled) cancel(); }
 
