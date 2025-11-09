@@ -33,6 +33,7 @@
 #ifndef _OC_CONCURRENT_STACK_H
 #define _OC_CONCURRENT_STACK_H
 
+#include <atomic>
 #include <condition_variable>
 #include <stack>
 #include <exception>

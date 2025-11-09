@@ -33,6 +33,7 @@
 #ifndef _OC_CONCURRENT_QUEUE_H
 #define _OC_CONCURRENT_QUEUE_H
 
+#include <atomic>
 #include <condition_variable>
 #include <queue>
 #include <exception>

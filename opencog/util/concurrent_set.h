@@ -33,6 +33,7 @@
 #ifndef _OC_CONCURRENT_SET_H
 #define _OC_CONCURRENT_SET_H
 
+#include <atomic>
 #include <condition_variable>
 #include <set>
 #include <exception>
