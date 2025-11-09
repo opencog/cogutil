@@ -67,14 +67,22 @@ private:
     std::queue<Element> the_queue;
     mutable std::mutex the_mutex;
     std::condition_variable the_cond;
+    std::condition_variable _watermark_cond;
     bool is_canceled;
+    size_t _high_watermark;
+    size_t _low_watermark;
+    std::atomic<size_t> _blocked_pushers;
 
     concurrent_queue(const concurrent_queue&) = delete;  // disable copying
     concurrent_queue& operator=(const concurrent_queue&) = delete; // no assign
 
 public:
     concurrent_queue(void)
-        : the_queue(), the_mutex(), the_cond(), is_canceled(false)
+        : the_queue(), the_mutex(), the_cond(), _watermark_cond(),
+          is_canceled(false),
+          _high_watermark(DEFAULT_HIGH_WATER_MARK),
+          _low_watermark(DEFAULT_LOW_WATER_MARK),
+          _blocked_pushers(0)
     {}
     ~concurrent_queue()
     { if (not is_canceled) cancel(); }
@@ -84,11 +92,27 @@ public:
         const char * what() { return "Cancellation of wait on concurrent_queue"; }
     };
 
+    static constexpr size_t DEFAULT_HIGH_WATER_MARK = 1000;
+    static constexpr size_t DEFAULT_LOW_WATER_MARK = 750;
+
     /// Push the Element onto the queue.
     void push(const Element& item)
     {
         std::unique_lock<std::mutex> lock(the_mutex);
         if (is_canceled) throw Canceled();
+
+        // Block if queue is at or above high watermark
+        if (the_queue.size() >= _high_watermark)
+        {
+            _blocked_pushers++;
+            while (the_queue.size() >= _low_watermark and not is_canceled)
+            {
+                _watermark_cond.wait(lock);
+            }
+            _blocked_pushers--;
+            if (is_canceled) throw Canceled();
+        }
+
         the_queue.push(item);
         lock.unlock();
         the_cond.notify_one();
@@ -99,6 +123,19 @@ public:
     {
         std::unique_lock<std::mutex> lock(the_mutex);
         if (is_canceled) throw Canceled();
+
+        // Block if queue is at or above high watermark
+        if (the_queue.size() >= _high_watermark)
+        {
+            _blocked_pushers++;
+            while (the_queue.size() >= _low_watermark and not is_canceled)
+            {
+                _watermark_cond.wait(lock);
+            }
+            _blocked_pushers--;
+            if (is_canceled) throw Canceled();
+        }
+
         the_queue.push(std::move(item));
         lock.unlock();
         the_cond.notify_one();
@@ -115,8 +152,12 @@ public:
         return the_queue.empty();
     }
 
-    /// The queue is unbounded. It will never get full.
-    bool is_full() const noexcept { return false; }
+    /// Return true if the queue is at/above high watermark or has blocked pushers.
+    bool is_full() const
+    {
+        std::lock_guard<std::mutex> lock(the_mutex);
+        return the_queue.size() >= _high_watermark or _blocked_pushers > 0;
+    }
 
     /// Return the size of the queue at this instant in time.
     /// Since other threads may have pushed or popped immediately
@@ -165,8 +206,16 @@ public:
         }
         while (the_queue.empty());
 
+        size_t old_size = the_queue.size();
         value = the_queue.front();
         the_queue.pop();
+
+        // Wake up waiting pushers if we dropped below low watermark
+        if (old_size >= _low_watermark and the_queue.size() < _low_watermark)
+        {
+            lock.unlock();
+            _watermark_cond.notify_all();
+        }
     }
     void wait_pop(Element& value) { pop(value); }
 
@@ -214,6 +263,17 @@ public:
             the_cond.wait(lock);
         }
         if (is_canceled) throw Canceled();
+    }
+
+    /// Set the high and low watermarks for the queue.
+    /// When the queue size reaches or exceeds the high watermark,
+    /// push() operations will block until the size drops below
+    /// the low watermark.
+    void set_watermarks(size_t high, size_t low)
+    {
+        std::lock_guard<std::mutex> lock(the_mutex);
+        _high_watermark = high;
+        _low_watermark = low;
     }
 
     void cancel_reset()
