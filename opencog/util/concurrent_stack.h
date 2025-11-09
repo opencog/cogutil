@@ -129,11 +129,13 @@ public:
     }
 
     /// Try to pop an element off the top of the stack. Return true
-    /// if success, else return false.
+    /// if success, else return false. This will work even on closed
+    /// stacks, and so can be used to clear the stack. Another
+    /// alternative for closed stacks is the wait_and_take_all()
+    /// method, which blocks on open stacks, and empties closed ones.
     bool try_pop(Element& value)
     {
         std::lock_guard<std::mutex> lock(the_mutex);
-        if (is_canceled) throw Canceled();
         if (the_stack.empty())
         {
             return false;
