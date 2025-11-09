@@ -129,11 +129,13 @@ public:
     }
 
     /// Try to get an element off the front of the queue. Return true
-    /// if success, else return false.
+    /// if success, else return false. This will work even on closed
+    /// queues, and so can be used to drain the queue. Another
+    /// alternative for closed queues is the wait_and_take_all()
+    /// method, which blocks on open queues, and empties closed ones.
     bool try_get(Element& value)
     {
         std::lock_guard<std::mutex> lock(the_mutex);
-        if (is_canceled) throw Canceled();
         if (the_queue.empty())
         {
             return false;
