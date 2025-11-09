@@ -83,17 +83,29 @@ private:
     std::set<Element, Compare> the_set;
     mutable std::mutex the_mutex;
     std::condition_variable the_cond;
+    std::condition_variable _watermark_cond;
     bool is_canceled;
+    size_t _high_watermark;
+    size_t _low_watermark;
+    std::atomic<size_t> _blocked_inserters;
 
     concurrent_set(const concurrent_set&) = delete;  // disable copying
     concurrent_set& operator=(const concurrent_set&) = delete; // no assign
 
 public:
     concurrent_set(void)
-        : the_set(), the_mutex(), the_cond(), is_canceled(false)
+        : the_set(), the_mutex(), the_cond(), _watermark_cond(),
+          is_canceled(false),
+          _high_watermark(DEFAULT_HIGH_WATER_MARK),
+          _low_watermark(DEFAULT_LOW_WATER_MARK),
+          _blocked_inserters(0)
     {}
     concurrent_set(const Compare& comp)
-        : the_set(comp), the_mutex(), the_cond(), is_canceled(false)
+        : the_set(comp), the_mutex(), the_cond(), _watermark_cond(),
+          is_canceled(false),
+          _high_watermark(DEFAULT_HIGH_WATER_MARK),
+          _low_watermark(DEFAULT_LOW_WATER_MARK),
+          _blocked_inserters(0)
     {}
     ~concurrent_set()
     { if (not is_canceled) cancel(); }
@@ -103,6 +115,9 @@ public:
         const char * what() { return "Cancellation of wait on concurrent_set"; }
     };
 
+    static constexpr size_t DEFAULT_HIGH_WATER_MARK = 1000;
+    static constexpr size_t DEFAULT_LOW_WATER_MARK = 750;
+
     /// Insert the Element into the set; copies the item.
     /// Return true if the item was not already in the set,
     /// else return false.
@@ -110,6 +125,19 @@ public:
     {
         std::unique_lock<std::mutex> lock(the_mutex);
         if (is_canceled) throw Canceled();
+
+        // Block if set is at or above high watermark
+        if (the_set.size() >= _high_watermark)
+        {
+            _blocked_inserters++;
+            while (the_set.size() >= _low_watermark and not is_canceled)
+            {
+                _watermark_cond.wait(lock);
+            }
+            _blocked_inserters--;
+            if (is_canceled) throw Canceled();
+        }
+
         size_t before = the_set.size();
         the_set.insert(item);
         size_t after = the_set.size();
@@ -125,6 +153,19 @@ public:
     {
         std::unique_lock<std::mutex> lock(the_mutex);
         if (is_canceled) throw Canceled();
+
+        // Block if set is at or above high watermark
+        if (the_set.size() >= _high_watermark)
+        {
+            _blocked_inserters++;
+            while (the_set.size() >= _low_watermark and not is_canceled)
+            {
+                _watermark_cond.wait(lock);
+            }
+            _blocked_inserters--;
+            if (is_canceled) throw Canceled();
+        }
+
         size_t before = the_set.size();
         the_set.insert(std::move(item));
         size_t after = the_set.size();
@@ -153,8 +194,12 @@ public:
         return the_set.empty();
     }
 
-    /// The set is unbounded. It will never get full.
-    bool is_full() const noexcept { return false; }
+    /// Return true if the set is at/above high watermark or has blocked inserters.
+    bool is_full() const
+    {
+        std::lock_guard<std::mutex> lock(the_mutex);
+        return the_set.size() >= _high_watermark or _blocked_inserters > 0;
+    }
 
     /// Return the size of the set at this instant in time.
     /// Since other threads may have inserted or removed immediately
@@ -265,9 +310,17 @@ public:
         }
         while (the_set.empty());
 
+        size_t old_size = the_set.size();
         auto it = the_set.begin();
         value = *it;
         the_set.erase(it);
+
+        // Wake up waiting inserters if we dropped below low watermark
+        if (old_size >= _low_watermark and the_set.size() < _low_watermark)
+        {
+            lock.unlock();
+            _watermark_cond.notify_all();
+        }
     }
     void wait_get(Element& value) { get(value); }
 
@@ -315,6 +368,17 @@ public:
             the_cond.wait(lock);
         }
         if (is_canceled) throw Canceled();
+    }
+
+    /// Set the high and low watermarks for the set.
+    /// When the set size reaches or exceeds the high watermark,
+    /// insert() operations will block until the size drops below
+    /// the low watermark.
+    void set_watermarks(size_t high, size_t low)
+    {
+        std::lock_guard<std::mutex> lock(the_mutex);
+        _high_watermark = high;
+        _low_watermark = low;
     }
 
     void cancel_reset()
