@@ -44,6 +44,10 @@ jobs:
 
   atomspace:
     docker:
+      - image: $CIRCLE_PROJECT_USERNAME/opencog-deps
+        user: root
+        environment:
+          CCACHE_DIR: /ws/ccache
     working_directory: /ws/atomspace
     steps:
       - attach_workspace:
