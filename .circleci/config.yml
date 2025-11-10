@@ -43,6 +43,7 @@ jobs:
             - ccache
 
   atomspace:
+    docker:
     working_directory: /ws/atomspace
     steps:
       - attach_workspace:
