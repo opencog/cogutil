@@ -314,6 +314,7 @@ public:
        is_canceled = true;
        lock.unlock();
        the_cond.notify_all();
+       _watermark_cond.notify_all();
     }
     void close() { cancel(); }
 
