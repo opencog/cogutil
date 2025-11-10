@@ -128,10 +128,12 @@ public:
         if (is_canceled) throw Canceled();
 
         // Block if set is at or above high watermark
+        bool was_blocked = false;
         if (the_set.size() >= _high_watermark)
         {
+            was_blocked = true;
             _blocked_inserters++;
-            while (the_set.size() >= _low_watermark and not is_canceled)
+            while (the_set.size() >= _high_watermark and not is_canceled)
             {
                 _watermark_cond.wait(lock);
             }
@@ -142,8 +144,18 @@ public:
         size_t before = the_set.size();
         the_set.insert(item);
         size_t after = the_set.size();
+
+        // If this inserter was blocked and there are still blocked
+        // inserters waiting, notify them all so they can check if
+        // there's room
+        bool should_cascade = (was_blocked and _blocked_inserters > 0);
+
         lock.unlock();
         the_cond.notify_one();
+
+        if (should_cascade)
+            _watermark_cond.notify_all();
+
         return before < after;
     }
 
@@ -156,10 +168,12 @@ public:
         if (is_canceled) throw Canceled();
 
         // Block if set is at or above high watermark
+        bool was_blocked = false;
         if (the_set.size() >= _high_watermark)
         {
+            was_blocked = true;
             _blocked_inserters++;
-            while (the_set.size() >= _low_watermark and not is_canceled)
+            while (the_set.size() >= _high_watermark and not is_canceled)
             {
                 _watermark_cond.wait(lock);
             }
@@ -170,8 +184,18 @@ public:
         size_t before = the_set.size();
         the_set.insert(std::move(item));
         size_t after = the_set.size();
+
+        // If this inserter was blocked and there are still blocked
+        // inserters waiting, notify them all so they can check if
+        // there's room
+        bool should_cascade = (was_blocked and _blocked_inserters > 0);
+
         lock.unlock();
         the_cond.notify_one();
+
+        if (should_cascade)
+            _watermark_cond.notify_all();
+
         return before < after;
     }
 
@@ -195,7 +219,8 @@ public:
         return the_set.empty();
     }
 
-    /// Return true if the set is at/above high watermark or has blocked inserters.
+    /// Return true if the set is at/above high watermark or has
+    /// blocked inserters.
     bool is_full() const
     {
         std::lock_guard<std::mutex> lock(the_mutex);
@@ -311,17 +336,19 @@ public:
         }
         while (the_set.empty());
 
-        size_t old_size = the_set.size();
         auto it = the_set.begin();
         value = *it;
         the_set.erase(it);
 
-        // Wake up waiting inserters if we dropped below low watermark
-        if (old_size >= _low_watermark and the_set.size() < _low_watermark)
-        {
-            lock.unlock();
+        // Wake up waiting inserters when dropping below low
+        // watermark (hysteresis)
+        bool should_notify = (_blocked_inserters > 0) and
+                             (the_set.size() < _low_watermark);
+
+        lock.unlock();
+
+        if (should_notify)
             _watermark_cond.notify_all();
-        }
     }
     void wait_get(Element& value) { get(value); }
 
@@ -398,6 +425,7 @@ public:
        is_canceled = true;
        lock.unlock();
        the_cond.notify_all();
+       _watermark_cond.notify_all();
     }
     void close() { cancel(); }
 

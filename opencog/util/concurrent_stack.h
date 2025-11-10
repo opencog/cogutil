@@ -103,10 +103,12 @@ public:
         if (is_canceled) throw Canceled();
 
         // Block if stack is at or above high watermark
+        bool was_blocked = false;
         if (the_stack.size() >= _high_watermark)
         {
+            was_blocked = true;
             _blocked_pushers++;
-            while (the_stack.size() >= _low_watermark and not is_canceled)
+            while (the_stack.size() >= _high_watermark and not is_canceled)
             {
                 _watermark_cond.wait(lock);
             }
@@ -115,8 +117,16 @@ public:
         }
 
         the_stack.push(item);
+
+        // If this pusher was blocked and there are still blocked pushers
+        // waiting, notify them all so they can check if there's room.
+        bool should_cascade = (was_blocked and _blocked_pushers > 0);
+
         lock.unlock();
         the_cond.notify_one();
+
+        if (should_cascade)
+            _watermark_cond.notify_all();
     }
 
     /// Push the Element onto the stack, by moving it.
@@ -126,10 +136,12 @@ public:
         if (is_canceled) throw Canceled();
 
         // Block if stack is at or above high watermark
+        bool was_blocked = false;
         if (the_stack.size() >= _high_watermark)
         {
+            was_blocked = true;
             _blocked_pushers++;
-            while (the_stack.size() >= _low_watermark and not is_canceled)
+            while (the_stack.size() >= _high_watermark and not is_canceled)
             {
                 _watermark_cond.wait(lock);
             }
@@ -138,8 +150,16 @@ public:
         }
 
         the_stack.push(std::move(item));
+
+        // If this pusher was blocked and there are still blocked pushers
+        // waiting, notify them all so they can check if there's room
+        bool should_cascade = (was_blocked and _blocked_pushers > 0);
+
         lock.unlock();
         the_cond.notify_one();
+
+        if (should_cascade)
+            _watermark_cond.notify_all();
     }
 
     /// Return true if the stack is empty at this instant in time.
@@ -206,16 +226,18 @@ public:
         }
         while (the_stack.empty());
 
-        size_t old_size = the_stack.size();
         value = the_stack.top();
         the_stack.pop();
 
-        // Wake up waiting pushers if we dropped below low watermark
-        if (old_size >= _low_watermark and the_stack.size() < _low_watermark)
-        {
-            lock.unlock();
+        // Wake up waiting pushers when dropping below low watermark
+        // (hysteresis)
+        bool should_notify = (_blocked_pushers > 0) and
+                             (the_stack.size() < _low_watermark);
+
+        lock.unlock();
+
+        if (should_notify)
             _watermark_cond.notify_all();
-        }
     }
     void wait_pop(Element& value) { pop(value); }
 
@@ -230,8 +252,8 @@ public:
     {
         std::unique_lock<std::mutex> lock(the_mutex);
 
-        // Use two nested loops here.  It can happen that the cond
-        // wakes up, and yet the stack is empty.
+        // Use two nested loops here.  It can happen that
+        // the cond wakes up, and yet the stack is empty.
         do
         {
             while (the_stack.empty() and not is_canceled)
