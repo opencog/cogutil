@@ -255,7 +255,7 @@ public:
     /// used to drain a closed set.
     bool try_get(Element& value, bool reverse = false)
     {
-        std::lock_guard<std::mutex> lock(the_mutex);
+        std::unique_lock<std::mutex> lock(the_mutex);
         if (the_set.empty())
             return false;
 
@@ -275,6 +275,17 @@ public:
             value = *it;
             the_set.erase(it);
         }
+
+        // Wake up waiting inserters when dropping below low watermark
+        // (hysteresis)
+        bool should_notify = (_blocked_inserters > 0) and
+                             (the_set.size() < _low_watermark);
+
+        lock.unlock();
+
+        if (should_notify)
+            _watermark_cond.notify_all();
+
         return true;
     }
 
@@ -285,7 +296,7 @@ public:
     {
         std::vector<Element> elvec;
 
-        std::lock_guard<std::mutex> lock(the_mutex);
+        std::unique_lock<std::mutex> lock(the_mutex);
         if (the_set.empty())
             return elvec;
 
@@ -315,6 +326,17 @@ public:
                 elvec.emplace_back(value);
             }
         }
+
+        // Wake up waiting inserters when dropping below low watermark
+        // (hysteresis)
+        bool should_notify = (_blocked_inserters > 0) and
+                             (the_set.size() < _low_watermark);
+
+        lock.unlock();
+
+        if (should_notify)
+            _watermark_cond.notify_all();
+
         return elvec;
     }
 

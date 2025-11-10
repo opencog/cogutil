@@ -202,7 +202,7 @@ public:
     /// method, which blocks on open queues, and empties closed ones.
     bool try_get(Element& value)
     {
-        std::lock_guard<std::mutex> lock(the_mutex);
+        std::unique_lock<std::mutex> lock(the_mutex);
         if (the_queue.empty())
         {
             return false;
@@ -210,6 +210,17 @@ public:
 
         value = the_queue.front();
         the_queue.pop();
+
+        // Wake up waiting pushers when dropping below low watermark
+        // (hysteresis)
+        bool should_notify = (_blocked_pushers > 0) and
+                             (the_queue.size() < _low_watermark);
+
+        lock.unlock();
+
+        if (should_notify)
+            _watermark_cond.notify_all();
+
         return true;
     }
     bool try_pop(Element& value) { return try_get(value); }

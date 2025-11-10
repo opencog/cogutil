@@ -197,7 +197,7 @@ public:
     /// method, which blocks on open stacks, and empties closed ones.
     bool try_pop(Element& value)
     {
-        std::lock_guard<std::mutex> lock(the_mutex);
+        std::unique_lock<std::mutex> lock(the_mutex);
         if (the_stack.empty())
         {
             return false;
@@ -205,6 +205,17 @@ public:
 
         value = the_stack.top();
         the_stack.pop();
+
+        // Wake up waiting pushers when dropping below low watermark
+        // (hysteresis)
+        bool should_notify = (_blocked_pushers > 0) and
+                             (the_stack.size() < _low_watermark);
+
+        lock.unlock();
+
+        if (should_notify)
+            _watermark_cond.notify_all();
+
         return true;
     }
 
