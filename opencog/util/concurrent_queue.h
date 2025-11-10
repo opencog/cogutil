@@ -172,6 +172,17 @@ public:
         return the_queue.size();
     }
 
+#define COMMON_POP_NOTIFY {                               \
+        value = the_queue.front();                        \
+        the_queue.pop();                                  \
+        /* Wake up waiting pushers when dropping below */ \
+        /* low watermark. (hysteresis)                 */ \
+        bool should_notify = (_blocked_pushers > 0) and   \
+                             (the_queue.size() < _low_watermark); \
+        lock.unlock();                                    \
+        if (should_notify)                                \
+            _watermark_cond.notify_all(); }
+
     /// Try to get an element off the front of the queue. Return true
     /// if success, else return false. This will work even on closed
     /// queues, and so can be used to drain the queue. Another
@@ -184,56 +195,29 @@ public:
         {
             return false;
         }
-
-        value = the_queue.front();
-        the_queue.pop();
-
-        // Wake up waiting pushers when dropping below low watermark
-        // (hysteresis)
-        bool should_notify = (_blocked_pushers > 0) and
-                             (the_queue.size() < _low_watermark);
-
-        lock.unlock();
-
-        if (should_notify)
-            _watermark_cond.notify_all();
-
+        COMMON_POP_NOTIFY
         return true;
     }
     bool try_pop(Element& value) { return try_get(value); }
 
+#define COMMON_COND_WAIT                                     \
+        std::unique_lock<std::mutex> lock(the_mutex);        \
+        /* Use two nested loops here.  It can happen that */ \
+        /* the cond wakes up, and yet the queue is empty. */ \
+        do {                                                 \
+            while (the_queue.empty() and not is_canceled)    \
+                the_cond.wait(lock);                         \
+            if (is_canceled) throw Canceled();               \
+        } while (the_queue.empty());
+
     /// Pop an item off the queue. Block if the queue is empty.
     void pop(Element& value)
     {
-        std::unique_lock<std::mutex> lock(the_mutex);
-
-        // Use two nested loops here.  It can happen that the cond
-        // wakes up, and yet the queue is empty.  And calling front()
-        // on an empty queue is undefined and/or throws ick.
-        do
-        {
-            while (the_queue.empty() and not is_canceled)
-            {
-                the_cond.wait(lock);
-            }
-            if (is_canceled) throw Canceled();
-        }
-        while (the_queue.empty());
-
-        value = the_queue.front();
-        the_queue.pop();
-
-        // Wake up waiting pushers when dropping below low watermark
-        // (hysteresis)
-        bool should_notify = (_blocked_pushers > 0) and
-                             (the_queue.size() < _low_watermark);
-
-        lock.unlock();
-
-        if (should_notify)
-            _watermark_cond.notify_all();
+        COMMON_COND_WAIT
+        COMMON_POP_NOTIFY
     }
     void wait_pop(Element& value) { pop(value); }
+#undef COMMON_POP_NOTIFY
 
     Element value_pop()
     {
@@ -244,24 +228,13 @@ public:
 
     std::queue<Element> wait_and_take_all()
     {
-        std::unique_lock<std::mutex> lock(the_mutex);
-
-        // Use two nested loops here.  It can happen that
-        // the cond wakes up, and yet the queue is empty.
-        do
-        {
-            while (the_queue.empty() and not is_canceled)
-            {
-                the_cond.wait(lock);
-            }
-            if (is_canceled) break;
-        }
-        while (the_queue.empty());
+        COMMON_COND_WAIT
 
         std::queue<Element> retval;
         std::swap(retval, the_queue);
         return retval;
     }
+#undef COMMON_COND_WAIT
 
     /// A weak barrier.  This will block as long as the queue is empty,
     /// returning only when the queue isn't. It's "weak", because while
