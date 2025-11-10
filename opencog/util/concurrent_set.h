@@ -216,6 +216,15 @@ public:
         return the_set.clear();
     }
 
+#define COMMON_WATERMARK_NOTIFY {                         \
+        /* Wake up waiting pushers when dropping below */ \
+        /* low watermark. (hysteresis)                 */ \
+        bool should_notify = (_blocked_inserters > 0) and \
+                             (the_set.size() < _low_watermark); \
+        lock.unlock();                                    \
+        if (should_notify)                                \
+            _watermark_cond.notify_all(); }
+
     /// Try to get an element in the set. Return true if success,
     /// else return false. The element is removed from the set.
     /// The reverse flag, if set, returns an element from the end
@@ -248,16 +257,7 @@ public:
             the_set.erase(it);
         }
 
-        // Wake up waiting inserters when dropping below low watermark
-        // (hysteresis)
-        bool should_notify = (_blocked_inserters > 0) and
-                             (the_set.size() < _low_watermark);
-
-        lock.unlock();
-
-        if (should_notify)
-            _watermark_cond.notify_all();
-
+        COMMON_WATERMARK_NOTIFY
         return true;
     }
 
@@ -299,52 +299,35 @@ public:
             }
         }
 
-        // Wake up waiting inserters when dropping below low watermark
-        // (hysteresis)
-        bool should_notify = (_blocked_inserters > 0) and
-                             (the_set.size() < _low_watermark);
-
-        lock.unlock();
-
-        if (should_notify)
-            _watermark_cond.notify_all();
-
+        COMMON_WATERMARK_NOTIFY
         return elvec;
     }
+
+#define COMMON_COND_WAIT                                     \
+        std::unique_lock<std::mutex> lock(the_mutex);        \
+        /* Use two nested loops here.  It can happen that */ \
+        /* the cond wakes up, and yet the queue is empty. */ \
+        do {                                                 \
+            while (the_set.empty() and not is_canceled)      \
+                the_cond.wait(lock);                         \
+            if (is_canceled) throw Canceled();               \
+        } while (the_set.empty());
 
     /// Get an item from the set. Block if the set is empty.
     /// The element is removed from the set, before this returns.
     void get(Element& value)
     {
-        std::unique_lock<std::mutex> lock(the_mutex);
-
-        // Use two nested loops here.  It can happen that the cond
-        // wakes up, and yet the set is empty.
-        do
-        {
-            while (the_set.empty() and not is_canceled)
-            {
-                the_cond.wait(lock);
-            }
-            if (is_canceled) throw Canceled();
-        }
-        while (the_set.empty());
+        COMMON_COND_WAIT
 
         auto it = the_set.begin();
         value = *it;
         the_set.erase(it);
 
-        // Wake up waiting inserters when dropping below low
-        // watermark (hysteresis)
-        bool should_notify = (_blocked_inserters > 0) and
-                             (the_set.size() < _low_watermark);
-
-        lock.unlock();
-
-        if (should_notify)
-            _watermark_cond.notify_all();
+        COMMON_WATERMARK_NOTIFY
     }
     void wait_get(Element& value) { get(value); }
+
+#undef COMMON_WATERMARK_NOTIFY
 
     Element value_get()
     {
@@ -355,24 +338,13 @@ public:
 
     std::set<Element, Compare> wait_and_take_all()
     {
-        std::unique_lock<std::mutex> lock(the_mutex);
-
-        // Use two nested loops here.  It can happen that the cond
-        // wakes up, and yet the set is empty.
-        do
-        {
-            while (the_set.empty() and not is_canceled)
-            {
-                the_cond.wait(lock);
-            }
-            if (is_canceled) break;
-        }
-        while (the_set.empty());
+        COMMON_COND_WAIT
 
         std::set<Element, Compare> retval(the_set.key_comp());
         std::swap(retval, the_set);
         return retval;
     }
+#undef COMMON_COND_WAIT
 
     /// A weak barrier.  This will block as long as the set is empty,
     /// returning only when the set isn't. It's "weak", because while

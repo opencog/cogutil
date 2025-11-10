@@ -169,6 +169,18 @@ public:
         return the_stack.size();
     }
 
+
+#define COMMON_POP_NOTIFY {                               \
+        value = the_stack.top();                          \
+        the_stack.pop();                                  \
+        /* Wake up waiting pushers when dropping below */ \
+        /* low watermark. (hysteresis)                 */ \
+        bool should_notify = (_blocked_pushers > 0) and   \
+                             (the_stack.size() < _low_watermark); \
+        lock.unlock();                                    \
+        if (should_notify)                                \
+            _watermark_cond.notify_all(); }
+
     /// Try to pop an element off the top of the stack. Return true
     /// if success, else return false. This will work even on closed
     /// stacks, and so can be used to clear the stack. Another
@@ -182,54 +194,29 @@ public:
             return false;
         }
 
-        value = the_stack.top();
-        the_stack.pop();
-
-        // Wake up waiting pushers when dropping below low watermark
-        // (hysteresis)
-        bool should_notify = (_blocked_pushers > 0) and
-                             (the_stack.size() < _low_watermark);
-
-        lock.unlock();
-
-        if (should_notify)
-            _watermark_cond.notify_all();
-
+        COMMON_POP_NOTIFY
         return true;
     }
+
+#define COMMON_COND_WAIT                                     \
+        std::unique_lock<std::mutex> lock(the_mutex);        \
+        /* Use two nested loops here.  It can happen that */ \
+        /* the cond wakes up, and yet the queue is empty. */ \
+        do {                                                 \
+            while (the_stack.empty() and not is_canceled)    \
+                the_cond.wait(lock);                         \
+            if (is_canceled) throw Canceled();               \
+        } while (the_stack.empty());
 
     /// Pop an item off the stack. Block if the stack is empty.
     void pop(Element& value)
     {
-        std::unique_lock<std::mutex> lock(the_mutex);
-
-        // Use two nested loops here.  It can happen that the cond
-        // wakes up, and yet the stack is empty.  And calling front()
-        // on an empty stack is undefined and/or throws ick.
-        do
-        {
-            while (the_stack.empty() and not is_canceled)
-            {
-                the_cond.wait(lock);
-            }
-            if (is_canceled) throw Canceled();
-        }
-        while (the_stack.empty());
-
-        value = the_stack.top();
-        the_stack.pop();
-
-        // Wake up waiting pushers when dropping below low watermark
-        // (hysteresis)
-        bool should_notify = (_blocked_pushers > 0) and
-                             (the_stack.size() < _low_watermark);
-
-        lock.unlock();
-
-        if (should_notify)
-            _watermark_cond.notify_all();
+        COMMON_COND_WAIT
+        COMMON_POP_NOTIFY
     }
     void wait_pop(Element& value) { pop(value); }
+
+#undef COMMON_POP_NOTIFY
 
     Element value_pop()
     {
@@ -240,24 +227,13 @@ public:
 
     std::stack<Element> wait_and_take_all()
     {
-        std::unique_lock<std::mutex> lock(the_mutex);
-
-        // Use two nested loops here.  It can happen that
-        // the cond wakes up, and yet the stack is empty.
-        do
-        {
-            while (the_stack.empty() and not is_canceled)
-            {
-                the_cond.wait(lock);
-            }
-            if (is_canceled) break;
-        }
-        while (the_stack.empty());
+        COMMON_COND_WAIT
 
         std::stack<Element> retval;
         the_stack.swap(retval);
         return retval;
     }
+#undef COMMON_COND_WAIT
 
     /// A weak barrier.  This will block as long as the queue is empty,
     /// returning only when the queue isn't. It's "weak", because while
