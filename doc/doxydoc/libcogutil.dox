@@ -48,18 +48,10 @@ The interface (RandGen) for random number generators that MT19937RandGen
 inherits is in RandGen.h. Other generators are found in random.h ( randset(), 
 gaussian_rand(), biased_randbool() ).
 
-tournament_selection, roulette_select() and NodeSelector are also relevant to
-this topic.
-
 \subsection ssect_config Configuration and logging
 Config class manages the variables important for various parts of the
 package. A list of key:value entries is stored, both of them being strings
 @todo link to definitive list of variables (keys)
-
-include/win32/getopt.h and the two files in opencog/util (getopt.c and
-getopt_long.c) implement 
-<a href="http://www.gnu.org/software/libc/manual/html_node/Getopt.html">Parsing program options</a>
-for Windows targets. The reason for getopt.h being where it is is unknown
 
 Logger class is the central way of communicating states to outside world. It has
 five  mutually exclusive levels: ERROR, WARN, INFO, DEBUG and FINE
