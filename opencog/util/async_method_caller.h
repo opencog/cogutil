@@ -126,6 +126,9 @@ class async_caller
 		void drain();
 
 	public:
+		static constexpr size_t DEFAULT_HIGH_WATER_MARK = 100;
+		static constexpr size_t DEFAULT_LOW_WATER_MARK = 10;
+
 		async_caller(Writer*, void (Writer::*)(const Element&), int nthreads=4);
 		~async_caller();
 		void enqueue(const Element&);
@@ -159,9 +162,6 @@ class async_caller
 
 /* ================================================================ */
 // Constructors
-
-#define DEFAULT_HIGH_WATER_MARK 100
-#define DEFAULT_LOW_WATER_MARK 10
 
 /// Writer: the class whose method will be called.
 /// cb: the method that will be called.

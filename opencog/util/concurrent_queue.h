@@ -33,10 +33,12 @@
 #ifndef _OC_CONCURRENT_QUEUE_H
 #define _OC_CONCURRENT_QUEUE_H
 
+#include <atomic>
 #include <condition_variable>
-#include <queue>
+#include <cstdint>
 #include <exception>
 #include <mutex>
+#include <queue>
 
 /** \addtogroup grp_cogutil
  *  @{
@@ -67,14 +69,22 @@ private:
     std::queue<Element> the_queue;
     mutable std::mutex the_mutex;
     std::condition_variable the_cond;
+    std::condition_variable _watermark_cond;
     bool is_canceled;
+    size_t _high_watermark;
+    size_t _low_watermark;
+    std::atomic<size_t> _blocked_pushers;
 
     concurrent_queue(const concurrent_queue&) = delete;  // disable copying
     concurrent_queue& operator=(const concurrent_queue&) = delete; // no assign
 
 public:
     concurrent_queue(void)
-        : the_queue(), the_mutex(), the_cond(), is_canceled(false)
+        : the_queue(), the_mutex(), the_cond(), _watermark_cond(),
+          is_canceled(false),
+          _high_watermark(DEFAULT_HIGH_WATER_MARK),
+          _low_watermark(DEFAULT_LOW_WATER_MARK),
+          _blocked_pushers(0)
     {}
     ~concurrent_queue()
     { if (not is_canceled) cancel(); }
@@ -84,24 +94,55 @@ public:
         const char * what() { return "Cancellation of wait on concurrent_queue"; }
     };
 
+    // These limits seem ... reasonable ...
+    static constexpr size_t DEFAULT_HIGH_WATER_MARK = INT32_MAX;
+    static constexpr size_t DEFAULT_LOW_WATER_MARK = INT32_MAX - 65536;
+
+private:
     /// Push the Element onto the queue.
-    void push(const Element& item)
+    template<typename PushFunc>
+    void push_impl(PushFunc&& do_push)
     {
         std::unique_lock<std::mutex> lock(the_mutex);
         if (is_canceled) throw Canceled();
-        the_queue.push(item);
+
+        // Block if queue is at or above high watermark,
+        // wait until it drops below high watermark (with
+        // hysteresis notification at low watermark).
+        bool was_blocked = false;
+        if (the_queue.size() >= _high_watermark)
+        {
+            was_blocked = true;
+            _blocked_pushers++;
+            while (the_queue.size() >= _high_watermark and not is_canceled)
+            {
+                _watermark_cond.wait(lock);
+            }
+            _blocked_pushers--;
+            if (is_canceled) throw Canceled();
+        }
+
+        do_push();
+
+        // If this pusher was blocked and there are still
+        // blocked pushers, wake one more so they can proceed.
+        bool should_cascade = (was_blocked and _blocked_pushers > 0);
+
         lock.unlock();
         the_cond.notify_one();
+
+        if (should_cascade)
+            _watermark_cond.notify_one();
     }
 
-    /// Push the Element onto the queue, by moving it.
+public:
+    void push(const Element& item)
+    {
+        push_impl([&]() { the_queue.push(item); });
+    }
     void push(Element&& item)
     {
-        std::unique_lock<std::mutex> lock(the_mutex);
-        if (is_canceled) throw Canceled();
-        the_queue.push(std::move(item));
-        lock.unlock();
-        the_cond.notify_one();
+        push_impl([&]() { the_queue.push(std::move(item)); });
     }
 
     /// Return true if the queue is empty at this instant in time.
@@ -115,8 +156,13 @@ public:
         return the_queue.empty();
     }
 
-    /// The queue is unbounded. It will never get full.
-    bool is_full() const noexcept { return false; }
+    /// Return true if the queue is at/above high watermark or has
+    /// blocked pushers.
+    bool is_full() const
+    {
+        std::lock_guard<std::mutex> lock(the_mutex);
+        return the_queue.size() >= _high_watermark or _blocked_pushers > 0;
+    }
 
     /// Return the size of the queue at this instant in time.
     /// Since other threads may have pushed or popped immediately
@@ -128,6 +174,17 @@ public:
         return the_queue.size();
     }
 
+#define COMMON_POP_NOTIFY {                               \
+        value = the_queue.front();                        \
+        the_queue.pop();                                  \
+        /* Wake up waiting pushers when dropping below */ \
+        /* low watermark. (hysteresis)                 */ \
+        bool should_notify = (_blocked_pushers > 0) and   \
+                             (the_queue.size() < _low_watermark); \
+        lock.unlock();                                    \
+        if (should_notify)                                \
+            _watermark_cond.notify_all(); }
+
     /// Try to get an element off the front of the queue. Return true
     /// if success, else return false. This will work even on closed
     /// queues, and so can be used to drain the queue. Another
@@ -135,40 +192,34 @@ public:
     /// method, which blocks on open queues, and empties closed ones.
     bool try_get(Element& value)
     {
-        std::lock_guard<std::mutex> lock(the_mutex);
+        std::unique_lock<std::mutex> lock(the_mutex);
         if (the_queue.empty())
         {
             return false;
         }
-
-        value = the_queue.front();
-        the_queue.pop();
+        COMMON_POP_NOTIFY
         return true;
     }
     bool try_pop(Element& value) { return try_get(value); }
 
+#define COMMON_COND_WAIT(DO_THING)                           \
+        std::unique_lock<std::mutex> lock(the_mutex);        \
+        /* Use two nested loops here.  It can happen that */ \
+        /* the cond wakes up, and yet the queue is empty. */ \
+        do {                                                 \
+            while (the_queue.empty() and not is_canceled)    \
+                the_cond.wait(lock);                         \
+            if (is_canceled) DO_THING;                       \
+        } while (the_queue.empty());
+
     /// Pop an item off the queue. Block if the queue is empty.
     void pop(Element& value)
     {
-        std::unique_lock<std::mutex> lock(the_mutex);
-
-        // Use two nested loops here.  It can happen that the cond
-        // wakes up, and yet the queue is empty.  And calling front()
-        // on an empty queue is undefined and/or throws ick.
-        do
-        {
-            while (the_queue.empty() and not is_canceled)
-            {
-                the_cond.wait(lock);
-            }
-            if (is_canceled) throw Canceled();
-        }
-        while (the_queue.empty());
-
-        value = the_queue.front();
-        the_queue.pop();
+        COMMON_COND_WAIT({ throw Canceled(); })
+        COMMON_POP_NOTIFY
     }
     void wait_pop(Element& value) { pop(value); }
+#undef COMMON_POP_NOTIFY
 
     Element value_pop()
     {
@@ -179,24 +230,13 @@ public:
 
     std::queue<Element> wait_and_take_all()
     {
-        std::unique_lock<std::mutex> lock(the_mutex);
-
-        // Use two nested loops here.  It can happen that the cond
-        // wakes up, and yet the queue is empty.
-        do
-        {
-            while (the_queue.empty() and not is_canceled)
-            {
-                the_cond.wait(lock);
-            }
-            if (is_canceled) break;
-        }
-        while (the_queue.empty());
+        COMMON_COND_WAIT({ break; })
 
         std::queue<Element> retval;
         std::swap(retval, the_queue);
         return retval;
     }
+#undef COMMON_COND_WAIT
 
     /// A weak barrier.  This will block as long as the queue is empty,
     /// returning only when the queue isn't. It's "weak", because while
@@ -216,6 +256,20 @@ public:
         if (is_canceled) throw Canceled();
     }
 
+    /// Set the high and low watermarks for the queue.
+    /// When the queue size reaches or exceeds the high watermark,
+    /// push() operations will block until the size drops below
+    /// the high watermark. The low watermark provides hysteresis:
+    /// notifications to blocked threads occur when size drops below
+    /// the low watermark, allowing multiple blocked threads to proceed
+    /// without excessive wakeup/sleep cycling.
+    void set_watermarks(size_t high, size_t low)
+    {
+        std::lock_guard<std::mutex> lock(the_mutex);
+        _high_watermark = high;
+        _low_watermark = low;
+    }
+
     void cancel_reset()
     {
        // This doesn't lose data, but it instead allows new calls
@@ -232,6 +286,7 @@ public:
        is_canceled = true;
        lock.unlock();
        the_cond.notify_all();
+       _watermark_cond.notify_all();
     }
     void close() { cancel(); }
 

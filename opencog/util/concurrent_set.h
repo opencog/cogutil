@@ -33,10 +33,12 @@
 #ifndef _OC_CONCURRENT_SET_H
 #define _OC_CONCURRENT_SET_H
 
+#include <atomic>
 #include <condition_variable>
-#include <set>
+#include <cstdint>
 #include <exception>
 #include <mutex>
+#include <set>
 #include <vector>
 
 /** \addtogroup grp_cogutil
@@ -83,17 +85,29 @@ private:
     std::set<Element, Compare> the_set;
     mutable std::mutex the_mutex;
     std::condition_variable the_cond;
+    std::condition_variable _watermark_cond;
     bool is_canceled;
+    size_t _high_watermark;
+    size_t _low_watermark;
+    std::atomic<size_t> _blocked_inserters;
 
     concurrent_set(const concurrent_set&) = delete;  // disable copying
     concurrent_set& operator=(const concurrent_set&) = delete; // no assign
 
 public:
     concurrent_set(void)
-        : the_set(), the_mutex(), the_cond(), is_canceled(false)
+        : the_set(), the_mutex(), the_cond(), _watermark_cond(),
+          is_canceled(false),
+          _high_watermark(DEFAULT_HIGH_WATER_MARK),
+          _low_watermark(DEFAULT_LOW_WATER_MARK),
+          _blocked_inserters(0)
     {}
     concurrent_set(const Compare& comp)
-        : the_set(comp), the_mutex(), the_cond(), is_canceled(false)
+        : the_set(comp), the_mutex(), the_cond(), _watermark_cond(),
+          is_canceled(false),
+          _high_watermark(DEFAULT_HIGH_WATER_MARK),
+          _low_watermark(DEFAULT_LOW_WATER_MARK),
+          _blocked_inserters(0)
     {}
     ~concurrent_set()
     { if (not is_canceled) cancel(); }
@@ -103,34 +117,60 @@ public:
         const char * what() { return "Cancellation of wait on concurrent_set"; }
     };
 
-    /// Insert the Element into the set; copies the item.
+    // These limits seem ... reasonable ...
+    static constexpr size_t DEFAULT_HIGH_WATER_MARK = INT32_MAX;
+    static constexpr size_t DEFAULT_LOW_WATER_MARK = INT32_MAX - 65536;
+
+private:
+    /// Insert the Element into the set.
     /// Return true if the item was not already in the set,
     /// else return false.
-    bool insert(const Element& item)
+    template<typename InsertFunc>
+    bool insert_impl(InsertFunc&& do_insert)
     {
         std::unique_lock<std::mutex> lock(the_mutex);
         if (is_canceled) throw Canceled();
+
+        // Block if set is at or above high watermark
+        bool was_blocked = false;
+        if (the_set.size() >= _high_watermark)
+        {
+            was_blocked = true;
+            _blocked_inserters++;
+            while (the_set.size() >= _high_watermark and not is_canceled)
+            {
+                _watermark_cond.wait(lock);
+            }
+            _blocked_inserters--;
+            if (is_canceled) throw Canceled();
+        }
+
         size_t before = the_set.size();
-        the_set.insert(item);
+        do_insert();
         size_t after = the_set.size();
+
+        // If this inserter was blocked and there are still blocked
+        // inserters waiting, notify them all so they can check if
+        // there's room.
+        bool should_cascade = (was_blocked and _blocked_inserters > 0);
+
         lock.unlock();
         the_cond.notify_one();
+
+        if (should_cascade)
+            _watermark_cond.notify_all();
+
         return before < after;
     }
 
-    /// Insert the Element into the set, by moving it.
-    /// Return true if the item was not already in the set,
-    /// else return false.
+public:
+    bool insert(const Element& item)
+    {
+        return insert_impl([&]() { the_set.insert(item); });
+    }
     bool insert(Element&& item)
     {
-        std::unique_lock<std::mutex> lock(the_mutex);
-        if (is_canceled) throw Canceled();
-        size_t before = the_set.size();
-        the_set.insert(std::move(item));
-        size_t after = the_set.size();
-        lock.unlock();
-        the_cond.notify_one();
-        return before < after;
+        return insert_impl([&]() { the_set.insert(std::move(item)); });
     }
 
     /// Remove the Element from the set. Return number of Elements
@@ -153,8 +193,13 @@ public:
         return the_set.empty();
     }
 
-    /// The set is unbounded. It will never get full.
-    bool is_full() const noexcept { return false; }
+    /// Return true if the set is at/above high watermark or has
+    /// blocked inserters.
+    bool is_full() const
+    {
+        std::lock_guard<std::mutex> lock(the_mutex);
+        return the_set.size() >= _high_watermark or _blocked_inserters > 0;
+    }
 
     /// Return the size of the set at this instant in time.
     /// Since other threads may have inserted or removed immediately
@@ -173,6 +218,15 @@ public:
         return the_set.clear();
     }
 
+#define COMMON_WATERMARK_NOTIFY {                         \
+        /* Wake up waiting pushers when dropping below */ \
+        /* low watermark. (hysteresis)                 */ \
+        bool should_notify = (_blocked_inserters > 0) and \
+                             (the_set.size() < _low_watermark); \
+        lock.unlock();                                    \
+        if (should_notify)                                \
+            _watermark_cond.notify_all(); }
+
     /// Try to get an element in the set. Return true if success,
     /// else return false. The element is removed from the set.
     /// The reverse flag, if set, returns an element from the end
@@ -184,7 +238,7 @@ public:
     /// used to drain a closed set.
     bool try_get(Element& value, bool reverse = false)
     {
-        std::lock_guard<std::mutex> lock(the_mutex);
+        std::unique_lock<std::mutex> lock(the_mutex);
         if (the_set.empty())
             return false;
 
@@ -204,6 +258,8 @@ public:
             value = *it;
             the_set.erase(it);
         }
+
+        COMMON_WATERMARK_NOTIFY
         return true;
     }
 
@@ -214,7 +270,7 @@ public:
     {
         std::vector<Element> elvec;
 
-        std::lock_guard<std::mutex> lock(the_mutex);
+        std::unique_lock<std::mutex> lock(the_mutex);
         if (the_set.empty())
             return elvec;
 
@@ -244,32 +300,36 @@ public:
                 elvec.emplace_back(value);
             }
         }
+
+        COMMON_WATERMARK_NOTIFY
         return elvec;
     }
+
+#define COMMON_COND_WAIT(DO_THING)                           \
+        std::unique_lock<std::mutex> lock(the_mutex);        \
+        /* Use two nested loops here.  It can happen that */ \
+        /* the cond wakes up, and yet the queue is empty. */ \
+        do {                                                 \
+            while (the_set.empty() and not is_canceled)      \
+                the_cond.wait(lock);                         \
+            if (is_canceled) DO_THING;                       \
+        } while (the_set.empty());
 
     /// Get an item from the set. Block if the set is empty.
     /// The element is removed from the set, before this returns.
     void get(Element& value)
     {
-        std::unique_lock<std::mutex> lock(the_mutex);
-
-        // Use two nested loops here.  It can happen that the cond
-        // wakes up, and yet the set is empty.
-        do
-        {
-            while (the_set.empty() and not is_canceled)
-            {
-                the_cond.wait(lock);
-            }
-            if (is_canceled) throw Canceled();
-        }
-        while (the_set.empty());
+        COMMON_COND_WAIT({ throw Canceled(); })
 
         auto it = the_set.begin();
         value = *it;
         the_set.erase(it);
+
+        COMMON_WATERMARK_NOTIFY
     }
     void wait_get(Element& value) { get(value); }
+
+#undef COMMON_WATERMARK_NOTIFY
 
     Element value_get()
     {
@@ -280,24 +340,13 @@ public:
 
     std::set<Element, Compare> wait_and_take_all()
     {
-        std::unique_lock<std::mutex> lock(the_mutex);
-
-        // Use two nested loops here.  It can happen that the cond
-        // wakes up, and yet the set is empty.
-        do
-        {
-            while (the_set.empty() and not is_canceled)
-            {
-                the_cond.wait(lock);
-            }
-            if (is_canceled) break;
-        }
-        while (the_set.empty());
+        COMMON_COND_WAIT({ break; })
 
         std::set<Element, Compare> retval(the_set.key_comp());
         std::swap(retval, the_set);
         return retval;
     }
+#undef COMMON_COND_WAIT
 
     /// A weak barrier.  This will block as long as the set is empty,
     /// returning only when the set isn't. It's "weak", because while
@@ -317,6 +366,17 @@ public:
         if (is_canceled) throw Canceled();
     }
 
+    /// Set the high and low watermarks for the set.
+    /// When the set size reaches or exceeds the high watermark,
+    /// insert() operations will block until the size drops below
+    /// the low watermark.
+    void set_watermarks(size_t high, size_t low)
+    {
+        std::lock_guard<std::mutex> lock(the_mutex);
+        _high_watermark = high;
+        _low_watermark = low;
+    }
+
     void cancel_reset()
     {
        // This doesn't lose data, but it instead allows new calls
@@ -333,6 +393,7 @@ public:
        is_canceled = true;
        lock.unlock();
        the_cond.notify_all();
+       _watermark_cond.notify_all();
     }
     void close() { cancel(); }
 

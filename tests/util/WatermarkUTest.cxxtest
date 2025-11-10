@@ -1,0 +1,248 @@
+/** WatermarkUTest.cxxtest ---
+ *
+ * Tests for watermark functionality in concurrent containers
+ *
+ * Copyright (C) 2025 BrainyBlaze Dynamics, Inc.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License v3 as
+ * published by the Free Software Foundation and including the exceptions
+ * at http://opencog.org/wiki/Licenses
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program; if not, write to:
+ * Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#include <opencog/util/concurrent_queue.h>
+#include <opencog/util/concurrent_stack.h>
+#include <opencog/util/concurrent_set.h>
+#include <opencog/util/Logger.h>
+#include <thread>
+#include <chrono>
+#include <atomic>
+
+using namespace opencog;
+using namespace std;
+
+class WatermarkUTest : public CxxTest::TestSuite
+{
+public:
+	WatermarkUTest() {
+		logger().set_print_to_stdout_flag(true);
+		logger().set_level(Logger::DEBUG);
+	}
+
+	void test_queue_set_watermarks() {
+		concurrent_queue<int> queue;
+		queue.set_watermarks(100, 75);
+		// Watermarks are set, no exception thrown
+		TS_ASSERT(true);
+	}
+
+	void test_queue_is_full_empty() {
+		concurrent_queue<int> queue;
+		queue.set_watermarks(5, 3);
+		TS_ASSERT(not queue.is_full());
+	}
+
+	void test_queue_is_full_at_watermark() {
+		concurrent_queue<int> queue;
+		queue.set_watermarks(5, 3);
+
+		// Push items up to high watermark
+		for (int i = 0; i < 5; i++) {
+			queue.push(i);
+		}
+
+		TS_ASSERT(queue.is_full());
+	}
+
+	void test_queue_blocking_behavior() {
+		concurrent_queue<int> queue;
+		queue.set_watermarks(5, 3);
+
+		// Fill to high watermark
+		for (int i = 0; i < 5; i++) {
+			queue.push(i);
+		}
+
+		atomic<bool> push_started(false);
+		atomic<bool> push_completed(false);
+
+		// Start thread that will block on push
+		thread pusher([&]() {
+			push_started = true;
+			queue.push(99);  // This should block
+			push_completed = true;
+		});
+
+		// Give pusher time to block
+		this_thread::sleep_for(chrono::milliseconds(100));
+
+		TS_ASSERT(push_started);
+		TS_ASSERT(not push_completed);  // Should still be blocked
+		TS_ASSERT(queue.is_full());
+
+		// Pop items to below low watermark
+		int value;
+		queue.pop(value);
+		queue.pop(value);
+		queue.pop(value);
+
+		// Wait for pusher to complete
+		pusher.join();
+
+		TS_ASSERT(push_completed);  // Should have unblocked
+	}
+
+	void test_stack_blocking_behavior() {
+		concurrent_stack<int> stack;
+		stack.set_watermarks(5, 3);
+
+		// Fill to high watermark
+		for (int i = 0; i < 5; i++) {
+			stack.push(i);
+		}
+
+		atomic<bool> push_completed(false);
+
+		// Start thread that will block on push
+		thread pusher([&]() {
+			stack.push(99);  // This should block
+			push_completed = true;
+		});
+
+		// Give pusher time to block
+		this_thread::sleep_for(chrono::milliseconds(100));
+
+		TS_ASSERT(not push_completed);  // Should be blocked
+		TS_ASSERT(stack.is_full());
+
+		// Pop items to below low watermark
+		int value;
+		stack.pop(value);
+		stack.pop(value);
+		stack.pop(value);
+
+		// Wait for pusher to complete
+		pusher.join();
+
+		TS_ASSERT(push_completed);  // Should have unblocked
+	}
+
+	void test_set_blocking_behavior() {
+		concurrent_set<int> set;
+		set.set_watermarks(5, 3);
+
+		// Fill to high watermark with unique items
+		for (int i = 0; i < 5; i++) {
+			set.insert(i);
+		}
+
+		atomic<bool> insert_completed(false);
+
+		// Start thread that will block on insert
+		thread inserter([&]() {
+			set.insert(99);  // This should block
+			insert_completed = true;
+		});
+
+		// Give inserter time to block
+		this_thread::sleep_for(chrono::milliseconds(100));
+
+		TS_ASSERT(not insert_completed);  // Should be blocked
+		TS_ASSERT(set.is_full());
+
+		// Get items to below low watermark
+		int value;
+		set.get(value);
+		set.get(value);
+		set.get(value);
+
+		// Wait for inserter to complete
+		inserter.join();
+
+		TS_ASSERT(insert_completed);  // Should have unblocked
+	}
+
+	void test_queue_multiple_blocked_pushers() {
+		concurrent_queue<int> queue;
+		queue.set_watermarks(3, 1);
+
+		// Fill to high watermark
+		for (int i = 0; i < 3; i++) {
+			queue.push(i);
+		}
+
+		atomic<int> completed_pushers(0);
+
+		// Start multiple threads that will block
+		thread pusher1([&]() {
+			queue.push(101);
+			completed_pushers++;
+		});
+
+		thread pusher2([&]() {
+			queue.push(102);
+			completed_pushers++;
+		});
+
+		// Give pushers time to block
+		this_thread::sleep_for(chrono::milliseconds(100));
+
+		TS_ASSERT_EQUALS(completed_pushers.load(), 0);
+		TS_ASSERT(queue.is_full());  // Should show full due to blocked pushers
+
+		// Pop items to below low watermark
+		int value;
+		queue.pop(value);
+		queue.pop(value);
+		queue.pop(value);
+
+		// Wait for pushers to complete
+		pusher1.join();
+		pusher2.join();
+
+		TS_ASSERT_EQUALS(completed_pushers.load(), 2);
+	}
+
+	void test_queue_no_deadlock_on_cancel() {
+		concurrent_queue<int> queue;
+		queue.set_watermarks(3, 1);
+
+		// Fill to high watermark
+		for (int i = 0; i < 3; i++) {
+			queue.push(i);
+		}
+
+		atomic<bool> caught_exception(false);
+
+		// Start thread that will block
+		thread pusher([&]() {
+			try {
+				queue.push(99);
+			}
+			catch (const concurrent_queue<int>::Canceled&) {
+				caught_exception = true;
+			}
+		});
+
+		// Give pusher time to block
+		this_thread::sleep_for(chrono::milliseconds(100));
+
+		// Cancel the queue
+		queue.close();
+
+		// Wait for pusher
+		pusher.join();
+
+		TS_ASSERT(caught_exception);
+	}
+};

@@ -33,10 +33,12 @@
 #ifndef _OC_CONCURRENT_STACK_H
 #define _OC_CONCURRENT_STACK_H
 
+#include <atomic>
 #include <condition_variable>
-#include <stack>
+#include <cstdint>
 #include <exception>
 #include <mutex>
+#include <stack>
 
 /** \addtogroup grp_cogutil
  *  @{
@@ -67,14 +69,22 @@ private:
     std::stack<Element> the_stack;
     mutable std::mutex the_mutex;
     std::condition_variable the_cond;
+    std::condition_variable _watermark_cond;
     bool is_canceled;
+    size_t _high_watermark;
+    size_t _low_watermark;
+    std::atomic<size_t> _blocked_pushers;
 
     concurrent_stack(const concurrent_stack&) = delete;  // disable copying
     concurrent_stack& operator=(const concurrent_stack&) = delete; // no assign
 
 public:
     concurrent_stack(void)
-        : the_stack(), the_mutex(), the_cond(), is_canceled(false)
+        : the_stack(), the_mutex(), the_cond(), _watermark_cond(),
+          is_canceled(false),
+          _high_watermark(DEFAULT_HIGH_WATER_MARK),
+          _low_watermark(DEFAULT_LOW_WATER_MARK),
+          _blocked_pushers(0)
     {}
     ~concurrent_stack()
     { if (not is_canceled) cancel(); }
@@ -84,24 +94,53 @@ public:
         const char * what() { return "Cancellation of wait on concurrent_stack"; }
     };
 
+    // These limits seem ... reasonable ...
+    static constexpr size_t DEFAULT_HIGH_WATER_MARK = INT32_MAX;
+    static constexpr size_t DEFAULT_LOW_WATER_MARK = INT32_MAX - 65536;
+
+private:
     /// Push the Element onto the stack.
-    void push(const Element& item)
+    template<typename PushFunc>
+    void push_impl(PushFunc&& do_push)
     {
         std::unique_lock<std::mutex> lock(the_mutex);
         if (is_canceled) throw Canceled();
-        the_stack.push(item);
+
+        // Block if stack is at or above high watermark
+        bool was_blocked = false;
+        if (the_stack.size() >= _high_watermark)
+        {
+            was_blocked = true;
+            _blocked_pushers++;
+            while (the_stack.size() >= _high_watermark and not is_canceled)
+            {
+                _watermark_cond.wait(lock);
+            }
+            _blocked_pushers--;
+            if (is_canceled) throw Canceled();
+        }
+
+        do_push();
+
+        // If this pusher was blocked and there are still blocked pushers
+        // waiting, notify them all so they can check if there's room.
+        bool should_cascade = (was_blocked and _blocked_pushers > 0);
+
         lock.unlock();
         the_cond.notify_one();
+
+        if (should_cascade)
+            _watermark_cond.notify_all();
     }
 
-    /// Push the Element onto the stack, by moving it.
+public:
+    void push(const Element& item)
+    {
+        push_impl([&]() { the_stack.push(item); });
+    }
     void push(Element&& item)
     {
-        std::unique_lock<std::mutex> lock(the_mutex);
-        if (is_canceled) throw Canceled();
-        the_stack.push(std::move(item));
-        lock.unlock();
-        the_cond.notify_one();
+        push_impl([&]() { the_stack.push(std::move(item)); });
     }
 
     /// Return true if the stack is empty at this instant in time.
@@ -115,8 +154,12 @@ public:
         return the_stack.empty();
     }
 
-    /// The stack is unbounded. It will never get full.
-    bool is_full() const noexcept { return false; }
+    /// Return true if the stack is at/above high watermark or has blocked pushers.
+    bool is_full() const
+    {
+        std::lock_guard<std::mutex> lock(the_mutex);
+        return the_stack.size() >= _high_watermark or _blocked_pushers > 0;
+    }
 
     /// Return the size of the stack at this instant in time.
     /// Since other threads may have pushed or popped immediately
@@ -128,6 +171,18 @@ public:
         return the_stack.size();
     }
 
+
+#define COMMON_POP_NOTIFY {                               \
+        value = the_stack.top();                          \
+        the_stack.pop();                                  \
+        /* Wake up waiting pushers when dropping below */ \
+        /* low watermark. (hysteresis)                 */ \
+        bool should_notify = (_blocked_pushers > 0) and   \
+                             (the_stack.size() < _low_watermark); \
+        lock.unlock();                                    \
+        if (should_notify)                                \
+            _watermark_cond.notify_all(); }
+
     /// Try to pop an element off the top of the stack. Return true
     /// if success, else return false. This will work even on closed
     /// stacks, and so can be used to clear the stack. Another
@@ -135,39 +190,35 @@ public:
     /// method, which blocks on open stacks, and empties closed ones.
     bool try_pop(Element& value)
     {
-        std::lock_guard<std::mutex> lock(the_mutex);
+        std::unique_lock<std::mutex> lock(the_mutex);
         if (the_stack.empty())
         {
             return false;
         }
 
-        value = the_stack.top();
-        the_stack.pop();
+        COMMON_POP_NOTIFY
         return true;
     }
+
+#define COMMON_COND_WAIT(DO_THING)                           \
+        std::unique_lock<std::mutex> lock(the_mutex);        \
+        /* Use two nested loops here.  It can happen that */ \
+        /* the cond wakes up, and yet the queue is empty. */ \
+        do {                                                 \
+            while (the_stack.empty() and not is_canceled)    \
+                the_cond.wait(lock);                         \
+            if (is_canceled) DO_THING;                       \
+        } while (the_stack.empty());
 
     /// Pop an item off the stack. Block if the stack is empty.
     void pop(Element& value)
     {
-        std::unique_lock<std::mutex> lock(the_mutex);
-
-        // Use two nested loops here.  It can happen that the cond
-        // wakes up, and yet the stack is empty.  And calling front()
-        // on an empty stack is undefined and/or throws ick.
-        do
-        {
-            while (the_stack.empty() and not is_canceled)
-            {
-                the_cond.wait(lock);
-            }
-            if (is_canceled) throw Canceled();
-        }
-        while (the_stack.empty());
-
-        value = the_stack.top();
-        the_stack.pop();
+        COMMON_COND_WAIT({ throw Canceled(); })
+        COMMON_POP_NOTIFY
     }
     void wait_pop(Element& value) { pop(value); }
+
+#undef COMMON_POP_NOTIFY
 
     Element value_pop()
     {
@@ -178,24 +229,13 @@ public:
 
     std::stack<Element> wait_and_take_all()
     {
-        std::unique_lock<std::mutex> lock(the_mutex);
-
-        // Use two nested loops here.  It can happen that the cond
-        // wakes up, and yet the stack is empty.
-        do
-        {
-            while (the_stack.empty() and not is_canceled)
-            {
-                the_cond.wait(lock);
-            }
-            if (is_canceled) break;
-        }
-        while (the_stack.empty());
+        COMMON_COND_WAIT({ break; })
 
         std::stack<Element> retval;
         the_stack.swap(retval);
         return retval;
     }
+#undef COMMON_COND_WAIT
 
     /// A weak barrier.  This will block as long as the queue is empty,
     /// returning only when the queue isn't. It's "weak", because while
@@ -215,6 +255,17 @@ public:
         if (is_canceled) throw Canceled();
     }
 
+    /// Set the high and low watermarks for the stack.
+    /// When the stack size reaches or exceeds the high watermark,
+    /// push() operations will block until the size drops below
+    /// the low watermark.
+    void set_watermarks(size_t high, size_t low)
+    {
+        std::lock_guard<std::mutex> lock(the_mutex);
+        _high_watermark = high;
+        _low_watermark = low;
+    }
+
     void cancel_reset()
     {
        // This doesn't lose data, but it instead allows new calls
@@ -231,6 +282,7 @@ public:
        is_canceled = true;
        lock.unlock();
        the_cond.notify_all();
+       _watermark_cond.notify_all();
     }
     void close() { cancel(); }
 
