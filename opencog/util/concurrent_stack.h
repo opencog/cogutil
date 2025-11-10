@@ -198,20 +198,20 @@ public:
         return true;
     }
 
-#define COMMON_COND_WAIT                                     \
+#define COMMON_COND_WAIT(DO_THING)                           \
         std::unique_lock<std::mutex> lock(the_mutex);        \
         /* Use two nested loops here.  It can happen that */ \
         /* the cond wakes up, and yet the queue is empty. */ \
         do {                                                 \
             while (the_stack.empty() and not is_canceled)    \
                 the_cond.wait(lock);                         \
-            if (is_canceled) throw Canceled();               \
+            if (is_canceled) DO_THING;                       \
         } while (the_stack.empty());
 
     /// Pop an item off the stack. Block if the stack is empty.
     void pop(Element& value)
     {
-        COMMON_COND_WAIT
+        COMMON_COND_WAIT({ throw Canceled(); })
         COMMON_POP_NOTIFY
     }
     void wait_pop(Element& value) { pop(value); }
@@ -227,7 +227,7 @@ public:
 
     std::stack<Element> wait_and_take_all()
     {
-        COMMON_COND_WAIT
+        COMMON_COND_WAIT({ break; })
 
         std::stack<Element> retval;
         the_stack.swap(retval);

@@ -303,21 +303,21 @@ public:
         return elvec;
     }
 
-#define COMMON_COND_WAIT                                     \
+#define COMMON_COND_WAIT(DO_THING)                           \
         std::unique_lock<std::mutex> lock(the_mutex);        \
         /* Use two nested loops here.  It can happen that */ \
         /* the cond wakes up, and yet the queue is empty. */ \
         do {                                                 \
             while (the_set.empty() and not is_canceled)      \
                 the_cond.wait(lock);                         \
-            if (is_canceled) throw Canceled();               \
+            if (is_canceled) DO_THING;                       \
         } while (the_set.empty());
 
     /// Get an item from the set. Block if the set is empty.
     /// The element is removed from the set, before this returns.
     void get(Element& value)
     {
-        COMMON_COND_WAIT
+        COMMON_COND_WAIT({ throw Canceled(); })
 
         auto it = the_set.begin();
         value = *it;
@@ -338,7 +338,7 @@ public:
 
     std::set<Element, Compare> wait_and_take_all()
     {
-        COMMON_COND_WAIT
+        COMMON_COND_WAIT({ break; })
 
         std::set<Element, Compare> retval(the_set.key_comp());
         std::swap(retval, the_set);
