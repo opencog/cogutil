@@ -119,10 +119,12 @@ public:
     static constexpr size_t DEFAULT_HIGH_WATER_MARK = 1000;
     static constexpr size_t DEFAULT_LOW_WATER_MARK = 750;
 
-    /// Insert the Element into the set; copies the item.
+private:
+    /// Insert the Element into the set.
     /// Return true if the item was not already in the set,
     /// else return false.
-    bool insert(const Element& item)
+    template<typename InsertFunc>
+    bool insert_impl(InsertFunc&& do_insert)
     {
         std::unique_lock<std::mutex> lock(the_mutex);
         if (is_canceled) throw Canceled();
@@ -142,12 +144,12 @@ public:
         }
 
         size_t before = the_set.size();
-        the_set.insert(item);
+        do_insert();
         size_t after = the_set.size();
 
         // If this inserter was blocked and there are still blocked
         // inserters waiting, notify them all so they can check if
-        // there's room
+        // there's room.
         bool should_cascade = (was_blocked and _blocked_inserters > 0);
 
         lock.unlock();
@@ -159,44 +161,14 @@ public:
         return before < after;
     }
 
-    /// Insert the Element into the set, by moving it.
-    /// Return true if the item was not already in the set,
-    /// else return false.
+public:
+    bool insert(const Element& item)
+    {
+        return insert_impl([&]() { the_set.insert(item); });
+    }
     bool insert(Element&& item)
     {
-        std::unique_lock<std::mutex> lock(the_mutex);
-        if (is_canceled) throw Canceled();
-
-        // Block if set is at or above high watermark
-        bool was_blocked = false;
-        if (the_set.size() >= _high_watermark)
-        {
-            was_blocked = true;
-            _blocked_inserters++;
-            while (the_set.size() >= _high_watermark and not is_canceled)
-            {
-                _watermark_cond.wait(lock);
-            }
-            _blocked_inserters--;
-            if (is_canceled) throw Canceled();
-        }
-
-        size_t before = the_set.size();
-        the_set.insert(std::move(item));
-        size_t after = the_set.size();
-
-        // If this inserter was blocked and there are still blocked
-        // inserters waiting, notify them all so they can check if
-        // there's room
-        bool should_cascade = (was_blocked and _blocked_inserters > 0);
-
-        lock.unlock();
-        the_cond.notify_one();
-
-        if (should_cascade)
-            _watermark_cond.notify_all();
-
-        return before < after;
+        return insert_impl([&]() { the_set.insert(std::move(item)); });
     }
 
     /// Remove the Element from the set. Return number of Elements

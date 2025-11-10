@@ -96,8 +96,10 @@ public:
     static constexpr size_t DEFAULT_HIGH_WATER_MARK = 1000;
     static constexpr size_t DEFAULT_LOW_WATER_MARK = 750;
 
+private:
     /// Push the Element onto the stack.
-    void push(const Element& item)
+    template<typename PushFunc>
+    void push_impl(PushFunc&& do_push)
     {
         std::unique_lock<std::mutex> lock(the_mutex);
         if (is_canceled) throw Canceled();
@@ -116,7 +118,7 @@ public:
             if (is_canceled) throw Canceled();
         }
 
-        the_stack.push(item);
+        do_push();
 
         // If this pusher was blocked and there are still blocked pushers
         // waiting, notify them all so they can check if there's room.
@@ -129,37 +131,14 @@ public:
             _watermark_cond.notify_all();
     }
 
-    /// Push the Element onto the stack, by moving it.
+public:
+    void push(const Element& item)
+    {
+        push_impl([&]() { the_stack.push(item); });
+    }
     void push(Element&& item)
     {
-        std::unique_lock<std::mutex> lock(the_mutex);
-        if (is_canceled) throw Canceled();
-
-        // Block if stack is at or above high watermark
-        bool was_blocked = false;
-        if (the_stack.size() >= _high_watermark)
-        {
-            was_blocked = true;
-            _blocked_pushers++;
-            while (the_stack.size() >= _high_watermark and not is_canceled)
-            {
-                _watermark_cond.wait(lock);
-            }
-            _blocked_pushers--;
-            if (is_canceled) throw Canceled();
-        }
-
-        the_stack.push(std::move(item));
-
-        // If this pusher was blocked and there are still blocked pushers
-        // waiting, notify them all so they can check if there's room
-        bool should_cascade = (was_blocked and _blocked_pushers > 0);
-
-        lock.unlock();
-        the_cond.notify_one();
-
-        if (should_cascade)
-            _watermark_cond.notify_all();
+        push_impl([&]() { the_stack.push(std::move(item)); });
     }
 
     /// Return true if the stack is empty at this instant in time.

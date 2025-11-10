@@ -96,43 +96,10 @@ public:
     static constexpr size_t DEFAULT_HIGH_WATER_MARK = 1000;
     static constexpr size_t DEFAULT_LOW_WATER_MARK = 750;
 
+private:
     /// Push the Element onto the queue.
-    void push(const Element& item)
-    {
-        std::unique_lock<std::mutex> lock(the_mutex);
-        if (is_canceled) throw Canceled();
-
-        // Block if queue is at or above high watermark,
-        // wait until it drops below high watermark (with hysteresis
-        // notification at low watermark)
-        bool was_blocked = false;
-        if (the_queue.size() >= _high_watermark)
-        {
-            was_blocked = true;
-            _blocked_pushers++;
-            while (the_queue.size() >= _high_watermark and not is_canceled)
-            {
-                _watermark_cond.wait(lock);
-            }
-            _blocked_pushers--;
-            if (is_canceled) throw Canceled();
-        }
-
-        the_queue.push(item);
-
-        // If this pusher was blocked and there are still blocked pushers
-        // waiting, notify them all so they can check if there's room.
-        bool should_cascade = (was_blocked and _blocked_pushers > 0);
-
-        lock.unlock();
-        the_cond.notify_one();
-
-        if (should_cascade)
-            _watermark_cond.notify_all();
-    }
-
-    /// Push the Element onto the queue, by moving it.
-    void push(Element&& item)
+    template<typename PushFunc>
+    void push_impl(PushFunc&& do_push)
     {
         std::unique_lock<std::mutex> lock(the_mutex);
         if (is_canceled) throw Canceled();
@@ -153,7 +120,7 @@ public:
             if (is_canceled) throw Canceled();
         }
 
-        the_queue.push(std::move(item));
+        do_push();
 
         // If this pusher was blocked and there are still
         // blocked pushers, wake one more so they can proceed.
@@ -164,6 +131,16 @@ public:
 
         if (should_cascade)
             _watermark_cond.notify_one();
+    }
+
+public:
+    void push(const Element& item)
+    {
+        push_impl([&]() { the_queue.push(item); });
+    }
+    void push(Element&& item)
+    {
+        push_impl([&]() { the_queue.push(std::move(item)); });
     }
 
     /// Return true if the queue is empty at this instant in time.
