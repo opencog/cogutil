@@ -43,16 +43,6 @@ jobs:
             - ccache
 
   atomspace:
-    docker:
-      - image: $CIRCLE_PROJECT_USERNAME/opencog-deps
-        user: root
-        environment:
-          PGHOST: opencog-postgres
-          PGUSER: opencog_test
-          PGPASSWORD: cheese
-          CCACHE_DIR: /ws/ccache
-      - image: $CIRCLE_PROJECT_USERNAME/postgres
-        name: opencog-postgres
     working_directory: /ws/atomspace
     steps:
       - attach_workspace:
