@@ -35,9 +35,10 @@
 
 #include <atomic>
 #include <condition_variable>
-#include <stack>
+#include <cstdint>
 #include <exception>
 #include <mutex>
+#include <stack>
 
 /** \addtogroup grp_cogutil
  *  @{
@@ -93,8 +94,9 @@ public:
         const char * what() { return "Cancellation of wait on concurrent_stack"; }
     };
 
-    static constexpr size_t DEFAULT_HIGH_WATER_MARK = 1000;
-    static constexpr size_t DEFAULT_LOW_WATER_MARK = 750;
+    // These limits seem ... reasonable ...
+    static constexpr size_t DEFAULT_HIGH_WATER_MARK = INT32_MAX;
+    static constexpr size_t DEFAULT_LOW_WATER_MARK = INT32_MAX - 65536;
 
 private:
     /// Push the Element onto the stack.
