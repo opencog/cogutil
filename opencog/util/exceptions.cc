@@ -137,13 +137,13 @@ RuntimeException::RuntimeException(const char *trace, const char* fmt, ...)
 {
     va_list  ap;
     va_start(ap, fmt);
-    parse_error_message(trace, fmt, ap);
+    parse_error_message(trace, fmt, ap, false);
     va_end(ap);
 }
 
 RuntimeException::RuntimeException(const char *trace, const char* fmt, va_list ap)
 {
-    parse_error_message(trace, fmt, ap);
+    parse_error_message(trace, fmt, ap, false);
 }
 
 RuntimeException::RuntimeException()
@@ -159,13 +159,13 @@ SyntaxException::SyntaxException(const char * trace, const char * fmt, ...)
 {
     va_list  ap;
     va_start(ap, fmt);
-    parse_error_message(trace, fmt, ap);
+    parse_error_message(trace, fmt, ap, false);
     va_end(ap);
 }
 
 SyntaxException::SyntaxException(const char * trace, const char * fmt, va_list ap)
 {
-    parse_error_message(trace, fmt, ap);
+    parse_error_message(trace, fmt, ap, false);
 }
 
 /*
@@ -267,13 +267,13 @@ FatalErrorException::FatalErrorException(const char * trace, const char * fmt, .
 {
     va_list  ap;
     va_start(ap, fmt);
-    parse_error_message(trace, fmt, ap);
+    parse_error_message(trace, fmt, ap, true);
     va_end(ap);
 }
 
 FatalErrorException::FatalErrorException(const char* trace, const char* fmt, va_list ap)
 {
-    parse_error_message(trace, fmt, ap);
+    parse_error_message(trace, fmt, ap, true);
 }
 
 /*
