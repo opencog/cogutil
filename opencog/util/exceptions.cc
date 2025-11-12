@@ -188,24 +188,6 @@ IOException::IOException(const char * trace, const char * fmt, va_list ap)
 
 /*
  * ----------------------------------------------------------------------
- * ComboException class
- * ----------------------------------------------------------------------
- */
-ComboException::ComboException(const char * trace, const char * fmt, ...)
-{
-    va_list  ap;
-    va_start(ap, fmt);
-    parse_error_message(trace, fmt, ap);
-    va_end(ap);
-}
-
-ComboException::ComboException(const char* trace, const char* fmt, va_list ap)
-{
-    parse_error_message(trace, fmt, ap);
-}
-
-/*
- * ----------------------------------------------------------------------
  * IndexErrorException class
  * ----------------------------------------------------------------------
  */

@@ -154,25 +154,6 @@ public:
 }; // IOException
 
 /**
- * Exception to be thrown when a Combo operation (parsing, executing)
- * fails.
- */
-class ComboException : public RuntimeException
-{
-public:
-    /**
-     * Constructor
-     *
-     * @param Trace information (filename:line-number). Use TRACE_INFO
-     * macro.
-     * @param Exception message in printf standard format.
-     */
-    ComboException(const char*, const char*, ...);
-    ComboException(const char*, const char*, va_list);
-
-}; // ComboException
-
-/**
  * Exception to be thrown when an out of range index is used.
  */
 class IndexErrorException : public RuntimeException
