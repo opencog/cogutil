@@ -296,6 +296,31 @@ NetworkException::NetworkException(const char* trace, const char* fmt, va_list a
 
 /*
  * ----------------------------------------------------------------------
+ * PythonException class
+ * ----------------------------------------------------------------------
+ */
+PythonException::PythonException(const std::string& pythonExcType,
+                                 const char * trace,
+                                 const char * fmt, ...)
+    : _python_exception_type(pythonExcType)
+{
+    va_list  ap;
+    va_start(ap, fmt);
+    parse_error_message(trace, fmt, ap);
+    va_end(ap);
+}
+
+PythonException::PythonException(const std::string& pythonExcType,
+                                 const char* trace,
+                                 const char* fmt,
+                                 va_list ap)
+    : _python_exception_type(pythonExcType)
+{
+    parse_error_message(trace, fmt, ap);
+}
+
+/*
+ * ----------------------------------------------------------------------
  * NotFoundException class
  * ----------------------------------------------------------------------
  */

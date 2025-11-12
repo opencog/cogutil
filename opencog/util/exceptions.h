@@ -272,6 +272,41 @@ public:
 
 }; // NetworkException
 
+/**
+ * Exception to be called when a Python error occurs in user code.
+ * Stores the Python exception type name so it can be re-raised correctly
+ * at the Python/C++ boundary.
+ */
+class PythonException : public RuntimeException
+{
+private:
+    std::string _python_exception_type;
+
+public:
+    /**
+     * Constructor
+     *
+     * @param pythonExcType The Python exception type name (e.g., "TypeError")
+     * @param Trace information (filename:line-number). Use TRACE_INFO macro.
+     * @param Exception message in printf standard format.
+     */
+    PythonException(const std::string& pythonExcType,
+                    const char* trace,
+                    const char* fmt, ...);
+    PythonException(const std::string& pythonExcType,
+                    const char* trace,
+                    const char* fmt,
+                    va_list ap);
+
+    /**
+     * Get the Python exception type name
+     */
+    const std::string& get_python_exception_type() const {
+        return _python_exception_type;
+    }
+
+}; // PythonException
+
 
 /**
  * Exception to be called when an assertion fails.
