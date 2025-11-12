@@ -155,6 +155,7 @@ public:
 
 /**
  * Exception to be thrown when an out of range index is used.
+ * Primary user is the ValueFactory
  */
 class IndexErrorException : public RuntimeException
 {
@@ -193,25 +194,6 @@ public:
     InvalidParamException(const char*, const char*, va_list);
 
 }; // InvalidParamException
-
-/**
- * Exception to be thrown when a consistency check (equal to, different,
- * etc.) fails.
- */
-class InconsistenceException : public RuntimeException
-{
-public:
-    /**
-     * Constructor
-     *
-     * @param Trace information (filename:line-number). Use TRACE_INFO
-     * macro.
-     * @param Exception message in printf standard format.
-     */
-    InconsistenceException(const char*, const char*, ...);
-    InconsistenceException(const char*, const char*, va_list);
-
-}; // InconsistenceException
 
 /**
  * Exception to be called when an unrecoverable error has occurred.
