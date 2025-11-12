@@ -242,24 +242,6 @@ FatalErrorException::FatalErrorException(const char* trace, const char* fmt, va_
 
 /*
  * ----------------------------------------------------------------------
- * NetworkException class
- * ----------------------------------------------------------------------
- */
-NetworkException::NetworkException(const char * trace, const char * fmt, ...)
-{
-    va_list  ap;
-    va_start(ap, fmt);
-    parse_error_message(trace, fmt, ap);
-    va_end(ap);
-}
-
-NetworkException::NetworkException(const char* trace, const char* fmt, va_list ap)
-{
-    parse_error_message(trace, fmt, ap);
-}
-
-/*
- * ----------------------------------------------------------------------
  * NotFoundException class
  * ----------------------------------------------------------------------
  */

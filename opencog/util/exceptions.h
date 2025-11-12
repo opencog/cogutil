@@ -216,27 +216,6 @@ public:
 }; // FatalErrorException
 
 /**
- * Exception to be called when a network error  has occurred.
- * When this exception is caught, a stack trace must be generated
- * and provided to the user (e.g. saved to a log file).
- */
-class NetworkException : public StandardException
-{
-public:
-    /**
-     * Constructor
-     *
-     * @param Trace information (filename:line-number). Use TRACE_INFO
-     * macro.
-     * @param Exception message in printf standard format.
-     */
-    NetworkException(const char*, const char*, ...);
-    NetworkException(const char*, const char*, va_list);
-
-}; // NetworkException
-
-
-/**
  * Exception to be called when an assertion fails.
  * Unlike almost all other exceptions, this one does not
  * log the called location; that is done by OC_ASSERT,
