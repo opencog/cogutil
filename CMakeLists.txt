@@ -215,6 +215,8 @@ ADD_SUBDIRECTORY(lib)
 ADD_SUBDIRECTORY(opencog)
 
 IF (CXXTEST_FOUND)
+	# Enable CTest support so that 'ctest' command works
+	ENABLE_TESTING()
 	ADD_CUSTOM_TARGET(tests)
 	ADD_SUBDIRECTORY(tests EXCLUDE_FROM_ALL)
 	IF (CMAKE_BUILD_TYPE STREQUAL "Coverage")
