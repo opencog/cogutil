@@ -171,6 +171,12 @@ public:
         return the_stack.size();
     }
 
+    std::stack<Element> peek() const
+    {
+        std::lock_guard<std::mutex> lock(the_mutex);
+        std::stack<Element> copy(the_stack);
+        return copy;
+    }
 
 #define COMMON_POP_NOTIFY {                               \
         value = the_stack.top();                          \

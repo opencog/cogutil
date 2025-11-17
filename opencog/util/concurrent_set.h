@@ -211,6 +211,13 @@ public:
         return the_set.size();
     }
 
+    std::set<Element, Compare> peek() const
+    {
+        std::lock_guard<std::mutex> lock(the_mutex);
+        std::set<Element, Compare> copy(the_set);
+        return copy;
+    }
+
     /// Erase all elements from the container.
     void clear()
     {

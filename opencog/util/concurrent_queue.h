@@ -174,6 +174,13 @@ public:
         return the_queue.size();
     }
 
+    std::queue<Element> peek() const
+    {
+        std::lock_guard<std::mutex> lock(the_mutex);
+        std::queue<Element> copy(the_queue);
+        return copy;
+    }
+
 #define COMMON_POP_NOTIFY {                               \
         value = the_queue.front();                        \
         the_queue.pop();                                  \
