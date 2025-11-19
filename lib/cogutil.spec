@@ -33,7 +33,7 @@ of useful utilities that are used throughout the OpenCog code base.
 
 
 %build
-cmake -DCMAKE_INSTALL_PREFIX:STRING=/usr -DCONFDIR=/etc -DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo .
+cmake -DCMAKE_INSTALL_PREFIX:STRING=/usr  -DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo .
 make %{?_smp_mflags}
 
 

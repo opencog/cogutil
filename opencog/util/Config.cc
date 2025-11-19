@@ -70,51 +70,10 @@ void Config::reset()
 {
     _table.clear();
     _no_config_loaded = true;
-    _had_to_search = true;
-    _abs_path = "";
     _cfg_filename = "";
 }
 
 static const char* DEFAULT_CONFIG_FILENAME = "opencog.conf";
-static const char* DEFAULT_CONFIG_PATHS[] =
-{
-    // A bunch of relative paths, typical for the current opencog setup.
-    "./",
-    "../",
-    "../../",
-    "../../../",
-    "../../../../",
-    "./lib/",
-    "../lib/",
-    "../../lib/",
-    "../../../lib/",
-    "../../../../lib/", // yes, really needed for some test cases!
-    CONFDIR,
-#ifndef WIN32
-    "/etc/opencog",
-    "/etc",
-#endif // !WIN32
-    NULL
-};
-
-const std::vector<std::string> Config::search_paths() const
-{
-    std::vector<std::string> paths;
-    if (_had_to_search)
-    {
-         int i=0;
-         while (DEFAULT_CONFIG_PATHS[i])
-         {
-             paths.push_back(DEFAULT_CONFIG_PATHS[i]);
-             i++;
-         }
-    }
-    else
-    {
-        paths.push_back(_abs_path);
-    }
-    return paths;
-}
 
 void Config::check_for_file(std::ifstream& fin,
                             const char* path_str, const char* filename)
@@ -157,24 +116,7 @@ void Config::load(const char* filename, bool resetFirst)
     _cfg_filename = filename;
 
     ifstream fin;
-
-    // If the filename specifies an absolute path, go directly there.
-    if ('/' == filename[0])
-    {
-        _had_to_search = false;
-        _abs_path = filename;
-        check_for_file(fin, "", filename);
-    }
-    else
-    {
-        // Search for the filename in a bunch of typical locations.
-        for (int i = 0; DEFAULT_CONFIG_PATHS[i] != NULL; ++i)
-        {
-            check_for_file(fin, DEFAULT_CONFIG_PATHS[i], filename);
-            if (fin and fin.good() and fin.is_open())
-                break;
-        }
-    }
+    check_for_file(fin, "", filename);
 
     // Whoops, failed.
     if (!fin or !fin.good() or !fin.is_open())
@@ -186,9 +128,7 @@ void Config::load(const char* filename, bool resetFirst)
         // fully initialized. Such is life; this is still a lot easier
         // than debugging the thrown exception in a debugger.
         logger().warn("No config file found!\n");
-        logger().warn("Searched for \"%s\"\n", search_file().c_str());
-        for (auto& path : search_paths())
-        logger().warn("Searched at %s\n", path.c_str());
+        logger().warn("Searched for \"%s\"\n", filename);
 
         throw IOException(TRACE_INFO,
              "unable to open file \"%s\"", filename);
