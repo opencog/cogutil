@@ -25,10 +25,8 @@
 #ifndef _OPENCOG_CONFIG_H
 #define _OPENCOG_CONFIG_H
 
-#include <fstream>
 #include <map>
 #include <string>
-#include <vector>
 
 namespace opencog
 {
@@ -41,38 +39,17 @@ class Config
 {
 protected:
     std::map<std::string, std::string> _table;
-    bool _no_config_loaded;
-    bool _had_to_search;
-    std::string _path_where_found;
-    std::string _abs_path;
-    std::string _cfg_filename;
-
-    void check_for_file(std::ifstream&, const char *, const char *);
     void setup_logger();
 
 public:
-    //! constructor
+    Config(void);
     ~Config();
-    //! destructor
-    Config();
-
-    //! Returns a new Config instance.
-    static Config* createInstance(void);
 
     //! Reset configuration to default.
-    virtual void reset();
+    void reset();
 
     //! Parse the indicated file for parameter values.
-    void load(const char* config_file, bool resetFirst = true);
-
-    //! Location at which the config file was found.
-    const std::string& path_where_found() const { return _path_where_found; }
-
-    //! List of paths that were searched, in looking for the config file.
-    const std::vector<std::string> search_paths() const;
-
-    //! Name of the file that was actually searched for.
-    const std::string& search_file() const { return _cfg_filename; }
+    void load(const char* config_file);
 
     //! Return true if a parameter exists.
     const bool has(const std::string &parameter_name) const;
@@ -102,14 +79,7 @@ public:
 };
 
 //! singleton instance (following meyer's design pattern)
-/**
- * Nil: if overwrite is true then the static variable instance@n
- *      is changed with the createInstance provided@n
- *      it is a temporary dirty hack@n
- */
-typedef Config* ConfigFactory(void);
-Config& config(ConfigFactory* = Config::createInstance,
-               bool overwrite = false);
+Config& config();
 
 /** @}*/
 } // namespace opencog

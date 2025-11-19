@@ -51,12 +51,6 @@ static string strip(string const& str, char const *strip_chars = blank_chars)
         str.substr(first, str.find_last_not_of(strip_chars) - first + 1);
 }
 
-
-Config* Config::createInstance()
-{
-    return new Config();
-}
-
 Config::~Config()
 {
 }
@@ -69,72 +63,32 @@ Config::Config()
 void Config::reset()
 {
     _table.clear();
-    _no_config_loaded = true;
-    _cfg_filename = "";
 }
 
 static const char* DEFAULT_CONFIG_FILENAME = "opencog.conf";
 
-void Config::check_for_file(std::ifstream& fin,
-                            const char* path_str, const char* filename)
-{
-    std::filesystem::path configPath(path_str);
-    configPath /= filename;
-
-    if (not std::filesystem::exists(configPath)) return;
-
-    // Try to open the config file
-    fin.open(configPath.string().c_str());
-    if (fin and fin.good() and fin.is_open())
-    {
-        // XXX FIXME Searching relative paths is
-        // a security bug waiting to happen. Right now, it seems
-        // like a very very unlikely thing, but it is a bug!
-        if ('/' != configPath.string()[0])
-        {
-#define PATH_MAX 4096
-            char buff[PATH_MAX+1];
-            char *p = getcwd(buff, PATH_MAX);
-            if (p) {
-                _path_where_found = buff;
-                _path_where_found += '/';
-            }
-        }
-        _path_where_found += configPath.string();
-    }
-}
-
-// constructor
-void Config::load(const char* filename, bool resetFirst)
+void Config::load(const char* filename)
 {
     if (NULL == filename or 0 == filename[0])
         filename = DEFAULT_CONFIG_FILENAME;
 
-    // Reset to default values
-    if (resetFirst) reset();
-
-    _cfg_filename = filename;
-
-    ifstream fin;
-    check_for_file(fin, "", filename);
-
-    // Whoops, failed.
-    if (!fin or !fin.good() or !fin.is_open())
+    std::filesystem::path configPath(filename);
+    if (not std::filesystem::exists(configPath))
     {
-        // This will print the diagnostics to the default log file
-        // location.  Note that the config file itself contains the
-        // log file location that is supposed to be used, so this
-        // printing is happening "too early", before the logger is
-        // fully initialized. Such is life; this is still a lot easier
-        // than debugging the thrown exception in a debugger.
-        logger().warn("No config file found!\n");
-        logger().warn("Searched for \"%s\"\n", filename);
-
+        logger().warn("Can't find config file \"%s\"\n", filename);
         throw IOException(TRACE_INFO,
-             "unable to open file \"%s\"", filename);
+             "Can't find config file \"%s\"", filename);
     }
 
-    _no_config_loaded = false;
+    // Try to open it
+    ifstream fin;
+    fin.open(filename);
+    if (!fin or !fin.good() or !fin.is_open())
+    {
+        logger().warn("Cannot open config file \"%s\"\n", filename);
+        throw IOException(TRACE_INFO,
+             "Unable to open config file \"%s\"", filename);
+    }
 
     string line;
     string name;
@@ -194,7 +148,7 @@ void Config::load(const char* filename, bool resetFirst)
             // than debugging the thrown exception in a debugger.
             setup_logger();
             logger().warn("Invalid config file entry at line %d in %s\n",
-                  line_number, path_where_found().c_str());
+                  line_number, filename);
 
             throw InvalidParamException(TRACE_INFO,
                   "[ERROR] invalid configuration entry (line %d)",
@@ -215,13 +169,7 @@ void Config::load(const char* filename, bool resetFirst)
     // Finish configuring the logger... The config file itself
     // contains the location of the log file. This is working around
     // a chicken-and-egg problem with reporting config file issues.
-    // Such is life; this is a lot easier than debugging screwed-up
-    // file-path craziness in a debugger. We MUST log the path!!!
     setup_logger();
-
-    // And then finally, at long last!!! report what happened.
-    logger().info("Using config file found at: %s\n",
-                  path_where_found().c_str());
 }
 
 void Config::setup_logger()
@@ -246,7 +194,6 @@ const bool Config::has(const string &name) const
 void Config::set(const std::string &parameter_name,
                  const std::string &parameter_value)
 {
-    _no_config_loaded = false;
     _table[parameter_name] = parameter_value;
 }
 
@@ -306,11 +253,8 @@ std::string Config::to_string() const
 }
 
 // create and return the single instance
-Config& opencog::config(ConfigFactory* factoryFunction,
-                        bool overwrite)
+Config& opencog::config()
 {
-    static std::unique_ptr<Config> instance((*factoryFunction)());
-    if (overwrite)
-        instance.reset((*factoryFunction)());
+    static std::unique_ptr<Config> instance(new Config());
     return *instance;
 }
