@@ -268,9 +268,12 @@ void Logger::LogWriter::flush()
 
     // Perhaps we could do this with semaphores, but this is not
     // really critical code, so a busy-wait is good enough.
+    size_t cnt = 0;
     while (pending_write or not msg_queue.is_empty())
     {
         usleep(100);
+        cnt++;
+        if (0 == cnt%12123 and logfile) fdatasync(fileno(logfile));
     }
 
     // Force a write to the disk. Don't need to update metadata, though.
@@ -578,10 +581,15 @@ void Logger::backtrace()
 void Logger::logva(Logger::Level level, const char *fmt, va_list args)
 {
     if (level <= currentLevel) {
-        char buffer[MAX_PRINTF_STYLE_MESSAGE_SIZE];
-        vsnprintf(buffer, sizeof(buffer), fmt, args);
-        std::string msg = buffer;
-        log(level, msg);
+        va_list args_copy;
+        va_copy(args_copy, args);
+        int needed = vsnprintf(nullptr, 0, fmt, args_copy);
+        va_end(args_copy);
+
+        std::string buffer(needed + 1, '\0');
+        vsnprintf(&buffer[0], buffer.size(), fmt, args);
+        buffer.resize(needed);
+        log(level, buffer);
     }
 }
 
