@@ -147,6 +147,10 @@ class async_buffer
 
 		bool _stall_writers;
 
+		// Per-thread barrier synchronization
+		std::atomic<unsigned> _barrier_phase;
+		std::atomic<unsigned> _barrier_remaining;
+
 		void start_writer_thread();
 		void stop_writer_threads();
 		void write_loop();
@@ -162,7 +166,8 @@ class async_buffer
 		~async_buffer();
 		void insert(const Element&);
 		void flush();
-		void barrier();
+		void barrier(void);
+		void barrier(const Element&);
 
 		void set_watermarks(size_t, size_t);
 		void stall(bool);
@@ -217,6 +222,8 @@ async_buffer<Writer, Element>::async_buffer(Writer* wr,
 	_pending = 0;
 	_stall_writers = false;
 	_in_drain = false;
+	_barrier_phase = 0;
+	_barrier_remaining = 0;
 
 	_high_watermark = DEFAULT_HIGH_WATER_MARK;
 	_low_watermark = DEFAULT_LOW_WATER_MARK;
@@ -436,15 +443,59 @@ void async_buffer<Writer, Element>::barrier()
 	drain();
 }
 
+/// Barrier that ensures every worker processes the given element.
+/// This first drains existing work queues, then gives each worker
+/// a copy of `elt` for processing. It then waits for all workers
+/// to complete. This guarantees that every worker has run at least
+/// once.
+///
+/// The intended use case for this function are systems that have
+/// workers that do caching or lazy initialization or implement
+/// other actions that require synchronization that the default
+/// `barrier(void)` would miss.
+template<typename Writer, typename Element>
+void async_buffer<Writer, Element>::barrier(const Element& elt)
+{
+	std::unique_lock<std::mutex> lock(_enqueue_mutex);
+
+	// First, drain existing work
+	drain();
+
+	// Set up the barrier: each thread must process exactly one element
+	_barrier_remaining = _thread_count;
+	_barrier_phase++;
+
+	// Enqueue one element for each thread.
+	for (unsigned int i = 0; i < _thread_count; i++)
+		do_insert(elt);
+
+	// Wait for all threads to complete their barrier work
+	while (_barrier_remaining.load() > 0)
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+}
+
 /// A single write thread. Reads elements from set, and invokes the
 /// method on them.
 template<typename Writer, typename Element>
 void async_buffer<Writer, Element>::write_loop()
 {
+	// Track which barrier phase this thread has completed.
+	// Used to ensure each thread processes exactly one barrier element.
+	static thread_local unsigned my_last_phase = 0;
+
 	try
 	{
 		while (true)
 		{
+			// If a barrier is active and we've done our part, wait for others.
+			// This prevents us from grabbing a second barrier element before
+			// all other threads have grabbed their first.
+			while (_barrier_remaining.load() > 0 and
+			       my_last_phase >= _barrier_phase.load())
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			}
+
 			// Do nothing, if asked to stall.
 			while (_stall_writers and _store_set.size() < _low_watermark)
 			{
@@ -453,7 +504,21 @@ void async_buffer<Writer, Element>::write_loop()
 
 			Element elt = _store_set.value_get();
 			_busy_writers ++;
-			(_writer->*_do_write)(elt);
+
+			unsigned current_phase = _barrier_phase.load();
+			if (my_last_phase < current_phase)
+			{
+				// This is barrier work - process and count toward completion
+				my_last_phase = current_phase;
+				(_writer->*_do_write)(elt);
+				_barrier_remaining.fetch_sub(1);
+			}
+			else
+			{
+				// Regular work
+				(_writer->*_do_write)(elt);
+			}
+
 			_busy_writers --;
 			_pending --;
 		}
