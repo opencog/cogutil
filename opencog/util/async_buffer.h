@@ -150,7 +150,7 @@ class async_buffer
 		void stop_writer_threads();
 		void write_loop();
 
-		void do_insert(const Element&);
+		void do_insert(Element&&);
 		void drain();
 
 	public:
@@ -159,7 +159,8 @@ class async_buffer
 
 		async_buffer(Writer*, void (Writer::*)(const Element&), int nthreads=4);
 		~async_buffer();
-		void insert(const Element&);
+		void insert(const Element& elt) { insert(Element(elt)); }
+		void insert(Element&&);
 		void flush();
 		void barrier(void);
 		template<typename Factory>
@@ -526,10 +527,10 @@ void async_buffer<Writer, Element>::write_loop()
 
 /// Insert, no matter what. Private, unsafe for external use.
 template<typename Writer, typename Element>
-void async_buffer<Writer, Element>::do_insert(const Element& elt)
+void async_buffer<Writer, Element>::do_insert(Element&& elt)
 {
 	_pending ++;
-	bool inserted = _store_set.insert(elt);
+	bool inserted = _store_set.insert(std::move(elt));
 	_item_count++;
 	if (not inserted)
 	{
@@ -545,7 +546,7 @@ void async_buffer<Writer, Element>::do_insert(const Element& elt)
  * mostly drained...
  */
 template<typename Writer, typename Element>
-void async_buffer<Writer, Element>::insert(const Element& elt)
+void async_buffer<Writer, Element>::insert(Element&& elt)
 {
 	// Sanity checks.
 	if (_stopping_writers)
@@ -574,7 +575,7 @@ void async_buffer<Writer, Element>::insert(const Element& elt)
 	{
 		if (th.get_id() == tid)
 		{
-			do_insert(elt);
+			do_insert(std::move(elt));
 			return;
 		}
 	}
@@ -585,7 +586,7 @@ void async_buffer<Writer, Element>::insert(const Element& elt)
 	// do need to use a lock for that.
 	{
 		std::unique_lock<std::mutex> lock(_enqueue_mutex);
-		do_insert(elt);
+		do_insert(std::move(elt));
 	}
 
 	// If the writer threads are falling behind, mitigate.
