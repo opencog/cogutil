@@ -334,9 +334,14 @@ void async_buffer<Writer, Element>::stop_writer_threads()
 
 	_stopping_writers = true;
 
-	// Wait until the writer threads are (mostly) done.
-	while (0 < _pending)
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	// Wait until the writer threads are (mostly) done. There
+	// might still be some lingering enqueues after this exits.
+	unsigned long pend = _pending.load();
+	while (pend != 0)
+	{
+		_pending.wait(pend);
+		pend = _pending.load();
+	}
 
 	// Now tell all the threads that they are done.
 	// I.e. cancel all the threads.
@@ -491,8 +496,10 @@ void async_buffer<Writer, Element>::write_loop()
 			_busy_writers ++;
 			(_writer->*_do_write)(elt);
 			_busy_writers --;
-			_pending --;
-			_pending.notify_all();
+
+			unsigned long old_pend = _pending.fetch_sub(1);
+			if (1 == old_pend)
+				_pending.notify_all();
 		}
 		catch (typename concurrent_set<Element>::Canceled& e)
 		{
@@ -506,7 +513,7 @@ void async_buffer<Writer, Element>::write_loop()
 
 				// barrier() will drop the count to zero after
 				// all workers have run.
-				unsigned cnt = _barrier_count.load();
+				unsigned int cnt = _barrier_count.load();
 				while (0 < cnt)
 				{
 					_barrier_count.wait(cnt);
@@ -533,7 +540,10 @@ void async_buffer<Writer, Element>::do_insert(Element&& elt)
 	if (not inserted)
 	{
 		_duplicate_count++;
-		_pending --;
+
+		unsigned long old_pend = _pending.fetch_sub(1);
+		if (1 == old_pend)
+			_pending.notify_all();
 	}
 }
 
