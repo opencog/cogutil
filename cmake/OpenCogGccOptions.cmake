@@ -2,11 +2,11 @@
 # Detect different compilers and OS'es, tweak flags as necessary.
 
 IF (CMAKE_COMPILER_IS_GNUCXX)
-	# Version 7.0 of gcc is required for full C++17 support.
+	# Version 11.0 of gcc is required for full C++20 support.
 
-	IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.0)
-		MESSAGE(FATAL_ERROR "GCC version must be at least 7.0!")
-	ENDIF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.0)
+	IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 11.0)
+		MESSAGE(FATAL_ERROR "GCC version must be at least 11.0!")
+	ENDIF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 11.0)
 
 	IF (APPLE)
 		CMAKE_POLICY(SET CMP0042 NEW)  # Something about MACOSX_RPATH
@@ -53,8 +53,8 @@ IF (CMAKE_COMPILER_IS_GNUCXX)
 	#
 	# 2) -fopenmp for multithreading support
 	#
-	# 3) -std=gnu++17 for C++17 and GNU extensions support
-	SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wno-variadic-macros -fopenmp -std=gnu++17")
+	# 3) -std=gnu++20 for C++20 and GNU extensions support
+	SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wno-variadic-macros -fopenmp -std=gnu++20")
 
 	SET(CMAKE_CXX_FLAGS_ASAN ${CMAKE_C_FLAGS_ASAN})
 	SET(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
@@ -78,8 +78,8 @@ IF (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 	SET(CMAKE_SHARED_LINKER_FLAGS "-undefined dynamic_lookup")
 	SET(CMAKE_EXE_LINKER_FLAGS "-lstdc++")
 	# Refer to this page https://clang.llvm.org/docs/OpenMPSupport.html to see which version of OpenMP Clang supports.
-	# SET(CMAKE_CXX_FLAGS "-std=c++17 -fopenmp")
+	# SET(CMAKE_CXX_FLAGS "-std=c++20 -fopenmp")
 	# Apparently, most versions of clang do not support OpenMP.
 	# So disable, by default; MOSES users will need to hack this.
-	SET(CMAKE_CXX_FLAGS "-std=c++17")
+	SET(CMAKE_CXX_FLAGS "-std=c++20")
 ENDIF (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
