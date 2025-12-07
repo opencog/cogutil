@@ -142,8 +142,8 @@ class async_buffer
 
 		bool _stall_writers;
 
-		// Per-thread barrier synchronization
-		std::atomic<unsigned> _barrier_phase;
+		// Barrier synchronization
+		const Element* _current_barrier;
 		std::latch* _barrier_latch;
 
 		void start_writer_thread();
@@ -218,7 +218,7 @@ async_buffer<Writer, Element>::async_buffer(Writer* wr,
 	_pending = 0;
 	_stall_writers = false;
 	_in_drain = false;
-	_barrier_phase = 0;
+	_current_barrier = nullptr;
 	_barrier_latch = nullptr;
 
 	_high_watermark = DEFAULT_HIGH_WATER_MARK;
@@ -359,7 +359,7 @@ void async_buffer<Writer, Element>::stop_writer_threads()
 		(_writer->*_do_write)(elt);
 	}
 
-	_barrier_phase = 0;
+	_current_barrier = nullptr;
 	_barrier_latch = nullptr;
 
 	// Its now OK to start new threads, if desired ...(!)
@@ -446,25 +446,24 @@ void async_buffer<Writer, Element>::barrier()
 /// workers that do caching or lazy initialization or implement
 /// other actions that require synchronization that the default
 /// `barrier(void)` would miss.
+///
 template<typename Writer, typename Element>
 void async_buffer<Writer, Element>::barrier(const Element& elt)
 {
 	std::unique_lock<std::mutex> lock(_enqueue_mutex);
 
-	// First, drain existing work
 	drain();
 
-	// Set up the barrier using std::latch for synchronization
 	std::latch completion(_thread_count);
 	_barrier_latch = &completion;
-	_barrier_phase++;
+	_current_barrier = &elt;
 
-	// Enqueue one element for each thread.
-	for (unsigned int i = 0; i < _thread_count; i++)
-		do_insert(elt);
+	_store_set.cancel();
 
-	// Wait for all threads to complete their barrier work
 	completion.wait();
+
+	_store_set.cancel_reset();
+	_current_barrier = nullptr;
 	_barrier_latch = nullptr;
 }
 
@@ -473,13 +472,9 @@ void async_buffer<Writer, Element>::barrier(const Element& elt)
 template<typename Writer, typename Element>
 void async_buffer<Writer, Element>::write_loop()
 {
-	// Track which barrier phase this thread has completed.
-	// Used to ensure each thread processes exactly one barrier element.
-	static thread_local unsigned my_last_phase = 0;
-
-	try
+	while (true)
 	{
-		while (true)
+		try
 		{
 			// Do nothing, if asked to stall.
 			while (_stall_writers and _store_set.size() < _low_watermark)
@@ -489,30 +484,23 @@ void async_buffer<Writer, Element>::write_loop()
 
 			Element elt = _store_set.value_get();
 			_busy_writers ++;
-
-			unsigned current_phase = _barrier_phase.load();
-			if (my_last_phase < current_phase)
-			{
-				// This is barrier work - process and signal completion
-				my_last_phase = current_phase;
-				(_writer->*_do_write)(elt);
-				_barrier_latch->count_down();
-			}
-			else
-			{
-				// Regular work
-				(_writer->*_do_write)(elt);
-			}
-
+			(_writer->*_do_write)(elt);
 			_busy_writers --;
 			_pending --;
 			_pending.notify_all();
 		}
-	}
-	catch (typename concurrent_set<Element>::Canceled& e)
-	{
-		// We are so out of here. Nothing to do, just exit this thread.
-		return;
+		catch (typename concurrent_set<Element>::Canceled& e)
+		{
+			if (_current_barrier != nullptr)
+			{
+				(_writer->*_do_write)(*_current_barrier);
+				_barrier_latch->count_down();
+				_barrier_latch->wait();
+			}
+
+			// We are so out of here. Nothing to do, just exit this thread.
+			if (_stopping_writers) return;
+		}
 	}
 }
 
