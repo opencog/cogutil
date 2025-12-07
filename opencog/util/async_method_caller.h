@@ -116,7 +116,7 @@ class async_caller
 
 		// Barrier synchronization
 		const Element* _current_barrier;
-		std::atomic<unsigned> _barrier_count;
+		std::atomic<int> _barrier_count;
 
 		void start_writer_thread();
 		void stop_writer_threads();
@@ -376,18 +376,33 @@ void async_caller<Writer, Element>::barrier(const Element& elt)
 
 	_store_queue.cancel();
 
-	// Wait for all workers to finish processing
-	unsigned cnt = _barrier_count.load();
+	// Wait for all workers to finish processing the barrier element.
+	// Workers decrement from _thread_count+1 down to 1, then wait.
+	int cnt = _barrier_count.load();
 	while (1 < cnt)
 	{
 		_barrier_count.wait(cnt);
 		cnt = _barrier_count.load();
 	}
 
+	// All workers have checked in. Unblock them.
 	_current_barrier = nullptr;
 	_store_queue.cancel_reset();
-	_barrier_count--;
+	_barrier_count--;  // Now 0
 	_barrier_count.notify_all();
+
+	// Wait for all workers to acknowledge and resume.
+	// Each worker decrements once more after waking, going negative.
+	// All workers have started when count reaches minus _thread_count
+	// Failure to wait, here, will result in confusion if another
+	// barrier arrives.
+	int target = -static_cast<int>(_thread_count);
+	cnt = _barrier_count.load();
+	while (target < cnt)
+	{
+		_barrier_count.wait(cnt);
+		cnt = _barrier_count.load();
+	}
 }
 
 /// A single write thread. Reads elements from queue, and invokes the
@@ -414,18 +429,25 @@ void async_caller<Writer, Element>::write_loop()
 			{
 				(_writer->*_do_write)(*_current_barrier);
 
-				unsigned int old_count = _barrier_count.fetch_sub(1);
+				// Last one out tells the master thread.
+				int old_count = _barrier_count.fetch_sub(1);
 				if (2 == old_count)
 					_barrier_count.notify_all();
 
 				// barrier() will drop the count to zero after
 				// all workers have run.
-				unsigned int cnt = _barrier_count.load();
+				int cnt = _barrier_count.load();
 				while (0 < cnt)
 				{
 					_barrier_count.wait(cnt);
 					cnt = _barrier_count.load();
 				}
+
+				// Ack that we're resuming normal operation.
+				// Last one notifies the master thread.
+				old_count = _barrier_count.fetch_sub(1);
+				if (1 - static_cast<int>(_thread_count) == old_count)
+					_barrier_count.notify_all();
 			}
 
 			// We are so out of here. Nothing to do, just exit this thread.
