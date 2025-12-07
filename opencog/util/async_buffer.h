@@ -335,10 +335,7 @@ void async_buffer<Writer, Element>::stop_writer_threads()
 
 	// Wait until the writer threads are (mostly) done.
 	while (0 < _pending)
-	{
-		unsigned long pend = _pending.load();
-		if (pend > 0) _pending.wait(pend);
-	}
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
 	// Now tell all the threads that they are done.
 	// I.e. cancel all the threads.
