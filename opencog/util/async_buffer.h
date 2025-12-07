@@ -499,10 +499,13 @@ void async_buffer<Writer, Element>::write_loop()
 			if (_current_barrier != nullptr)
 			{
 				(_writer->*_do_write)(*_current_barrier);
-				_barrier_count--;
-				_barrier_count.notify_all();
 
-				// Wait for barrier to complete
+				unsigned int old_count = _barrier_count.fetch_sub(1);
+				if (2 == old_count)
+					_barrier_count.notify_all();
+
+				// barrier() will drop the count to zero after
+				// all workers have run.
 				unsigned cnt = _barrier_count.load();
 				while (0 < cnt)
 				{
