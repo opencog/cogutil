@@ -47,14 +47,20 @@ IF (CMAKE_COMPILER_IS_GNUCXX)
 		SET(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_LINK_EXECUTABLE} <LINK_LIBRARIES>")
 	ENDIF (APPLE)
 
-	# 1) -Wno-variadic-macros is to avoid warnings regarding using
-	# variadic in macro OC_ASSERT (the warning warns that this is only
-	# available from C99, lol!)
+	# *) -Wno-variadic-macros is to avoid warnings regarding using
+	#    variadic in macro OC_ASSERT (the warning warns that this is
+	#    only available from C99, lol!)
 	#
-	# 2) -fopenmp for multithreading support
+	# *) -Wno-volatile because guile-3.0 has `(volatile SCM *)` sprinkled
+	#    throughout the code base, and g++20 spews warning about this.
 	#
-	# 3) -std=gnu++20 for C++20 and GNU extensions support
-	SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wno-variadic-macros -fopenmp -std=gnu++20")
+	# *) -fopenmp for omp multithreading. It's not used much but does
+	#    get a sprinkling in the codebase.
+	#
+	# *) -std=gnu++20 for C++20 Mostly for std::atomic::wait, but also
+	#    a few other randos.
+	#
+	SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wno-volatile -Wno-variadic-macros -fopenmp -std=gnu++20")
 
 	SET(CMAKE_CXX_FLAGS_ASAN ${CMAKE_C_FLAGS_ASAN})
 	SET(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
