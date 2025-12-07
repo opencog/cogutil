@@ -27,7 +27,6 @@
 
 #include <atomic>
 #include <chrono>
-#include <latch>
 #include <mutex>
 #include <thread>
 #include <vector>
@@ -144,7 +143,7 @@ class async_buffer
 
 		// Barrier synchronization
 		const Element* _current_barrier;
-		std::latch* _barrier_latch;
+		std::atomic<unsigned> _barrier_count;
 
 		void start_writer_thread();
 		void stop_writer_threads();
@@ -219,7 +218,7 @@ async_buffer<Writer, Element>::async_buffer(Writer* wr,
 	_stall_writers = false;
 	_in_drain = false;
 	_current_barrier = nullptr;
-	_barrier_latch = nullptr;
+	_barrier_count = 0;
 
 	_high_watermark = DEFAULT_HIGH_WATER_MARK;
 	_low_watermark = DEFAULT_LOW_WATER_MARK;
@@ -360,7 +359,7 @@ void async_buffer<Writer, Element>::stop_writer_threads()
 	}
 
 	_current_barrier = nullptr;
-	_barrier_latch = nullptr;
+	_barrier_count = 0;
 
 	// Its now OK to start new threads, if desired ...(!)
 	_stopping_writers = false;
@@ -454,17 +453,23 @@ void async_buffer<Writer, Element>::barrier(const Element& elt)
 
 	drain();
 
-	std::latch completion(_thread_count);
-	_barrier_latch = &completion;
+	_barrier_count = _thread_count + 1;
 	_current_barrier = &elt;
 
 	_store_set.cancel();
 
-	completion.wait();
+	// Wait for all workers to finish processing
+	unsigned cnt = _barrier_count.load();
+	while (1 < cnt)
+	{
+		_barrier_count.wait(cnt);
+		cnt = _barrier_count.load();
+	}
 
-	_store_set.cancel_reset();
 	_current_barrier = nullptr;
-	_barrier_latch = nullptr;
+	_store_set.cancel_reset();
+	_barrier_count--;
+	_barrier_count.notify_all();
 }
 
 /// A single write thread. Reads elements from set, and invokes the
@@ -494,8 +499,16 @@ void async_buffer<Writer, Element>::write_loop()
 			if (_current_barrier != nullptr)
 			{
 				(_writer->*_do_write)(*_current_barrier);
-				_barrier_latch->count_down();
-				_barrier_latch->wait();
+				_barrier_count--;
+				_barrier_count.notify_all();
+
+				// Wait for barrier to complete
+				unsigned cnt = _barrier_count.load();
+				while (0 < cnt)
+				{
+					_barrier_count.wait(cnt);
+					cnt = _barrier_count.load();
+				}
 			}
 
 			// We are so out of here. Nothing to do, just exit this thread.
