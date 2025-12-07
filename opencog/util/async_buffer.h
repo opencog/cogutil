@@ -30,7 +30,6 @@
 #include <mutex>
 #include <thread>
 #include <vector>
-#include <unistd.h> /* for usleep() */
 
 #include <opencog/util/concurrent_set.h>
 #include <opencog/util/exceptions.h>
@@ -120,11 +119,6 @@ namespace opencog
  * barrier() call needs to do is to be a fence, ensuring that everything
  * before really is before everything after. It didn't need to actually
  * drain everything.
- *
- * Another issue is that the assorted loops to drain queues use
- * spin-loops and usleeps. I think this is mostly harmless, but is
- * impure, and should be replaced by CV's. Doing so becomes much easier
- * once C++20 is widely available, as it has CV's on std::atomic ints.
  */
 template<typename Writer, typename Element>
 class async_buffer
@@ -339,11 +333,11 @@ void async_buffer<Writer, Element>::stop_writer_threads()
 
 	_stopping_writers = true;
 
-	// Spin a while, until the writer threads are (mostly) done.
+	// Wait until the writer threads are (mostly) done.
 	while (0 < _pending)
 	{
-		// std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		usleep(1000);
+		unsigned long pend = _pending.load();
+		if (pend > 0) _pending.wait(pend);
 	}
 
 	// Now tell all the threads that they are done.
@@ -385,10 +379,12 @@ void async_buffer<Writer, Element>::drain()
 	_stall_writers = false;
 	_flush_count++;
 
-	// XXX TODO - when C++20 becomes widely available,
-	// replace this loop by _pending.wait(0)
+	// Wait for all pending work to complete
 	while (0 < _pending)
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	{
+		unsigned long pend = _pending.load();
+		if (pend > 0) _pending.wait(pend);
+	}
 
 	_stall_writers = save_stall;
 }
@@ -468,7 +464,10 @@ void async_buffer<Writer, Element>::barrier(const Element& elt)
 
 	// Wait for all threads to complete their barrier work
 	while (_barrier_remaining.load() > 0)
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	{
+		unsigned rem = _barrier_remaining.load();
+		if (rem > 0) _barrier_remaining.wait(rem);
+	}
 }
 
 /// A single write thread. Reads elements from set, and invokes the
@@ -490,7 +489,9 @@ void async_buffer<Writer, Element>::write_loop()
 			while (_barrier_remaining.load() > 0 and
 			       my_last_phase >= _barrier_phase.load())
 			{
-				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+				unsigned rem = _barrier_remaining.load();
+				if (rem > 0 and my_last_phase >= _barrier_phase.load())
+					_barrier_remaining.wait(rem);
 			}
 
 			// Do nothing, if asked to stall.
@@ -509,6 +510,7 @@ void async_buffer<Writer, Element>::write_loop()
 				my_last_phase = current_phase;
 				(_writer->*_do_write)(elt);
 				_barrier_remaining.fetch_sub(1);
+				_barrier_remaining.notify_all();
 			}
 			else
 			{
@@ -518,6 +520,7 @@ void async_buffer<Writer, Element>::write_loop()
 
 			_busy_writers --;
 			_pending --;
+			_pending.notify_all();
 		}
 	}
 	catch (typename concurrent_set<Element>::Canceled& e)
