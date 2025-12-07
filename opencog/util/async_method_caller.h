@@ -135,7 +135,8 @@ class async_caller
 		void enqueue(Element&&);
 		void flush_queue();
 		void barrier(void);
-		void barrier(const Element&);
+		template<typename Factory>
+		void barrier(Factory&& make_element);
 
 		void set_watermarks(size_t, size_t);
 
@@ -349,18 +350,22 @@ void async_caller<Writer, Element>::barrier()
 	drain();
 }
 
-/// Barrier that ensures every worker processes the given element.
+/// Barrier that ensures every worker processes an element.
 /// This first drains existing work queues, then gives each worker
-/// a copy of `elt` for processing. It then waits for all workers
-/// to complete. This guarantees that every worker has run at least
-/// once.
+/// an element provided by the factory. It then waits for all
+/// workers to complete. This guarantees that every worker has run
+/// at least once.
+///
+/// The factory callable is invoked once per worker thread to create
+/// an element.
 ///
 /// The intended use case for this function are systems that have
 /// workers that do caching or lazy initialization or implement
 /// other actions that require synchronization that the default
 /// `barrier(void)` would miss.
 template<typename Writer, typename Element>
-void async_caller<Writer, Element>::barrier(const Element& elt)
+template<typename Factory>
+void async_caller<Writer, Element>::barrier(Factory&& make_element)
 {
 	std::unique_lock<std::mutex> lock(_enqueue_mutex);
 
@@ -376,7 +381,7 @@ void async_caller<Writer, Element>::barrier(const Element& elt)
 	for (unsigned int i = 0; i < _thread_count; i++)
 	{
 		_pending ++;
-		_store_queue.push(elt);
+		_store_queue.push(make_element());
 		_item_count++;
 	}
 
