@@ -27,6 +27,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <latch>
 #include <mutex>
 #include <thread>
 #include <vector>
@@ -116,7 +117,7 @@ class async_caller
 
 		// Per-thread barrier synchronization
 		std::atomic<unsigned> _barrier_phase;
-		std::atomic<unsigned> _barrier_remaining;
+		std::latch* _barrier_latch;
 
 		void start_writer_thread();
 		void stop_writer_threads();
@@ -180,7 +181,7 @@ async_caller<Writer, Element>::async_caller(Writer* wr,
 	_pending = 0;
 	_in_drain = false;
 	_barrier_phase = 0;
-	_barrier_remaining = 0;
+	_barrier_latch = nullptr;
 
 	_high_watermark = DEFAULT_HIGH_WATER_MARK;
 	_low_watermark = DEFAULT_LOW_WATER_MARK;
@@ -278,7 +279,7 @@ void async_caller<Writer, Element>::stop_writer_threads()
 	}
 
 	_barrier_phase = 0;
-	_barrier_remaining = 0;
+	_barrier_latch = nullptr;
 
 	// Its now OK to start new threads, if desired ...(!)
 	_stopping_writers = false;
@@ -366,10 +367,10 @@ void async_caller<Writer, Element>::barrier(const Element& elt)
 	// First, drain existing work
 	drain();
 
-	// Set up the barrier: each thread must process exactly one element
-	_barrier_remaining = _thread_count;
+	// Set up the latch for barrier completion
+	std::latch completion(_thread_count);
+	_barrier_latch = &completion;
 	_barrier_phase++;
-	_barrier_remaining.notify_all();  // Wake workers checking phase condition
 
 	// Enqueue one element for each thread.
 	for (unsigned int i = 0; i < _thread_count; i++)
@@ -380,11 +381,8 @@ void async_caller<Writer, Element>::barrier(const Element& elt)
 	}
 
 	// Wait for all threads to complete their barrier work
-	while (_barrier_remaining.load() > 0)
-	{
-		unsigned rem = _barrier_remaining.load();
-		if (rem > 0) _barrier_remaining.wait(rem);
-	}
+	completion.wait();
+	_barrier_latch = nullptr;
 }
 
 /// A single write thread. Reads elements from queue, and invokes the
@@ -400,17 +398,6 @@ void async_caller<Writer, Element>::write_loop()
 	{
 		while (true)
 		{
-			// If a barrier is active and we've done our part, wait for others.
-			// This prevents us from grabbing a second barrier element before
-			// all other threads have grabbed their first.
-			while (_barrier_remaining.load() > 0 and
-			       my_last_phase >= _barrier_phase.load())
-			{
-				unsigned rem = _barrier_remaining.load();
-				if (rem > 0 and my_last_phase >= _barrier_phase.load())
-					_barrier_remaining.wait(rem);
-			}
-
 			Element elt = _store_queue.value_pop();
 			_busy_writers ++;
 
@@ -420,8 +407,7 @@ void async_caller<Writer, Element>::write_loop()
 				// This is barrier work - process and count toward completion
 				my_last_phase = current_phase;
 				(_writer->*_do_write)(elt);
-				_barrier_remaining.fetch_sub(1);
-				_barrier_remaining.notify_all();
+				_barrier_latch->count_down();
 			}
 			else
 			{
