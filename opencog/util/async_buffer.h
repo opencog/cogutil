@@ -56,7 +56,7 @@ namespace opencog
  *
  * This de-duplication can be very handy if the method is writing data,
  * and the caller is repeatedly asking for the same data to be written.
- * By bufferring up and de-duplicating the write requests, this class
+ * By buffering up and de-duplicating the write requests, this class
  * can reduce load on the system, especially if a delay is introduced,
  * so that the requests buffer up before being serviced.
  *
@@ -284,7 +284,7 @@ void async_buffer<Writer, Element>::set_watermarks(size_t hi, size_t lo)
 /// until at least _low_watermark elements have accumulated in the pool.
 /// The goal here is to allow the de-duplication services to actually
 /// do their work.  This has the dangerous side-effect of potentially
-/// leaving eleemnts in the set forever, never quite getting them
+/// leaving elements in the set forever, never quite getting them
 /// written out. Caveat emptor! You may want to flush periodically,
 /// to avoid this situation.
 template<typename Writer, typename Element>
