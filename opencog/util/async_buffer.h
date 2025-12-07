@@ -163,8 +163,7 @@ class async_buffer
 		void insert(Element&&);
 		void flush();
 		void barrier(void);
-		template<typename Factory>
-		void barrier(Factory&& make_element);
+		void barrier(const Element&);
 
 		void set_watermarks(size_t, size_t);
 		void stall(bool);
@@ -437,23 +436,18 @@ void async_buffer<Writer, Element>::barrier()
 	drain();
 }
 
-/// Barrier that ensures every worker processes a provided element.
+/// Barrier that ensures every worker processes the given element.
 /// This first drains existing work queues, then gives each worker
-/// an element provided by the factory. It then waits for all
-/// workers to complete. This guarantees that every worker has run
-/// at least once.
-///
-/// The factory callable is invoked once per worker thread to create
-/// a unique element. Since the async_buffer is deduplicating for
-/// work elements, each element must be distinct.
+/// a copy of `elt` for processing. It then waits for all workers
+/// to complete. This guarantees that every worker has run at least
+/// once.
 ///
 /// The intended use case for this function are systems that have
 /// workers that do caching or lazy initialization or implement
 /// other actions that require synchronization that the default
 /// `barrier(void)` would miss.
 template<typename Writer, typename Element>
-template<typename Factory>
-void async_buffer<Writer, Element>::barrier(Factory&& make_element)
+void async_buffer<Writer, Element>::barrier(const Element& elt)
 {
 	std::unique_lock<std::mutex> lock(_enqueue_mutex);
 
@@ -467,7 +461,7 @@ void async_buffer<Writer, Element>::barrier(Factory&& make_element)
 
 	// Enqueue one element for each thread.
 	for (unsigned int i = 0; i < _thread_count; i++)
-		do_insert(make_element());
+		do_insert(elt);
 
 	// Wait for all threads to complete their barrier work
 	completion.wait();
