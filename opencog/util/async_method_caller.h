@@ -371,6 +371,7 @@ void async_caller<Writer, Element>::barrier(const Element& elt)
 	// Set up the barrier: each thread must process exactly one element
 	_barrier_remaining = _thread_count;
 	_barrier_phase++;
+	_barrier_remaining.notify_all();  // Wake workers checking phase condition
 
 	// Enqueue one element for each thread.
 	for (unsigned int i = 0; i < _thread_count; i++)
