@@ -284,7 +284,10 @@ void async_caller<Writer, Element>::stop_writer_threads()
 		Element elt = _store_queue.value_pop();
 		(_writer->*_do_write)(elt);
 	}
-	
+
+	_barrier_phase = 0;
+	_barrier_remaining = 0;
+
 	// Its now OK to start new threads, if desired ...(!)
 	_stopping_writers = false;
 }
@@ -302,10 +305,7 @@ void async_caller<Writer, Element>::drain()
 	// XXX TODO - when C++20 becomes widely available,
 	// replace this loop by _pending.wait(0)
 	while (0 < _pending)
-	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		// usleep(1000);
-	}
 }
 
 
@@ -321,10 +321,7 @@ void async_caller<Writer, Element>::flush_queue()
 {
 	_flush_count++;
 	while (0 < _store_queue.size())
-	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		// usleep(1000);
-	}
 }
 
 /// Drain the pending queue.  Synchronizing.
