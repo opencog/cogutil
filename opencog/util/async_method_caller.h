@@ -295,10 +295,11 @@ void async_caller<Writer, Element>::drain()
 	_flush_count++;
 
 	// Wait for all pending work to complete
-	while (0 < _pending)
+	unsigned long pend = _pending.load();
+	while (pend != 0)
 	{
-		unsigned long pend = _pending.load();
-		if (pend > 0) _pending.wait(pend);
+		_pending.wait(pend);
+		pend = _pending.load();
 	}
 }
 
