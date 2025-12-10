@@ -47,6 +47,11 @@ namespace opencog
  */
 unsigned int bitcount(unsigned long n);
 
+#ifndef WIN32
+/// Demangle c++ function names.
+std::string demangle(const std::string& mangled);
+#endif
+
 template <typename _OutputIterator>
 void tokenize(const std::string& str,
               _OutputIterator tokens,
@@ -67,21 +72,6 @@ void tokenize(const std::string& str,
         pos = str.find_first_of(delimiters, lastPos);
     }
 }
-
-template<typename _T>
-struct safe_deleter
-{
-    void operator()(_T*& __ptr) {
-        if (__ptr) {
-            delete __ptr;
-            __ptr = 0;
-        }
-    }
-};
-
-#ifndef WIN32
-std::string demangle(const std::string& mangled);
-#endif
 
 /** @}*/
 } // namespace opencog
