@@ -14,8 +14,22 @@ These include:
 * random tournament selection
 * OS portability layers.
 
-
 The main project site is at http://opencog.org
+
+Status
+------
+***Version 2.2.0***.  Notable changes since January 2025:
+
+* Enhanced barrier support for async_buffer: *every* worker can be
+  given the barrier message, thus synchornizing *all* workers.
+* Replacment of (minor) busy-waits by c++-20 std::atomic::wait()
+  This reduces latency during congestion and improves performance.
+* Remove all dependency on boost. Unfortunately, boost causes more
+  headaches than it solves, and just making it obsolete works best.
+* Removal of a large number of unused, stale files and functions.
+  Decades of work allowed arcane cruft and litter to accumulate.
+  That has been removed. Assorted single-user files have been moved
+  to that single user (almost entirely to as-moses; some to miner)
 
 Prerequisites
 -------------
