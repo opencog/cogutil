@@ -35,7 +35,6 @@
 #include <opencog/util/concurrent_stack.h>
 #include <opencog/util/exceptions.h>
 #include <opencog/util/Logger.h>
-#include <opencog/util/macros.h>
 
 namespace opencog
 {

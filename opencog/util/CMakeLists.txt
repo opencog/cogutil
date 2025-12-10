@@ -109,7 +109,6 @@ INSTALL(FILES
 	lazy_random_selector.h
 	lazy_selector.h
 	Logger.h
-	macros.h
 	misc.h
 	mt19937ar.h
 	numeric.h
