@@ -16,7 +16,6 @@ ADD_LIBRARY(cogutil SHARED
 	algorithm.h
 	backtrace-symbols.c
 	Config.cc
-	dorepeat.h
 	exceptions.cc
 	lazy_selector.cc
 	lazy_random_selector.cc
@@ -109,7 +108,6 @@ INSTALL(FILES
 	concurrent_queue.h
 	concurrent_set.h
 	concurrent_stack.h
-	dorepeat.h
 	empty_string.h
 	exceptions.h
 	lazy_random_selector.h
