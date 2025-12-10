@@ -29,7 +29,6 @@
 #include <limits>
 #include <type_traits>
 
-#include <opencog/util/dorepeat.h>
 #include <opencog/util/RandGen.h>
 #include <opencog/util/mt19937ar.h>
 #include <opencog/util/numeric.h>
@@ -134,7 +133,7 @@ static inline std::string randstr(const std::string& prefix=std::string(),
 {
 	std::stringstream ss;
 	ss << prefix << std::setbase(base);
-	dorepeat(n)
+	for (int j=0; j<n; j++)
 		ss << rng.randint();
 	return ss.str();
 }
