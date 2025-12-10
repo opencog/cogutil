@@ -1,9 +1,5 @@
-IF (WIN32 AND NOT UNIX)
-	SET(WIN32_GETOPT_FILES getopt getopt_long)
-ELSE (WIN32 AND NOT UNIX)
-	SET(WIN32_GETOPT_FILES)
-ENDIF (WIN32 AND NOT UNIX)
-
+#
+#
 include(CheckSymbolExists)
 include(CheckCSourceCompiles)
 
