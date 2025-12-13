@@ -12,7 +12,6 @@ LINK_LIBRARIES(
 )
 
 ADD_CXXTEST(algorithmUTest)
-ADD_CXXTEST(ConfigUTest)
 ADD_CXXTEST(CounterUTest)
 ADD_CXXTEST(LoggerUTest)
 ADD_CXXTEST(numericUTest)

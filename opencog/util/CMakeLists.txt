@@ -11,7 +11,6 @@ ADD_DEFINITIONS(
 ADD_LIBRARY(cogutil SHARED
 	algorithm.h
 	backtrace-symbols.c
-	Config.cc
 	exceptions.cc
 	lazy_selector.cc
 	lazy_random_selector.cc
@@ -99,7 +98,6 @@ INSTALL(FILES
 	async_method_caller.h
 	backtrace-symbols.h
 	cogutil.h
-	Config.h
 	Counter.h
 	concurrent_queue.h
 	concurrent_set.h
