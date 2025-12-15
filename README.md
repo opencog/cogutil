@@ -18,7 +18,7 @@ The main project site is at http://opencog.org
 
 Status
 ------
-***Version 2.2.0***.  Notable changes since January 2025:
+***Version 2.2.1***.  Notable changes since January 2025:
 
 * Enhanced barrier support for async_buffer: *every* worker can be
   given the barrier message, thus synchornizing *all* workers.
