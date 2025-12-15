@@ -133,7 +133,7 @@ static inline std::string randstr(const std::string& prefix=std::string(),
 {
 	std::stringstream ss;
 	ss << prefix << std::setbase(base);
-	for (int j=0; j<n; j++)
+	for (unsigned j=0; j<n; j++)
 		ss << rng.randint();
 	return ss.str();
 }
