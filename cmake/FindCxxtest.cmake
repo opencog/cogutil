@@ -11,43 +11,40 @@
 # CXXTEST_BIN_DIR environment variable must have been defined already
 
 # cxxtest has a Python version and a Perl version. First, look
-# for the Python version.
-FIND_PACKAGE(Python3 COMPONENTS Interpreter)
-IF (Python3_Interpreter_FOUND)
-	# Look for the .py version first.  Some versions of cxxtest have a
-	# non-py version, but it crashes and burns, so, use the .py version
-	# preferentially, in order to maintain compatibility across (all??)
-	# versions of cxxtest
-	FIND_PATH(CXXTEST_PYTHON_BIN_DIR cxxtestgen.py
+# for the Python version (.py extension).
+FIND_PATH(CXXTEST_PYTHON_BIN_DIR cxxtestgen.py
+	$ENV{CXXTEST_BIN_DIR}
+	/usr/bin
+	/usr/local/bin
+	DOC "Where is cxxtest located?"
+)
+
+# Sometimes, the python version doesn't have a .py extension.
+IF (NOT CXXTEST_PYTHON_BIN_DIR)
+	FIND_PATH(CXXTEST_PYTHON_BIN_DIR cxxtestgen
 		$ENV{CXXTEST_BIN_DIR}
 		/usr/bin
 		/usr/local/bin
 		DOC "Where is cxxtest located?"
 	)
-	IF (CXXTEST_PYTHON_BIN_DIR)
-		SET(CXXTEST_FOUND 1)
-		SET(CXXTEST_GEN "${CXXTEST_PYTHON_BIN_DIR}/cxxtestgen.py" CACHE FILEPATH "CxxTest binary filepath")
-	ENDIF (CXXTEST_PYTHON_BIN_DIR)
+	SET(CXXTEST_NO_PY_EXT TRUE)
+ENDIF (NOT CXXTEST_PYTHON_BIN_DIR)
 
-	# Sometimes, the python version doesn't have a .py extension.
-	# repeat the above search, without the extension.
-	IF (NOT CXXTEST_FOUND)
-		FIND_PATH(CXXTEST_PYTHON_BIN_DIR cxxtestgen
-			$ENV{CXXTEST_BIN_DIR}
-			/usr/bin
-			/usr/local/bin
-			DOC "Where is cxxtest located?"
-		)
-		IF (CXXTEST_PYTHON_BIN_DIR)
-			SET(CXXTEST_FOUND 1)
+# If we found a Python version of cxxtestgen, verify Python3 is available
+IF (CXXTEST_PYTHON_BIN_DIR)
+	FIND_PACKAGE(Python3 COMPONENTS Interpreter)
+	IF (Python3_Interpreter_FOUND)
+		SET(CXXTEST_FOUND 1)
+		IF (CXXTEST_NO_PY_EXT)
 			SET(CXXTEST_GEN "${CXXTEST_PYTHON_BIN_DIR}/cxxtestgen" CACHE FILEPATH "CxxTest binary filepath")
-		ENDIF (CXXTEST_PYTHON_BIN_DIR)
-	ENDIF (NOT CXXTEST_FOUND)
-ENDIF (Python3_Interpreter_FOUND)
+		ELSE (CXXTEST_NO_PY_EXT)
+			SET(CXXTEST_GEN "${CXXTEST_PYTHON_BIN_DIR}/cxxtestgen.py" CACHE FILEPATH "CxxTest binary filepath")
+		ENDIF (CXXTEST_NO_PY_EXT)
+	ENDIF (Python3_Interpreter_FOUND)
+ENDIF (CXXTEST_PYTHON_BIN_DIR)
 
 # If we still haven't found it, try the perl version.
 IF (NOT CXXTEST_FOUND)
-	# The python version wasn't found--search for the perl version.
 	FIND_PATH(CXXTEST_PERL_BIN_DIR cxxtestgen.pl
 		$ENV{CXXTEST_BIN_DIR}
 		/usr/bin
