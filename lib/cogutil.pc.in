@@ -7,6 +7,6 @@ libdir=${exec_prefix}/lib/opencog
 
 Name: CogUtil
 Description: The OpenCog Development Utilities Collection
-Version: @SEMANTIC_VERSION@
+Version: @PROJECT_VERSION@
 Cflags: -I${includedir}
 Libs: -L${libdir} -lcogutil

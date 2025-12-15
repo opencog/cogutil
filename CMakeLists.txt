@@ -18,7 +18,7 @@ include(cmake/Summary.cmake)
 # add_compile_definitions shows up in CMake version 3.12
 CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
 
-PROJECT(cogutil)
+PROJECT(cogutil VERSION 2.2.1)
 
 # Uncomment to be in Release mode [default].
 # SET(CMAKE_BUILD_TYPE Release)
@@ -47,16 +47,6 @@ ADD_DEFINITIONS(-DPROJECT_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
 
 # Add the 'cmake' dir to cmake's module search path.
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/")
-
-# Get cogutil version.
-# NOTE: This is the official semantic-version, as it is derived from
-# a version-control independent means of declaring versioning.
-#
-FILE(READ "${CMAKE_SOURCE_DIR}/opencog/util/cogutil.h" _CU_H_CONTENTS)
-STRING(REGEX MATCH
-	"#define COGUTIL_VERSION_STRING \"([0-9]+[.0-9]+[.0-9]+)\""
-	_ "${_CU_H_CONTENTS}")
-SET(SEMANTIC_VERSION ${CMAKE_MATCH_1})
 
 include(cmake/OpenCogGccOptions.cmake)
 
@@ -271,7 +261,7 @@ SET(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/packages")
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "The OpenCog Basic C++ Utilities")
 SET(CPACK_PACKAGE_NAME "libcogutil-dev")
 SET(CPACK_PACKAGE_VENDOR "opencog.org")
-SET(CPACK_PACKAGE_VERSION "${SEMANTIC_VERSION}-${UTC_DATE}")
+SET(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}-${UTC_DATE}")
 SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 SET(CPACK_PACKAGE_FILE_NAME
 	"${CPACK_PACKAGE_NAME}_${CPACK_PACKAGE_VERSION}_${PACKAGE_ARCHITECTURE}")

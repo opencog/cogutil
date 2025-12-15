@@ -97,7 +97,6 @@ INSTALL(FILES
 	async_buffer.h
 	async_method_caller.h
 	backtrace-symbols.h
-	cogutil.h
 	Counter.h
 	concurrent_queue.h
 	concurrent_set.h
