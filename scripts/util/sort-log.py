@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Sort a log according to some order (chronological or thread
 # cohesiveness for now).
