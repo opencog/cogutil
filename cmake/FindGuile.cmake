@@ -22,23 +22,11 @@ FIND_PATH(GUILE_INCLUDE_DIR libguile.h
 	/usr/local/include/guile/2.2
 	/opt/local/include/guile/2.2
 
-	/usr/include/guile/2.0
-	/usr/local/include/guile/2.0
-	/opt/local/include/guile/2.0
-
-	/usr/include/libguile
-	/usr/local/include/libguile
-	/opt/local/include/guile
-
 	/opt/homebrew/include/guile/3.0
-
-	/usr/include
-	/usr/local/include
-	NO_DEFAULT_PATH
 )
 
 # Look for the library
-FIND_LIBRARY(GUILE_LIBRARY NAMES guile-3.0 guile-2.2 guile-2.0 guile PATHS
+FIND_LIBRARY(GUILE_LIBRARY NAMES guile-3.0 guile-2.2 PATHS
 	/usr/lib
 	/usr/local/lib
 	/opt/local/lib
