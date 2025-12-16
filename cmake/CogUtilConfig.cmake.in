@@ -6,6 +6,8 @@ set(COGUTIL_DATA_DIR   "@DATADIR@")
 set(COGUTIL_LIBRARY "@CMAKE_INSTALL_PREFIX@/lib@LIB_DIR_SUFFIX@/opencog/libcogutil@CMAKE_SHARED_LIBRARY_SUFFIX@")
 set(COGUTIL_FOUND 1)
 
+MESSAGE(STATUS "CogUtil version ${COGUTIL_VERSION} found.")
+
 # Automatically add cogutil's cmake modules to the module path
 list(APPEND CMAKE_MODULE_PATH "${COGUTIL_DATA_DIR}/cmake")
 
