@@ -193,8 +193,6 @@ SET (MAN_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/share/man")
 # ===================================================================
 # Decide what to build, based on the packages found.
 
-SET(HAVE_UTIL 1)
-
 ADD_SUBDIRECTORY(cmake)
 ADD_SUBDIRECTORY(etc)
 ADD_SUBDIRECTORY(lib)
@@ -291,5 +289,4 @@ ADD_SUBDIRECTORY(doc EXCLUDE_FROM_ALL)
 SUMMARY_ADD("Doxygen" "Code documentation" DOXYGEN_FOUND)
 SUMMARY_ADD("StackPrint" "Pretty printing of stack traces" HAVE_BFD AND HAVE_IBERTY)
 SUMMARY_ADD("Unit tests" "Unit tests" CXXTEST_FOUND)
-SUMMARY_ADD("Util" "General utility library" HAVE_UTIL)
 SUMMARY_SHOW()
