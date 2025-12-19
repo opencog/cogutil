@@ -94,10 +94,6 @@ ENDIF (CYGWIN)
 # ===================================================================
 # Check for existence of various required, optional packages.
 
-# CxxTest setup (also provides OPENCOG_SETUP_TESTING macro)
-INCLUDE(OpenCogTestOptions)
-
-# -------------------------------------------------------------
 # Look for GNU C++ backtrace. Needed for basic stack printing.
 FIND_PACKAGE(GNUBacktrace)
 IF (GNU_BACKTRACE_FOUND)
@@ -134,10 +130,7 @@ IF (PARALLEL_STL_FOUND)
 ENDIF (PARALLEL_STL_FOUND)
 
 # ===================================================================
-# Global includes
-
-# -------------------------------------------------
-# Include configuration.
+# Global config
 
 # Set default include paths.
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR})
@@ -145,9 +138,11 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR})
 # Library configuration (LIB_DIR_SUFFIX for lib64, RPATH handling)
 INCLUDE(OpenCogLibOptions)
 
-# -------------------------------------------------
-# Install configuration
+# Setup testing infrastructure (tests target, check target)
+INCLUDE(OpenCogTestOptions)
+OPENCOG_SETUP_TESTING()
 
+# Install configuration
 # Only list install files that have actually changed.
 SET(CMAKE_INSTALL_MESSAGE "LAZY")
 
@@ -167,9 +162,6 @@ ADD_SUBDIRECTORY(cmake)
 ADD_SUBDIRECTORY(etc)
 ADD_SUBDIRECTORY(lib)
 ADD_SUBDIRECTORY(opencog)
-
-# Setup testing infrastructure (tests target, check target)
-OPENCOG_SETUP_TESTING()
 
 ADD_CUSTOM_TARGET(cscope
 	COMMAND find opencog examples tests -name '*.cc' -o -name '*.h' -o -name '*.cxxtest' -o -name '*.scm' > ${CMAKE_SOURCE_DIR}/cscope.files
