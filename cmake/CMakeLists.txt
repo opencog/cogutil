@@ -37,6 +37,7 @@ INSTALL(FILES
 	OpenCogGccOptions.cmake
 	OpenCogInstallOptions.cmake
 	OpenCogLibOptions.cmake
+	OpenCogTestOptions.cmake
 	Summary.cmake
 	UseOCaml.cmake
 	COPYING-CMAKE-SCRIPTS
