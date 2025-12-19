@@ -38,6 +38,7 @@
 #include <cstdint>
 #include <exception>
 #include <mutex>
+#include <optional>
 #include <set>
 #include <vector>
 
