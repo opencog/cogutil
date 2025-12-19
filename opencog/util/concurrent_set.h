@@ -211,11 +211,23 @@ public:
         return the_set.size();
     }
 
-    std::set<Element, Compare> peek() const
+    /// Return entire contents of the container, as they are at just
+    /// this particular moment in time.
+    std::set<Element, Compare> snapshot() const
     {
         std::lock_guard<std::mutex> lock(the_mutex);
         std::set<Element, Compare> copy(the_set);
         return copy;
+    }
+
+    /// Return one element, any element from the container, as it is
+    /// right now, at just this moment.
+    std::optional<Element> peek() const
+    {
+        std::lock_guard<std::mutex> lock(the_mutex);
+        if (the_set.empty())
+            return std::nullopt;
+        return *the_set.begin();
     }
 
     /// Erase all elements from the container.

@@ -174,7 +174,8 @@ public:
         return the_queue.size();
     }
 
-    std::queue<Element> peek() const
+    /// Return a copy of the entire queue, as it is at this moment.
+    std::queue<Element> snapshot() const
     {
         std::lock_guard<std::mutex> lock(the_mutex);
         std::queue<Element> copy(the_queue);
