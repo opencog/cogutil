@@ -174,6 +174,25 @@ public:
         return insert_impl([&]() { the_set.insert(std::move(item)); });
     }
 
+    /// Atomic transition from empty to non-empty set. Useful for
+    /// implementing homogenous sets, where set contents are determined
+    /// by the first element to be inserted; the goal is to avoid two
+    /// threads racing to insert the first element.
+    ///
+    /// If the set is empty, insert the item and return std::nullopt.
+    /// If the set is non-empty, return a representative from the set;
+    /// The insert is NOT performed.
+    std::optional<Element> try_insert(Element&& item)
+    {
+        std::lock_guard<std::mutex> lock(the_mutex);
+        if (the_set.empty())
+        {
+            the_set.insert(std::move(item));
+            return std::nullopt;
+        }
+        return *the_set.begin();
+    }
+
     /// Remove the Element from the set. Return number of Elements
     /// removed, i.e. 1 or 0, depending on whether the item was found
     /// (or not) in the set.
