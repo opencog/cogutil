@@ -194,9 +194,7 @@ static char **translate_addresses_buf(bfd *abfd, bfd_vma *addr, int naddr, asymb
                 name = spot.functionname;
                 if (name == NULL || *name == '\0') name = "??";
                 if (spot.filename != NULL) {
-                    char *h;
-
-                    h = strrchr(spot.filename, '/');
+                    const char* h = strrchr(spot.filename, '/');
                     if (h != NULL) spot.filename = h + 1;
                 }
                 total += snprintf(buf, len, "%s:%u\t%s()", spot.filename ? spot.filename : "??",
